@@ -44,7 +44,12 @@ local/simhub/
 ├── qr.php                       Point d'entrée QR code (§7)
 ├── manage/
 │   ├── ateliers.php             Liste de gestion des fiches ateliers (§6)
-│   └── atelier_edit.php         Création/modification, gestion du statut indisponible (§6.1)
+│   ├── atelier_edit.php         Création/modification, gestion du statut indisponible (§6.1)
+│   ├── import.php                Import CSV souple des ateliers (§12.1)
+│   ├── parcours.php              Liste des parcours pédagogiques (§8)
+│   ├── parcours_edit.php         Création/modification d'un parcours
+│   ├── parcours_ateliers.php     Composition d'un parcours (ajout/ordre/retrait d'ateliers)
+│   └── parcours_suivi.php        Suivi de progression par étudiant (§8.1)
 ├── asv/
 │   ├── index.php                 Pilotage du parcours ASV (§9.4)
 │   ├── valider_simulation.php    Validation ASV en simulation par un encadrant (§9.2)
@@ -151,12 +156,23 @@ le schéma :
 - **QR code** (`qr.php`) : point d'entrée qui démarre une session à
   la volée, avec accroche pour le contrôle anti-faux-scan (§7.3) déjà
   paramétrable (`local_simhub/controlepresenceactif`).
+- **Import CSV** (`manage/import.php`, `classes/local/atelier_importer.php`) :
+  import souple des ateliers avec reconnaissance d'alias de colonnes
+  (accents/casse/espaces ignorés) pour s'adapter aux tableaux
+  hétérogènes des quatre écoles (§12.1) ; upsert par (établissement,
+  numéro) pour permettre des imports répétés sans doublons.
+- **Parcours pédagogiques** (`manage/parcours*.php`, §8) : création,
+  composition (ajout/ordre/obligatoire), et suivi de progression par
+  étudiant avec pourcentage d'avancement (§8.1), à partir des membres
+  d'une cohorte Moodle si le parcours y est rattaché.
 
 ## Ce qui reste à faire
 
 **Import/export (§12)**
-- [ ] Import initial CSV/XLSX hétérogène des listes d'ateliers,
-      salles, rattachements (§12.1).
+- [ ] Import XLSX natif (l'import actuel n'accepte que le CSV ; un
+      export Excel non converti doit d'abord être enregistré en CSV).
+- [ ] Import des rattachements pédagogiques et de la composition des
+      parcours (l'import actuel ne couvre que la fiche atelier).
 - [ ] Exports CSV/XLSX/PDF par étudiant, UC, parcours, cohorte (§12.3).
 - [ ] Génération PDF (fiches, attestations, livret ASV).
 
@@ -170,9 +186,10 @@ le schéma :
       faire pour mes UC", "Mes parcours en cours", "Parcours ASV"...)
       restent à construire au-dessus du filtre générique actuel, une
       fois les rattachements réels connus après import.
-- [ ] UI de gestion des parcours et rattachements (actuellement classes
-      `record/parc_atelier.php` et `record/rattachement.php` sans page
-      dédiée).
+- [ ] UI de gestion des rattachements UC/année/cohorte hors parcours
+      (`record/rattachement.php` existe mais sans page dédiée — seuls
+      les filtres étudiants et le suivi de parcours l'exploitent déjà
+      en lecture).
 - [ ] Web services / API externe (`classes/external/`) pour un futur
       composant mobile et pour la synchronisation QR code hors-ligne.
 

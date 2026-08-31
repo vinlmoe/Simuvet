@@ -155,3 +155,10 @@ $string['asv_lien_invalide'] = 'Ce lien de validation est invalide ou a expiré.
 $string['asv_niveau_a1'] = 'A1';
 $string['asv_niveau_a2'] = 'A2';
 $string['asv_niveau_a3'] = 'A3';
+
+// Import (§12.1).
+$string['import_ateliers'] = 'Importer des ateliers';
+$string['import_description'] = 'Importe une liste d\'ateliers depuis un fichier CSV. Les colonnes reconnues (numéro, nom, discipline, espèce, niveau, durée, statut, établissement, salle, zone, poste, localisation, commentaire) peuvent être dans n\'importe quel ordre et sous des intitulés variés (accents et casse ignorés) : les tableaux des différentes écoles n\'ont pas besoin d\'être harmonisés au préalable. Seuls le numéro et le nom sont obligatoires. Un atelier déjà existant (même établissement + même numéro) est mis à jour plutôt que dupliqué ; le reste des champs peut être corrigé ensuite dans la gestion des ateliers.';
+$string['import_fichier'] = 'Fichier CSV';
+$string['import_crees'] = '{$a} atelier(s) créé(s)';
+$string['import_mis_a_jour'] = '{$a} atelier(s) mis à jour';

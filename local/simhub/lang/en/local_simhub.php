@@ -146,3 +146,9 @@ $string['asv_lien_invalide'] = 'This validation link is invalid or has expired.'
 $string['asv_niveau_a1'] = 'A1';
 $string['asv_niveau_a2'] = 'A2';
 $string['asv_niveau_a3'] = 'A3';
+
+$string['import_ateliers'] = 'Import workshops';
+$string['import_description'] = 'Imports a list of workshops from a CSV file. Recognised columns (number, name, discipline, species, level, duration, status, institution, room, zone, workstation, location, comment) can be in any order and under varied headings (accents and case ignored): the different schools\' spreadsheets do not need to be harmonised beforehand. Only the number and name are required. A workshop that already exists (same institution + same number) is updated rather than duplicated; the rest of the fields can be corrected afterwards in workshop management.';
+$string['import_fichier'] = 'CSV file';
+$string['import_crees'] = '{$a} workshop(s) created';
+$string['import_mis_a_jour'] = '{$a} workshop(s) updated';

@@ -42,6 +42,26 @@ function local_simhub_extend_navigation(global_navigation $nav) {
         );
     }
 
+    if (has_capability('local/simhub:manageparcours', $context) || has_capability('local/simhub:viewprogression', $context)) {
+        $node->add(
+            get_string('filtre_parcours', 'local_simhub'),
+            new moodle_url('/local/simhub/manage/parcours.php'),
+            navigation_node::TYPE_CUSTOM,
+            null,
+            'local_simhub_parcours'
+        );
+    }
+
+    if (has_capability('local/simhub:importexport', $context)) {
+        $node->add(
+            get_string('import_ateliers', 'local_simhub'),
+            new moodle_url('/local/simhub/manage/import.php'),
+            navigation_node::TYPE_CUSTOM,
+            null,
+            'local_simhub_import'
+        );
+    }
+
     if (has_capability('local/simhub:manageasv', $context) || has_capability('local/simhub:validateasvsimulation', $context)) {
         $node->add(
             get_string('asv_parcours', 'local_simhub'),
