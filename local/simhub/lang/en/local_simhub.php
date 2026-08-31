@@ -156,6 +156,22 @@ $string['asv_champ_certification'] = 'I certify that I am a veterinarian or an a
 $string['asv_champ_signature'] = 'Signature';
 $string['asv_valide_avec_succes'] = 'Validation recorded. Thank you.';
 $string['asv_lien_invalide'] = 'This validation link is invalid or has expired.';
+// Anti-fake-scan control (§7.3).
+$string['seancecode_intro'] = 'A presence check is required for this workshop: enter the session code displayed in the room by the supervisor.';
+$string['seancecode_champ'] = 'Session code';
+$string['seancecode_valider'] = 'Validate code';
+$string['seancecode_pasdecode'] = 'I have no code, start anyway';
+$string['seancecode_invalide'] = 'This code is invalid or has expired. You can start without a code: your completion will then be submitted for validation by a supervisor.';
+$string['seancecode_sansvalidation'] = 'Session started without a session code. Your completion will need to be validated by a supervisor.';
+$string['seancecode_generer'] = 'Generate a session code';
+$string['seancecode_champ_salle'] = 'Room';
+$string['seancecode_genere'] = 'Generated code';
+$string['seancecode_validite'] = 'Valid until {$a}';
+$string['sessions_a_valider'] = 'Sessions to validate';
+$string['sessions_aucune_a_valider'] = 'No session awaiting validation.';
+$string['session_valider'] = 'Validate';
+$string['session_refuser'] = 'Reject';
+
 $string['asv_niveau_a1'] = 'A1';
 $string['asv_niveau_a2'] = 'A2';
 $string['asv_niveau_a3'] = 'A3';

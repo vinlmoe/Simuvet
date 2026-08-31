@@ -165,6 +165,22 @@ $string['asv_champ_certification'] = 'Je certifie être vétérinaire ou encadra
 $string['asv_champ_signature'] = 'Signature';
 $string['asv_valide_avec_succes'] = 'Validation enregistrée. Merci.';
 $string['asv_lien_invalide'] = 'Ce lien de validation est invalide ou a expiré.';
+// Contrôle anti-faux-scan (§7.3).
+$string['seancecode_intro'] = 'Un contrôle de présence est demandé pour cet atelier : saisissez le code de séance affiché en salle par l\'encadrant.';
+$string['seancecode_champ'] = 'Code de séance';
+$string['seancecode_valider'] = 'Valider le code';
+$string['seancecode_pasdecode'] = 'Je n\'ai pas de code, commencer quand même';
+$string['seancecode_invalide'] = 'Ce code est invalide ou a expiré. Vous pouvez commencer sans code : votre réalisation sera alors soumise à une validation par un encadrant.';
+$string['seancecode_sansvalidation'] = 'Session démarrée sans code de séance. Votre réalisation devra être validée par un encadrant.';
+$string['seancecode_generer'] = 'Générer un code de séance';
+$string['seancecode_champ_salle'] = 'Salle';
+$string['seancecode_genere'] = 'Code généré';
+$string['seancecode_validite'] = 'Valable jusqu\'à {$a}';
+$string['sessions_a_valider'] = 'Sessions à valider';
+$string['sessions_aucune_a_valider'] = 'Aucune session en attente de validation.';
+$string['session_valider'] = 'Valider';
+$string['session_refuser'] = 'Refuser';
+
 $string['asv_niveau_a1'] = 'A1';
 $string['asv_niveau_a2'] = 'A2';
 $string['asv_niveau_a3'] = 'A3';

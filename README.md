@@ -42,6 +42,7 @@ local/simhub/
 ├── atelier.php                  Fiche atelier étudiant (§5.4 localisation, §5.5 ressources)
 ├── session.php                  Démarrage/fin de session + auto-évaluation guidée (§7, §5.6)
 ├── qr.php                       Point d'entrée QR code (§7)
+├── session_code.php             Saisie du code de séance anti-faux-scan (§7.3)
 ├── manage/
 │   ├── ateliers.php             Liste de gestion des fiches ateliers (§6)
 │   ├── atelier_edit.php         Création/modification, gestion du statut indisponible (§6.1)
@@ -56,7 +57,9 @@ local/simhub/
 │   ├── parcours.php              Liste des parcours pédagogiques (§8)
 │   ├── parcours_edit.php         Création/modification d'un parcours
 │   ├── parcours_ateliers.php     Composition d'un parcours (ajout/ordre/retrait d'ateliers)
-│   └── parcours_suivi.php        Suivi de progression par étudiant (§8.1)
+│   ├── parcours_suivi.php        Suivi de progression par étudiant (§8.1)
+│   ├── seancecode_generer.php    Génération d'un code de séance par salle (§7.3)
+│   └── sessions_a_valider.php    File d'attente de validation manuelle par un encadrant (§7.3)
 ├── asv/
 │   ├── index.php                 Pilotage du parcours ASV (§9.4)
 │   ├── valider_simulation.php    Validation ASV en simulation par un encadrant (§9.2)
@@ -182,9 +185,15 @@ le schéma :
   pilotage (§9.4), validation en simulation par un encadrant (§9.2),
   génération d'un lien de validation animal vivant et page publique à
   jeton avec signature au doigt (`<canvas>` vanilla JS, §9.3).
-- **QR code** (`qr.php`) : point d'entrée qui démarre une session à
-  la volée, avec accroche pour le contrôle anti-faux-scan (§7.3) déjà
-  paramétrable (`local_simhub/controlepresenceactif`).
+- **QR code et contrôle anti-faux-scan** (`qr.php`, `session_code.php`,
+  `manage/seancecode_generer.php`, `manage/sessions_a_valider.php`, §7.3) :
+  si `local_simhub/controlepresenceactif` est désactivé, le scan
+  démarre directement la session ; sinon l'étudiant est renvoyé vers
+  une page de saisie du code de séance généré par l'encadrant. Jamais
+  bloquant de façon absolue : sans code, l'étudiant peut tout de même
+  démarrer sa session, marquée non vérifiée, et elle apparaît alors
+  dans une file d'attente que tout profil `validatesession` peut
+  valider ou refuser manuellement.
 - **Import CSV** (`manage/import.php`, `classes/local/atelier_importer.php`) :
   import souple des ateliers avec reconnaissance d'alias de colonnes
   (accents/casse/espaces ignorés) pour s'adapter aux tableaux
@@ -246,9 +255,10 @@ le schéma :
       de ce plugin.
 
 **V1+ souhaitable (§13)**
-- [ ] Contrôle anti-faux-scan renforcé (réseau local / code de séance
-      combinés — le code de séance existe côté modèle
-      `record/seancecode.php` mais n'est pas encore relié à `qr.php`).
+- [ ] Reconnaissance réseau local pour le contrôle anti-faux-scan
+      (§7.3) : seuls le code de séance et la validation encadrant sont
+      implémentés pour l'instant ; le contrôle par plage IP de salle
+      demanderait de connaître l'infrastructure réseau réelle des ENV.
 - [ ] Badges Moodle.
 - [ ] Tableaux de bord par cohorte/parcours plus riches que la liste
       actuelle (§12.2).

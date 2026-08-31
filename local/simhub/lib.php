@@ -62,6 +62,23 @@ function local_simhub_extend_navigation(global_navigation $nav) {
         );
     }
 
+    if (has_capability('local/simhub:validatesession', $context)) {
+        $node->add(
+            get_string('seancecode_generer', 'local_simhub'),
+            new moodle_url('/local/simhub/manage/seancecode_generer.php'),
+            navigation_node::TYPE_CUSTOM,
+            null,
+            'local_simhub_seancecode'
+        );
+        $node->add(
+            get_string('sessions_a_valider', 'local_simhub'),
+            new moodle_url('/local/simhub/manage/sessions_a_valider.php'),
+            navigation_node::TYPE_CUSTOM,
+            null,
+            'local_simhub_sessionsavalider'
+        );
+    }
+
     if (has_capability('local/simhub:manageasv', $context) || has_capability('local/simhub:validateasvsimulation', $context)) {
         $node->add(
             get_string('asv_parcours', 'local_simhub'),
