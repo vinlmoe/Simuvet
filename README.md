@@ -58,6 +58,8 @@ local/simhub/
 │   ├── parcours_edit.php         Création/modification d'un parcours
 │   ├── parcours_ateliers.php     Composition d'un parcours (ajout/ordre/retrait d'ateliers)
 │   ├── parcours_suivi.php        Suivi de progression par étudiant (§8.1)
+│   ├── dashboard.php              Tableau de bord par parcours/cohorte (§12.2)
+│   ├── dashboard_salle.php        Tableau de bord responsable de salle (§12.2)
 │   ├── seancecode_generer.php    Génération d'un code de séance par salle (§7.3)
 │   └── sessions_a_valider.php    File d'attente de validation manuelle par un encadrant (§7.3)
 ├── asv/
@@ -201,6 +203,14 @@ le schéma :
   numéro) pour permettre des imports répétés sans doublons.
 - **Export CSV** (`manage/export.php`) : liste des ateliers, et suivi
   de progression d'un parcours (§12.3).
+- **Tableaux de bord** (§12.2) : `manage/dashboard.php` donne, pour
+  chaque parcours, une vue d'ensemble par cohorte (étudiants n'ayant
+  pas commencé / en cours / terminé, ateliers à reprendre, échéances
+  proches ou dépassées, avancement moyen) plutôt que la seule liste de
+  parcours ou le tableau brut par étudiant ; `manage/dashboard_salle.php`
+  donne au responsable de salle des tuiles et des listes actionnables
+  (ateliers en maintenance, sans ressource, sans rattachement UC, peu
+  utilisés).
 - **Parcours pédagogiques** (`manage/parcours*.php`, §8) : création,
   composition (ajout/ordre/obligatoire), et suivi de progression par
   étudiant avec pourcentage d'avancement (§8.1), à partir des membres
@@ -260,8 +270,6 @@ le schéma :
       implémentés pour l'instant ; le contrôle par plage IP de salle
       demanderait de connaître l'infrastructure réseau réelle des ENV.
 - [ ] Badges Moodle.
-- [ ] Tableaux de bord par cohorte/parcours plus riches que la liste
-      actuelle (§12.2).
 
 **Hors périmètre V1** (rappel §14, pour éviter la dérive de périmètre)
 Ticketing complet, mode OSCE, signature électronique qualifiée,

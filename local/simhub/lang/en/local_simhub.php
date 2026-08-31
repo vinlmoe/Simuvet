@@ -168,6 +168,12 @@ $string['seancecode_champ_salle'] = 'Room';
 $string['seancecode_genere'] = 'Generated code';
 $string['seancecode_validite'] = 'Valid until {$a}';
 $string['sessions_a_valider'] = 'Sessions to validate';
+
+$string['dashboard_parcours'] = 'Pathway dashboard';
+$string['dashboard_salle'] = 'Room dashboard';
+$string['dashboard_sansressource'] = 'No resource';
+$string['dashboard_sansuc'] = 'No course link';
+$string['dashboard_peuutilise'] = 'Rarely used';
 $string['sessions_aucune_a_valider'] = 'No session awaiting validation.';
 $string['session_valider'] = 'Validate';
 $string['session_refuser'] = 'Reject';

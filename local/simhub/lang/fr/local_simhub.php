@@ -177,6 +177,13 @@ $string['seancecode_champ_salle'] = 'Salle';
 $string['seancecode_genere'] = 'Code généré';
 $string['seancecode_validite'] = 'Valable jusqu\'à {$a}';
 $string['sessions_a_valider'] = 'Sessions à valider';
+
+// Tableaux de bord (§12.2).
+$string['dashboard_parcours'] = 'Tableau de bord parcours';
+$string['dashboard_salle'] = 'Tableau de bord salle';
+$string['dashboard_sansressource'] = 'Sans ressource';
+$string['dashboard_sansuc'] = 'Sans UC';
+$string['dashboard_peuutilise'] = 'Peu utilisés';
 $string['sessions_aucune_a_valider'] = 'Aucune session en attente de validation.';
 $string['session_valider'] = 'Valider';
 $string['session_refuser'] = 'Refuser';
