@@ -1,19 +1,14 @@
 <?php
-// Fonctions de callback Moodle pour l'intégration de SimHub.
-//
-// Ce fichier reste volontairement léger en V0 : il pose les points
-// d'entrée attendus par le noyau Moodle (navigation, service de
-// fichiers), sans encore porter la logique métier détaillée, qui devra
-// être développée dans classes/local/ (managers) au fil des sprints.
+// Fonctions de callback Moodle pour l'intégration de SimHub : navigation et service de
+// fichiers. La logique métier vit dans classes/local/, classes/persistent/ et
+// classes/record/.
 
 defined('MOODLE_INTERNAL') || die();
 
 /**
- * Ajoute SimHub à la navigation primaire pour les utilisateurs
- * disposant de la capacité local/simhub:view.
- *
- * TODO : différencier l'entrée de menu selon le profil (étudiant vs
- * gestionnaire) une fois les pages respectives développées.
+ * Ajoute SimHub à la navigation primaire pour les utilisateurs disposant de la capacité
+ * local/simhub:view, avec des sous-entrées conditionnées à la capacité de gestion
+ * correspondante (§11 : chaque profil ne voit que les pages qui le concernent).
  */
 function local_simhub_extend_navigation(global_navigation $nav) {
     global $PAGE;
@@ -117,12 +112,10 @@ function local_simhub_extend_navigation(global_navigation $nav) {
  * ressources d'atelier (PDF, vidéos, plans de salle...).
  *
  * Zones de fichiers prévues :
- *   - 'ressource'  : fichiers attachés à local_simhub_ressource.fileitemid
+ *   - 'ressource'  : fichiers attachés à local_simhub_ressource.fileitemid, avec contrôle
+ *                    de visibilité (une source éditable n'est jamais servie à un
+ *                    utilisateur sans local/simhub:manageressources, §6.2)
  *   - 'plan'       : image de plan de salle, local_simhub_atelier.planimageitemid
- *
- * TODO : implémenter le contrôle de visibilité (une ressource de type
- * "source_editable" ne doit jamais être servie à un utilisateur qui n'a
- * pas local/simhub:manageressources, cf. §6.2 du cahier des charges).
  */
 function local_simhub_pluginfile($course, $cm, $context, $filearea, $args, $forcedownload, array $options = []) {
     global $DB;

@@ -72,7 +72,7 @@ foreach (rattachement::get_pour_atelier($atelierid) as $r) {
     $table->data[] = [
         $r->courseid ?: '—',
         $r->anneeetude ? annee_resolver::get_label((int) $r->anneeetude) : '—',
-        $r->cohortid ? ($cohortoptions[$r->cohortid] ?? '#' . $r->cohortid) : '—',
+        $r->cohortid ? s($cohortoptions[$r->cohortid] ?? '#' . $r->cohortid) : '—',
         $r->caractere,
         s($r->niveauattendu ?? ''),
         html_writer::link($delurl, 'Retirer'),

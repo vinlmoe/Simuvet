@@ -50,6 +50,7 @@ if ($form->is_cancelled()) {
 
     if ($isnew) {
         $atelier->create();
+        // Le jeton QR (§7) est généré automatiquement par atelier::after_create().
         \local_simhub\event\atelier_created::create([
             'objectid' => $atelier->get('id'),
             'context' => $context,

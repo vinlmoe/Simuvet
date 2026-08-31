@@ -89,6 +89,9 @@ $string['event_asv_valide_animal'] = 'ASV act validated on a live animal';
 
 $string['manage_ateliers'] = 'Workshop management';
 $string['rattachements'] = 'Course links';
+$string['qr_lien_intro'] = 'This link opens the workshop sheet and starts a session on scan (§7). Encode it in a QR code generator to produce the printable image to stick on the workshop.';
+$string['qr_regenerer'] = 'Regenerate the link (invalidates the previously printed QR code)';
+$string['qr_pasdimage'] = 'This skeleton does not generate a printable QR image (Moodle ships no generation library): use the link above with an external QR code generator until a library is integrated.';
 $string['atelier_nouveau'] = 'New workshop';
 $string['atelier_modifier'] = 'Edit workshop';
 $string['atelier_enregistre'] = 'Workshop saved.';

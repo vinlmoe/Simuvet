@@ -47,6 +47,7 @@ local/simhub/
 │   ├── ateliers.php             Liste de gestion des fiches ateliers (§6)
 │   ├── atelier_edit.php         Création/modification, gestion du statut indisponible (§6.1)
 │   ├── atelier_plan.php          Positionnement du repère plan par simple clic (§5.4)
+│   ├── atelier_qr.php             Lien de scan QR d'un atelier, régénération (§7)
 │   ├── atelier_fiche_pdf.php     Export PDF imprimable d'une fiche atelier (§12.3)
 │   ├── parcours_attestation_pdf.php  Attestation PDF de fin de parcours, si 100% d'avancement (§8.1)
 │   ├── ressources.php            Liste des ressources d'un atelier (§6.2)
@@ -258,6 +259,54 @@ le schéma :
   niveau ASV en simulation **et** sur animal vivant (§9.1, §9.4
   "certification globale de fin de A3") — sinon la page affiche l'état
   d'avancement à la place du document.
+
+## Corrections d'une revue globale
+
+Une relecture complète du dépôt (imports de classes, chaînes de langue,
+capacités, échappement HTML, code mort) a permis de trouver et corriger
+plusieurs bugs réels, au-delà des simples ajustements de confort :
+
+- **Import de classe incorrect (fatal)** : trois fichiers
+  (`manage/ressources.php`, `manage/ressource_edit.php`,
+  `classes/form/ressource_form.php`) référençaient
+  `local_simhub\record\ressource`, une classe qui n'existe pas (la
+  bonne est `local_simhub\persistent\ressource`) — ces pages auraient
+  provoqué une erreur fatale "Class not found" à l'exécution.
+- **QR code jamais généré** : aucun code n'appelait jamais
+  `qrtoken::get_ou_creer()`, donc `qr.php` n'avait jamais de jeton à
+  reconnaître — un atelier ne pouvait en réalité jamais être scanné.
+  Corrigé via un hook `atelier::after_create()` (le `before_create()`
+  d'origine ne pouvait de toute façon pas fonctionner : l'id de
+  l'atelier n'existe pas encore à ce stade). Une page
+  `manage/atelier_qr.php` a été ajoutée pour retrouver/régénérer le
+  lien de scan (aucune bibliothèque de rendu d'image QR n'étant fournie
+  par Moodle, elle affiche le lien à encoder dans un générateur externe).
+- **Champ "échéance" invisible** : `manage/parcours_ateliers.php` lisait
+  un paramètre `echeance` côté serveur, mais le formulaire ne
+  comportait aucun champ pour le saisir — impossible à renseigner
+  depuis l'interface. Un champ date a été ajouté.
+- **Événement et clôture de session incohérents sans grille
+  d'auto-évaluation** : `session.php` déclenchait
+  `session_completed` uniquement quand une grille existait, jamais
+  sinon, et réécrivait `timeend` à chaque simple rechargement de la
+  page. Corrigé pour ne clôturer et déclencher l'événement qu'une seule
+  fois, avec ou sans grille.
+- **Nom de cohorte non échappé** dans `manage/rattachements.php`
+  (le tableau HTML de Moodle ne échappe pas ses cellules par défaut).
+- **Code mort** : `atelier::get_actifs()`, devenu obsolète depuis
+  l'introduction de `classes/local/atelier_filter.php`, n'était plus
+  appelé nulle part — supprimé plutôt que laissé comme piège pour un
+  futur mainteneur.
+- Nettoyage de commentaires/TODO obsolètes (`lib.php`, persistent
+  `atelier`) qui décrivaient un état antérieur du code déjà dépassé.
+
+Cette revue a aussi vérifié systématiquement : que chaque `use
+local_simhub\...` référence une classe qui existe réellement, que
+chaque `get_string()` (y compris à clé dynamique) a une entrée dans les
+deux fichiers de langue, que chaque capacité utilisée dans le code est
+bien déclarée dans `db/access.php` et réciproquement, et que les noms
+de table SQL utilisés correspondent au schéma — sans trouver d'autre
+divergence.
 
 ## Ce qui reste à faire
 

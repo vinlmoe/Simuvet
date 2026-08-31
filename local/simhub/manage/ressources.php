@@ -4,7 +4,7 @@
 require(__DIR__ . '/../../../config.php');
 
 use local_simhub\persistent\atelier;
-use local_simhub\record\ressource;
+use local_simhub\persistent\ressource;
 
 require_login();
 

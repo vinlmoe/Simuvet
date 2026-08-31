@@ -2,13 +2,13 @@
 // Création / modification d'une ressource pédagogique (§6.2), avec upload de fichier via
 // l'API filestorage de Moodle. L'itemid de la zone de fichiers 'ressource' est toujours
 // l'id de l'enregistrement local_simhub_ressource lui-même (cf. lib.php::local_simhub_pluginfile
-// et record\ressource::fileitemid), ce qui évite d'avoir à faire correspondre deux
+// et persistent\ressource::fileitemid), ce qui évite d'avoir à faire correspondre deux
 // identifiants différents.
 
 require(__DIR__ . '/../../../config.php');
 
 use local_simhub\persistent\atelier;
-use local_simhub\record\ressource;
+use local_simhub\persistent\ressource;
 use local_simhub\form\ressource_form;
 
 require_login();

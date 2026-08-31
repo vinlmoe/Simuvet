@@ -29,7 +29,8 @@ if ($action === 'ajouter') {
     $atelierid = required_param('atelierid', PARAM_INT);
     $ordre = optional_param('ordre', 0, PARAM_INT);
     $obligatoire = optional_param('obligatoire', 0, PARAM_BOOL);
-    $echeance = optional_param('echeance', 0, PARAM_INT);
+    $echeancedate = optional_param('echeance', '', PARAM_TEXT);
+    $echeance = $echeancedate !== '' ? strtotime($echeancedate) : 0;
 
     parc_atelier::ajouter($parcoursid, $atelierid, $ordre, (bool) $obligatoire, $echeance ?: null);
 
@@ -89,6 +90,11 @@ echo html_writer::end_tag('select');
 
 echo html_writer::empty_tag('input', [
     'type' => 'number', 'name' => 'ordre', 'placeholder' => 'Ordre', 'class' => 'form-control d-inline-block w-auto mr-2',
+]);
+
+echo html_writer::empty_tag('input', [
+    'type' => 'date', 'name' => 'echeance', 'title' => 'Échéance (optionnel)',
+    'class' => 'form-control d-inline-block w-auto mr-2',
 ]);
 
 echo html_writer::start_tag('label', ['class' => 'mr-2']);

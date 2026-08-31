@@ -104,8 +104,15 @@ echo $OUTPUT->header();
 
 if (!$modele) {
     // Pas de grille associée à cet atelier : on clôture directement la session (§7.2, la
-    // grille est optionnelle selon paramétrage).
-    $session->terminer();
+    // grille est optionnelle selon paramétrage). Ne termine (et ne déclenche l'événement)
+    // qu'une seule fois : revisiter cette page ne doit pas réécrire timeend à chaque affichage.
+    if ($session->get('statut') === session::STATUT_COMMENCE) {
+        $session->terminer();
+        \local_simhub\event\session_completed::create([
+            'objectid' => $session->get('id'),
+            'context' => $context,
+        ])->trigger();
+    }
     echo $OUTPUT->notification(get_string('atelier_enregistre', 'local_simhub'), \core\output\notification::NOTIFY_SUCCESS);
     echo $OUTPUT->continue_button(new moodle_url('/local/simhub/index.php'));
     echo $OUTPUT->footer();

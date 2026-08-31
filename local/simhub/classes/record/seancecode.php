@@ -29,7 +29,9 @@ class seancecode {
 
         $record = (object) [
             'salle' => $salle,
-            'code' => strtoupper(substr(str_replace(['0', 'O', '1', 'I'], '', \core\uuid::generate()), 0, 6)),
+            // Code court, lisible à voix haute : chiffres/lettres ambigus (0/O, 1/I) et
+            // tirets du UUID source retirés avant de tronquer aux 6 premiers caractères.
+            'code' => strtoupper(substr(str_replace(['0', 'O', '1', 'I', '-'], '', \core\uuid::generate()), 0, 6)),
             'validfrom' => $now,
             'validto' => $now + $duree,
             'createuruserid' => $createuruserid,

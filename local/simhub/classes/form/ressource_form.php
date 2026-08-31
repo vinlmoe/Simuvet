@@ -6,7 +6,7 @@ defined('MOODLE_INTERNAL') || die();
 
 require_once($CFG->libdir . '/formslib.php');
 
-use local_simhub\record\ressource;
+use local_simhub\persistent\ressource;
 
 /**
  * Formulaire d'ajout/modification d'une ressource pédagogique (§6.2).

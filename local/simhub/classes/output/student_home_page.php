@@ -40,6 +40,7 @@ class student_home_page implements renderable, templatable {
         global $DB;
 
         $envcode = $this->filter->envcode;
+        $anneeoptions = annee_resolver::get_options(false);
 
         // Base commune : tous les ateliers actifs de l'établissement, et le statut
         // personnel de l'étudiant sur chacun (§5.3), calculés une seule fois et réutilisés
@@ -181,8 +182,8 @@ class student_home_page implements renderable, templatable {
             ],
             'anneeoptions' => array_map(
                 fn($val, $label) => ['value' => $val, 'label' => $label, 'selected' => (string) $val === (string) $this->filter->anneeetude],
-                array_keys(annee_resolver::get_options(false)),
-                annee_resolver::get_options(false)
+                array_keys($anneeoptions),
+                $anneeoptions
             ),
             'strings' => [
                 'filtremotcle' => get_string('filtre_motcle', 'local_simhub'),
