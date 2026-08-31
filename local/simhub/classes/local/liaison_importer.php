@@ -65,7 +65,7 @@ class liaison_importer {
 
             rattachement::creer($atelier->get('id'), [
                 'courseid' => !empty($data['courseid']) ? (int) $data['courseid'] : null,
-                'anneeetude' => !empty($data['anneeetude']) ? (int) $data['anneeetude'] : null,
+                'anneeetude' => self::parse_annee($data['anneeetude'] ?? ''),
                 'cohortid' => !empty($data['cohortid']) ? (int) $data['cohortid'] : null,
                 'caractere' => !empty($data['caractere']) && stripos($data['caractere'], 'obl') !== false
                     ? rattachement::CARACTERE_OBLIGATOIRE : rattachement::CARACTERE_RECOMMANDE,
@@ -184,6 +184,23 @@ class liaison_importer {
         }
 
         return [$colmap, $lines, null];
+    }
+
+    /**
+     * Extrait une année d'étude (1 à 5) d'une valeur de cellule, qu'elle soit un chiffre
+     * brut ("3") ou une notation courante ("A3", "Année 3").
+     *
+     * @param string $value
+     * @return int|null
+     */
+    private static function parse_annee(string $value): ?int {
+        if (trim($value) === '') {
+            return null;
+        }
+        if (preg_match('/([1-5])/', $value, $matches)) {
+            return (int) $matches[1];
+        }
+        return null;
     }
 
     /**

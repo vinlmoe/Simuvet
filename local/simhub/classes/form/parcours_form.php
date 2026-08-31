@@ -6,6 +6,8 @@ defined('MOODLE_INTERNAL') || die();
 
 require_once($CFG->libdir . '/formslib.php');
 
+use local_simhub\local\annee_resolver;
+
 /**
  * Formulaire de création/modification d'un parcours pédagogique (§8).
  */
@@ -33,7 +35,12 @@ class parcours_form extends \moodleform {
         $mform->addElement('text', 'courseid', 'Id de l\'UC Moodle (optionnel)');
         $mform->setType('courseid', PARAM_INT);
 
-        $mform->addElement('text', 'anneeetude', get_string('filtre_annee', 'local_simhub') . ' (optionnel)');
+        $mform->addElement(
+            'select',
+            'anneeetude',
+            get_string('filtre_annee', 'local_simhub') . ' (optionnel)',
+            annee_resolver::get_options()
+        );
         $mform->setType('anneeetude', PARAM_INT);
 
         $mform->addElement('text', 'cohortid', 'Id de la cohorte Moodle (optionnel)');

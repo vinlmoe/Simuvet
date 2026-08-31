@@ -8,6 +8,7 @@ require(__DIR__ . '/../../../config.php');
 
 use local_simhub\persistent\atelier;
 use local_simhub\record\rattachement;
+use local_simhub\local\annee_resolver;
 
 require_login();
 
@@ -67,7 +68,7 @@ foreach (rattachement::get_pour_atelier($atelierid) as $r) {
     ]);
     $table->data[] = [
         $r->courseid ?: '—',
-        $r->anneeetude ?: '—',
+        $r->anneeetude ? annee_resolver::get_label((int) $r->anneeetude) : '—',
         $r->cohortid ?: '—',
         $r->caractere,
         s($r->niveauattendu ?? ''),
@@ -90,7 +91,13 @@ echo html_writer::end_div();
 
 echo html_writer::start_div('form-group');
 echo html_writer::tag('label', get_string('filtre_annee', 'local_simhub') . ' (optionnel)');
-echo html_writer::empty_tag('input', ['type' => 'number', 'name' => 'anneeetude', 'class' => 'form-control d-inline-block w-auto mr-2']);
+echo html_writer::select(
+    annee_resolver::get_options(),
+    'anneeetude',
+    '',
+    false,
+    ['class' => 'form-control d-inline-block w-auto mr-2']
+);
 echo html_writer::end_div();
 
 echo html_writer::start_div('form-group');

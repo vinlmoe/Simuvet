@@ -11,7 +11,9 @@ use local_simhub\persistent\session;
 use local_simhub\record\ae_reponse;
 use local_simhub\record\indispo;
 use local_simhub\record\asv_valsim;
+use local_simhub\record\rattachement;
 use local_simhub\persistent\asv_acte;
+use local_simhub\local\annee_resolver;
 use renderable;
 use templatable;
 
@@ -116,6 +118,18 @@ class student_home_page implements renderable, templatable {
             }
         }
 
+        // 7. Recommandés pour mon année : ateliers rattachés à l'année d'étude déduite des
+        // groupes Moodle de l'étudiant (§5.1), pas encore réalisés.
+        $recommandesannee = [];
+        $annee = annee_resolver::get_annee_etudiant($this->userid);
+        if ($annee !== null) {
+            foreach (rattachement::get_pour_annee($annee) as $r) {
+                if (isset($cardsbyid[$r->atelierid]) && $statutsparid[$r->atelierid] === 'pascommence') {
+                    $recommandesannee[$r->atelierid] = $cardsbyid[$r->atelierid];
+                }
+            }
+        }
+
         // 3. Parcours ASV : résumé rapide (nombre d'actes validés / total du référentiel).
         $asvtotal = $envcode !== '' ? count(asv_acte::get_referentiel($envcode)) : 0;
         $asvvalides = count(asv_valsim::get_actes_valides($this->userid));
@@ -140,6 +154,10 @@ class student_home_page implements renderable, templatable {
             'areprendre' => array_values($areprendre),
             'hasareprendre' => !empty($areprendre),
 
+            'recommandesannee' => array_values($recommandesannee),
+            'hasrecommandesannee' => !empty($recommandesannee),
+            'anneelabel' => $annee !== null ? annee_resolver::get_label($annee) : '',
+
             'parcoursencours' => $parcoursencours,
             'hasparcoursencours' => !empty($parcoursencours),
 
@@ -158,13 +176,20 @@ class student_home_page implements renderable, templatable {
                 'espece' => s($this->filter->espece),
                 'niveaudifficulte' => s($this->filter->niveaudifficulte),
                 'dureemax' => $this->filter->dureemax ?: '',
+                'anneeetude' => $this->filter->anneeetude ?: '',
             ],
+            'anneeoptions' => array_map(
+                fn($val, $label) => ['value' => $val, 'label' => $label, 'selected' => (string) $val === (string) $this->filter->anneeetude],
+                array_keys(annee_resolver::get_options(false)),
+                annee_resolver::get_options(false)
+            ),
             'strings' => [
                 'filtremotcle' => get_string('filtre_motcle', 'local_simhub'),
                 'filtrediscipline' => get_string('filtre_discipline', 'local_simhub'),
                 'filtreespece' => get_string('filtre_espece', 'local_simhub'),
                 'filtreniveau' => get_string('filtre_niveau', 'local_simhub'),
                 'filtreduree' => get_string('filtre_duree', 'local_simhub'),
+                'filtreannee' => get_string('filtre_annee', 'local_simhub'),
                 'filtreappliquer' => get_string('filtre_appliquer', 'local_simhub'),
                 'filtrereinitialiser' => get_string('filtre_reinitialiser', 'local_simhub'),
                 'boutonlocalisation' => get_string('bouton_localisation', 'local_simhub'),
@@ -176,6 +201,7 @@ class student_home_page implements renderable, templatable {
                 'sectionasv' => get_string('section_asv', 'local_simhub'),
                 'sectioncommences' => get_string('section_commences', 'local_simhub'),
                 'sectionareprendre' => get_string('section_areprendre', 'local_simhub'),
+                'sectionrecommandes' => get_string('section_recommandes', 'local_simhub', $annee !== null ? annee_resolver::get_label($annee) : ''),
                 'sectiontous' => get_string('section_tous', 'local_simhub'),
                 'voirasv' => get_string('asv_parcours', 'local_simhub'),
             ],

@@ -3,7 +3,8 @@
 
     Accueil étudiant personnalisé (§5.1) : sept sections construites sur le même modèle de
     carte atelier (§5.3) - à faire pour mes UC, mes parcours en cours, parcours ASV,
-    ateliers commencés, ateliers à reprendre, et la liste complète avec filtres (§5.2).
+    ateliers commencés, ateliers à reprendre, recommandés pour mon année, et la liste
+    complète avec filtres (§5.2).
 
     Context variables required for this template:
     * title, strings
@@ -12,6 +13,7 @@
     * asvtotal, asvvalides, hasasv, urlasv
     * commences, hascommences
     * areprendre, hasareprendre
+    * recommandesannee, hasrecommandesannee, anneelabel
     * ateliers, hasateliers, nomessage, formurl, filtre
 }}
 <div class="local-simhub-studenthome">
@@ -51,6 +53,13 @@
     </div>
     {{/hasareprendre}}
 
+    {{#hasrecommandesannee}}
+    <h4>{{strings.sectionrecommandes}}</h4>
+    <div class="local-simhub-cartes mb-4">
+        {{#recommandesannee}}{{> local_simhub/atelier_card }}{{/recommandesannee}}
+    </div>
+    {{/hasrecommandesannee}}
+
     <h4>{{strings.sectiontous}}</h4>
 
     <form method="get" action="{{formurl}}" class="local-simhub-filtres form-inline mb-3">
@@ -77,6 +86,14 @@
         <div class="form-group mr-2 mb-2">
             <input type="number" name="dureemax" class="form-control" placeholder="{{strings.filtreduree}}"
                    value="{{filtre.dureemax}}" min="0">
+        </div>
+        <div class="form-group mr-2 mb-2">
+            <select name="anneeetude" class="form-control">
+                <option value="">{{strings.filtreannee}}</option>
+                {{#anneeoptions}}
+                <option value="{{value}}" {{#selected}}selected{{/selected}}>{{label}}</option>
+                {{/anneeoptions}}
+            </select>
         </div>
         <div class="form-group mb-2">
             <button type="submit" class="btn btn-primary mr-1">{{strings.filtreappliquer}}</button>

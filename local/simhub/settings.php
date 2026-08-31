@@ -45,6 +45,16 @@ if ($hassiteconfig) {
         ''
     ));
 
+    // Année d'étude déduite des groupes Moodle (§5.1 "recommandés pour mon année") : chaque
+    // école nomme ses groupes différemment, d'où une expression régulière paramétrable
+    // plutôt qu'une convention imposée. Voir classes/local/annee_resolver.php.
+    $settings->add(new admin_setting_configtext(
+        'local_simhub/groupeanneeregex',
+        get_string('setting_groupeanneeregex', 'local_simhub'),
+        get_string('setting_groupeanneeregex_desc', 'local_simhub'),
+        \local_simhub\local\annee_resolver::DEFAULT_PATTERN
+    ));
+
     // Logo de l'établissement (§4 "Paramétrable ENVF") : utilisé en en-tête des documents
     // PDF (attestations, livret ASV, fiches ateliers) plutôt qu'un logo générique SimHub.
     $settings->add(new admin_setting_configstoredfile(

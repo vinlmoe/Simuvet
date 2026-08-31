@@ -81,6 +81,7 @@ local/simhub/
 │   ├── local/atelier_importer.php Import CSV souple des ateliers (§12.1)
 │   ├── local/liaison_importer.php Import CSV des rattachements et de la composition de parcours
 │   ├── local/pdf_helper.php       En-tête PDF commun (logo + nom d'établissement, §4)
+│   ├── local/annee_resolver.php   Année d'étude (A1-A5) déduite des groupes Moodle (§5.1)
 │   ├── output/                    Renderer + classe templatable de l'accueil étudiant
 │   ├── form/atelier_form.php      Formulaire moodleform de la fiche atelier
 │   ├── event/                     Événements métier (atelier créé, session, validations ASV)
@@ -151,10 +152,19 @@ le schéma :
   faire pour mes UC (via les rattachements et les UC où l'étudiant est
   inscrit), mes parcours en cours (avec % d'avancement), parcours ASV
   (résumé actes validés/total), ateliers déjà commencés, ateliers à
-  reprendre, et enfin la liste complète avec formulaire de filtres
-  (mot-clé, discipline, espèce, niveau, durée max) + cartes atelier
-  avec statut personnel et boutons localisation/ressources/commencer-
-  terminer (§5.2, §5.3).
+  reprendre, recommandés pour mon année (voir ci-dessous), et enfin la
+  liste complète avec formulaire de filtres (mot-clé, discipline,
+  espèce, niveau, durée max, année) + cartes atelier avec statut
+  personnel et boutons localisation/ressources/commencer-terminer
+  (§5.2, §5.3).
+- **Année d'étude déduite des groupes Moodle** (`classes/local/annee_resolver.php`) :
+  Moodle n'ayant pas de champ standard pour l'année d'étude, elle est
+  déduite du nom des groupes de l'étudiant via une expression régulière
+  paramétrable (`local_simhub/groupeanneeregex`, reconnaît par défaut
+  "A1".."A5" ou "Année 1".."Année 5"). Les rattachements et parcours
+  utilisent désormais un sélecteur A1 à A5 plutôt qu'un champ numérique
+  libre (`manage/rattachements.php`, `classes/form/parcours_form.php`),
+  et l'import CSV des rattachements reconnaît les mêmes notations.
 - **Fiche atelier** (`atelier.php`) : bloc localisation (salle, zone,
   poste, plan + repère, §5.4) et bloc ressources visibles étudiant
   (§5.5), en respectant la visibilité `interne` des sources éditables
@@ -224,12 +234,12 @@ le schéma :
 - [ ] Export XLSX (seul CSV et PDF sont couverts pour l'instant).
 
 **Ergonomie et robustesse**
-- [ ] "Recommandés pour mon année" (§5.1) n'est pas encore une section
-      distincte : l'année d'étude de l'étudiant n'a pas de source fiable
-      dans ce squelette (pas de champ standard Moodle) ; à câbler une
-      fois la source retenue (profil personnalisé, cohorte annuelle...).
 - [ ] Web services / API externe (`classes/external/`) pour un futur
       composant mobile et pour la synchronisation QR code hors-ligne.
+- [ ] UI d'administration pour affecter/consulter les groupes Moodle
+      "année" eux-mêmes (SimHub ne fait que lire le nom des groupes
+      existants — la création/l'affectation des groupes A1-A5 reste à
+      faire côté Moodle standard, hors périmètre de ce plugin).
 
 **V1+ souhaitable (§13)**
 - [ ] Contrôle anti-faux-scan renforcé (réseau local / code de séance

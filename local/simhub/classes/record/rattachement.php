@@ -62,6 +62,19 @@ class rattachement {
     }
 
     /**
+     * Rattachements pour une année d'étude donnée (A1 à A5), utilisés par l'accueil
+     * étudiant pour la section "Ateliers recommandés pour mon année" (§5.1).
+     *
+     * @param int $anneeetude
+     * @return \stdClass[]
+     */
+    public static function get_pour_annee(int $anneeetude): array {
+        global $DB;
+
+        return $DB->get_records(self::TABLE, ['anneeetude' => $anneeetude]);
+    }
+
+    /**
      * Supprime un rattachement.
      *
      * @param int $id
