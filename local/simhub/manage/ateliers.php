@@ -1,0 +1,68 @@
+<?php
+// Liste de gestion des fiches ateliers (§6, profil "Responsable / gestionnaire de salle").
+//
+// Vue volontairement simple (tableau HTML natif) : la carte étudiante et ses filtres
+// riches (§5.2/§5.3) sont une expérience distincte, développée dans index.php /
+// classes/output. Ici, l'enjeu est l'administration : voir tous les ateliers quel que
+// soit leur statut, et accéder rapidement à l'édition ou au changement de statut.
+
+require(__DIR__ . '/../../../config.php');
+
+use local_simhub\persistent\atelier;
+use local_simhub\record\indispo;
+
+require_login();
+
+$context = context_system::instance();
+require_capability('local/simhub:manageateliers', $context);
+
+$envcode = optional_param('envcode', get_config('local_simhub', 'envcode') ?: '', PARAM_ALPHANUMEXT);
+
+$PAGE->set_context($context);
+$PAGE->set_url(new moodle_url('/local/simhub/manage/ateliers.php'));
+$PAGE->set_pagelayout('admin');
+$PAGE->set_title(get_string('manage_ateliers', 'local_simhub'));
+$PAGE->set_heading(get_string('manage_ateliers', 'local_simhub'));
+
+echo $OUTPUT->header();
+
+echo $OUTPUT->single_button(
+    new moodle_url('/local/simhub/manage/atelier_edit.php'),
+    get_string('atelier_nouveau', 'local_simhub')
+);
+
+$params = $envcode !== '' ? ['envcode' => $envcode] : [];
+$ateliers = atelier::get_records($params, 'nomcourt');
+
+$table = new html_table();
+$table->head = [
+    get_string('champ_numero', 'local_simhub'),
+    get_string('champ_nomcourt', 'local_simhub'),
+    get_string('champ_statut', 'local_simhub'),
+    get_string('champ_salle', 'local_simhub'),
+    '',
+];
+
+foreach ($ateliers as $atelier) {
+    $statutlabel = get_string('statut_' . $atelier->get('statut'), 'local_simhub');
+    if ($atelier->get('statut') === atelier::STATUT_INDISPONIBLE) {
+        $encours = indispo::get_en_cours($atelier->get('id'));
+        if ($encours && !empty($encours->commentaire)) {
+            $statutlabel .= ' — ' . s($encours->commentaire);
+        }
+    }
+
+    $editurl = new moodle_url('/local/simhub/manage/atelier_edit.php', ['id' => $atelier->get('id')]);
+
+    $table->data[] = [
+        s($atelier->get('numero')),
+        s($atelier->get('nomcourt')),
+        $statutlabel,
+        s($atelier->get('salle')),
+        html_writer::link($editurl, get_string('atelier_modifier', 'local_simhub')),
+    ];
+}
+
+echo html_writer::table($table);
+
+echo $OUTPUT->footer();

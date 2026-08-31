@@ -31,6 +31,27 @@ function local_simhub_extend_navigation(global_navigation $nav) {
         'local_simhub',
         new pix_icon('i/report', '')
     );
+
+    if (has_capability('local/simhub:manageateliers', $context)) {
+        $node->add(
+            get_string('manage_ateliers', 'local_simhub'),
+            new moodle_url('/local/simhub/manage/ateliers.php'),
+            navigation_node::TYPE_CUSTOM,
+            null,
+            'local_simhub_manage'
+        );
+    }
+
+    if (has_capability('local/simhub:manageasv', $context) || has_capability('local/simhub:validateasvsimulation', $context)) {
+        $node->add(
+            get_string('asv_parcours', 'local_simhub'),
+            new moodle_url('/local/simhub/asv/index.php'),
+            navigation_node::TYPE_CUSTOM,
+            null,
+            'local_simhub_asv'
+        );
+    }
+
     $nav->add_node($node);
 }
 
@@ -60,9 +81,18 @@ function local_simhub_pluginfile($course, $cm, $context, $filearea, $args, $forc
         return false;
     }
 
-    // TODO : vérifier la visibilité de la ressource avant de servir le
-    // fichier (cf. table local_simhub_ressource.visibilite), en plus du
-    // contrôle de capacité déjà exercé par require_login().
+    $itemid = (int) reset($args);
+
+    if ($filearea === 'ressource') {
+        $ressource = $DB->get_record('local_simhub_ressource', ['fileitemid' => $itemid]);
+        // Une source éditable (§6.2) n'est jamais servie à un utilisateur qui n'a pas la
+        // capacité de gérer les ressources, quel que soit son droit de consultation générale.
+        if ($ressource
+                && $ressource->visibilite === \local_simhub\persistent\ressource::VISIBILITE_INTERNE
+                && !has_capability('local/simhub:manageressources', $context)) {
+            return false;
+        }
+    }
 
     $itemid = array_shift($args);
     $filename = array_pop($args);

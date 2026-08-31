@@ -1,0 +1,106 @@
+<?php
+
+namespace local_simhub\record;
+
+defined('MOODLE_INTERNAL') || die();
+
+/**
+ * Validation ASV sur animal vivant, potentiellement par un validateur externe sans compte
+ * Moodle, via un lien à jeton (§9.3). Niveau de preuve volontairement simple : nom, prénom,
+ * date, case de certification, signature au doigt — pas de signature électronique qualifiée.
+ */
+class asv_valanimal {
+
+    const TABLE = 'local_simhub_asv_valanimal';
+
+    const STATUT_EN_ATTENTE = 'en_attente';
+    const STATUT_VALIDE = 'valide';
+
+    /**
+     * Crée une demande de validation animal vivant et son lien à jeton, pour un étudiant/acte.
+     *
+     * @param int $userid Étudiant.
+     * @param int $acteid
+     * @return \stdClass Enregistrement créé (contient le token).
+     */
+    public static function creer_demande(int $userid, int $acteid): \stdClass {
+        global $DB;
+
+        $expiry = (int) (get_config('local_simhub', 'asvtokenexpiry') ?: 7 * DAYSECS);
+        $record = (object) [
+            'userid' => $userid,
+            'acteid' => $acteid,
+            'datevalidation' => null,
+            'nomvalidateur' => null,
+            'prenomvalidateur' => null,
+            'certificationcochee' => 0,
+            'signature' => null,
+            'statut' => self::STATUT_EN_ATTENTE,
+            'token' => \core\uuid::generate(),
+            'tokenexpire' => time() + $expiry,
+            'timecreated' => time(),
+        ];
+        $record->id = $DB->insert_record(self::TABLE, $record);
+        return $record;
+    }
+
+    /**
+     * Retrouve une demande par son jeton, si elle n'a pas expiré.
+     *
+     * @param string $token
+     * @return \stdClass|false
+     */
+    public static function get_par_token(string $token) {
+        global $DB;
+
+        $record = $DB->get_record(self::TABLE, ['token' => $token]);
+        if (!$record) {
+            return false;
+        }
+        if ($record->tokenexpire && $record->tokenexpire < time()) {
+            return false;
+        }
+        return $record;
+    }
+
+    /**
+     * Enregistre la validation par le validateur (externe ou non), via le formulaire court du §9.3.
+     *
+     * @param string $token
+     * @param string $nom
+     * @param string $prenom
+     * @param bool $certificationcochee Case attestant que le validateur est vétérinaire/encadrant autorisé.
+     * @param string $signature Tracé de signature (SVG/PNG base64).
+     * @return bool
+     */
+    public static function valider(string $token, string $nom, string $prenom,
+            bool $certificationcochee, string $signature): bool {
+        global $DB;
+
+        $record = self::get_par_token($token);
+        if (!$record || !$certificationcochee) {
+            return false;
+        }
+
+        $record->nomvalidateur = $nom;
+        $record->prenomvalidateur = $prenom;
+        $record->certificationcochee = 1;
+        $record->signature = $signature;
+        $record->datevalidation = time();
+        $record->statut = self::STATUT_VALIDE;
+        $DB->update_record(self::TABLE, $record);
+        return true;
+    }
+
+    /**
+     * Validations animal vivant d'un étudiant.
+     *
+     * @param int $userid
+     * @return \stdClass[]
+     */
+    public static function get_pour_etudiant(int $userid): array {
+        global $DB;
+
+        return $DB->get_records(self::TABLE, ['userid' => $userid]);
+    }
+}

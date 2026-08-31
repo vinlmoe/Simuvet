@@ -1,0 +1,148 @@
+<?php
+
+defined('MOODLE_INTERNAL') || die();
+
+$string['pluginname'] = 'SimHub';
+$string['simhub:studenthome'] = 'My workshops';
+
+$string['setting_envcode'] = 'Institution code';
+$string['setting_envcode_desc'] = 'Short code identifying the veterinary school (e.g. ENVA, ENVT, ONIRIS, VETAGROSUP).';
+$string['setting_seancecodeduration'] = 'Session code validity';
+$string['setting_seancecodeduration_desc'] = 'How long a temporary session code (anti-fake-scan control) stays valid.';
+$string['setting_asvtokenexpiry'] = 'ASV external validation link validity';
+$string['setting_asvtokenexpiry_desc'] = 'How long the link sent to an external validator (vet, placement supervisor...) remains active.';
+$string['setting_controlepresenceactif'] = 'Enable anti-fake-scan control';
+$string['setting_controlepresenceactif_desc'] = 'If disabled, no presence check is required when scanning a workshop QR code.';
+
+$string['statut_actif'] = 'Active';
+$string['statut_non_utilise'] = 'Not in use';
+$string['statut_indisponible'] = 'Unavailable';
+$string['statut_archive'] = 'Archived';
+
+$string['niveau_reussi'] = 'Achieved';
+$string['niveau_a_consolider'] = 'To consolidate';
+$string['niveau_a_reprendre'] = 'To redo';
+
+$string['simhub:view'] = 'View SimHub';
+$string['simhub:startsession'] = 'Start / end a workshop';
+$string['simhub:submitautoeval'] = 'Submit a guided self-assessment';
+$string['simhub:viewprogression'] = 'View student progression';
+$string['simhub:validatesession'] = 'Validate a workshop completion';
+$string['simhub:exportsuivi'] = 'Export tracking data';
+$string['simhub:manageparcours'] = 'Manage learning pathways';
+$string['simhub:managerattachement'] = 'Manage pedagogical links';
+$string['simhub:manageateliers'] = 'Manage workshop records';
+$string['simhub:manageressources'] = 'Manage learning resources';
+$string['simhub:managestatuts'] = 'Manage statuses and unavailability';
+$string['simhub:manageqrcodes'] = 'Manage QR codes';
+$string['simhub:importexport'] = 'Import / export data';
+$string['simhub:manageasv'] = 'Administer the ASV module';
+$string['simhub:validateasvsimulation'] = 'Validate an ASV act in simulation';
+$string['simhub:configure'] = 'Configure SimHub';
+
+$string['privacy:metadata:local_simhub_session'] = 'History of simulation workshops completed by the user.';
+$string['privacy:metadata:local_simhub_session:userid'] = 'The id of the user who completed the workshop.';
+$string['privacy:metadata:local_simhub_session:atelierid'] = 'The workshop involved.';
+$string['privacy:metadata:local_simhub_session:timestart'] = 'The date the session started.';
+$string['privacy:metadata:local_simhub_session:timeend'] = 'The date the session ended.';
+$string['privacy:metadata:local_simhub_session:statut'] = 'The session status (started, completed, certified, unfinished).';
+
+$string['privacy:metadata:local_simhub_ae_reponse'] = 'User answers to self-assessment criteria.';
+$string['privacy:metadata:local_simhub_ae_reponse:sessionid'] = 'The session involved.';
+$string['privacy:metadata:local_simhub_ae_reponse:critereid'] = 'The criterion assessed.';
+$string['privacy:metadata:local_simhub_ae_reponse:niveau'] = 'The level reached (achieved, to consolidate, to redo).';
+
+$string['privacy:metadata:local_simhub_ae_bilan'] = 'End-of-workshop self-assessment summaries written by the user.';
+$string['privacy:metadata:local_simhub_ae_bilan:sessionid'] = 'The session involved.';
+$string['privacy:metadata:local_simhub_ae_bilan:pointmaitrise'] = 'The best-mastered point, as written by the user.';
+$string['privacy:metadata:local_simhub_ae_bilan:pointaretravailler'] = 'The point to work on, as written by the user.';
+$string['privacy:metadata:local_simhub_ae_bilan:pointattention'] = 'The point of attention for next time, as written by the user.';
+
+$string['privacy:metadata:local_simhub_val_encadrant'] = 'Workshop validations performed by a supervisor.';
+$string['privacy:metadata:local_simhub_val_encadrant:sessionid'] = 'The session validated.';
+$string['privacy:metadata:local_simhub_val_encadrant:validateuruserid'] = 'The supervisor who performed the validation.';
+$string['privacy:metadata:local_simhub_val_encadrant:statut'] = 'The validation outcome (validated, rejected).';
+$string['privacy:metadata:local_simhub_val_encadrant:commentaire'] = 'The supervisor\'s free-text comment.';
+
+$string['privacy:metadata:local_simhub_asv_valsim'] = 'ASV simulation validations.';
+$string['privacy:metadata:local_simhub_asv_valsim:userid'] = 'The student concerned by the validation.';
+$string['privacy:metadata:local_simhub_asv_valsim:acteid'] = 'The ASV act concerned.';
+$string['privacy:metadata:local_simhub_asv_valsim:validateuruserid'] = 'The supervisor who validated the act.';
+$string['privacy:metadata:local_simhub_asv_valsim:statut'] = 'The validation outcome.';
+
+$string['privacy:metadata:local_simhub_asv_valanimal'] = 'ASV live-animal validation data, including external validator identity and signature.';
+$string['privacy:metadata:local_simhub_asv_valanimal:userid'] = 'The student concerned by the validation.';
+$string['privacy:metadata:local_simhub_asv_valanimal:acteid'] = 'The ASV act concerned.';
+$string['privacy:metadata:local_simhub_asv_valanimal:nomvalidateur'] = 'The validator\'s last name (possibly external to Moodle).';
+$string['privacy:metadata:local_simhub_asv_valanimal:prenomvalidateur'] = 'The validator\'s first name.';
+$string['privacy:metadata:local_simhub_asv_valanimal:signature'] = 'The validator\'s signature trace.';
+
+$string['event_atelier_created'] = 'Workshop created';
+$string['event_session_started'] = 'Workshop session started';
+$string['event_session_completed'] = 'Workshop session completed';
+$string['event_asv_valide_simulation'] = 'ASV act validated in simulation';
+$string['event_asv_valide_animal'] = 'ASV act validated on a live animal';
+
+$string['manage_ateliers'] = 'Workshop management';
+$string['atelier_nouveau'] = 'New workshop';
+$string['atelier_modifier'] = 'Edit workshop';
+$string['atelier_enregistre'] = 'Workshop saved.';
+$string['atelier_supprime'] = 'Workshop deleted.';
+$string['champ_numero'] = 'Number (invariant)';
+$string['champ_nomcourt'] = 'Short name';
+$string['champ_nomlong'] = 'Long name';
+$string['champ_descriptioncourte'] = 'Short description';
+$string['champ_discipline'] = 'Discipline';
+$string['champ_espece'] = 'Species';
+$string['champ_niveaudifficulte'] = 'Difficulty level';
+$string['champ_dureeindicative'] = 'Estimated duration (minutes)';
+$string['champ_statut'] = 'Status';
+$string['champ_envcode'] = 'Institution';
+$string['champ_salle'] = 'Room';
+$string['champ_zone'] = 'Zone';
+$string['champ_codeposte'] = 'Workstation code / number';
+$string['champ_indicationtextuelle'] = 'Text hint';
+$string['champ_commentaireadmin'] = 'Comment (internal)';
+$string['champ_commentaire_indispo'] = 'Comment about the unavailability';
+$string['champ_echeance_indispo'] = 'Estimated resolution date';
+$string['champ_pointmaitrise'] = 'Best-mastered point';
+$string['champ_pointaretravailler'] = 'Point to work on';
+$string['champ_pointattention'] = 'Point of attention for next time';
+
+$string['filtre_uc'] = 'Course';
+$string['filtre_parcours'] = 'Pathway';
+$string['filtre_annee'] = 'Study year';
+$string['filtre_discipline'] = 'Discipline';
+$string['filtre_espece'] = 'Species';
+$string['filtre_niveau'] = 'Difficulty level';
+$string['filtre_duree'] = 'Duration';
+$string['filtre_statutperso'] = 'Personal status';
+$string['filtre_motcle'] = 'Keyword';
+$string['filtre_appliquer'] = 'Filter';
+$string['filtre_reinitialiser'] = 'Reset';
+$string['statutperso_pascommence'] = 'Not started';
+$string['statutperso_commence'] = 'Started';
+$string['statutperso_realise'] = 'Completed';
+$string['statutperso_valide'] = 'Validated';
+$string['statutperso_areprendre'] = 'To redo';
+$string['aucun_atelier'] = 'No workshop matches these criteria.';
+$string['bouton_localisation'] = 'Show location';
+$string['bouton_ressources'] = 'View resources';
+$string['bouton_commencer'] = 'Start';
+$string['bouton_terminer'] = 'Finish workshop and self-assess';
+
+$string['asv_parcours'] = 'ASV pathway';
+$string['asv_livret'] = 'ASV competency logbook';
+$string['asv_valider_simulation'] = 'Validate in simulation';
+$string['asv_demander_validation_animal'] = 'Request a live-animal validation';
+$string['asv_lien_valanimal'] = 'Live-animal validation link';
+$string['asv_formulaire_validateur_titre'] = 'Live-animal act validation';
+$string['asv_champ_nom'] = 'Last name';
+$string['asv_champ_prenom'] = 'First name';
+$string['asv_champ_certification'] = 'I certify that I am a veterinarian or an authorised supervisor for this act.';
+$string['asv_champ_signature'] = 'Signature';
+$string['asv_valide_avec_succes'] = 'Validation recorded. Thank you.';
+$string['asv_lien_invalide'] = 'This validation link is invalid or has expired.';
+$string['asv_niveau_a1'] = 'A1';
+$string['asv_niveau_a2'] = 'A2';
+$string['asv_niveau_a3'] = 'A3';

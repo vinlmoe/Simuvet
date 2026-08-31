@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8" ?>
-<XMLDB PATH="local/simhub/db" VERSION="20260831" COMMENT="XMLDB file for Moodle local/simhub - squelette V0"
+<XMLDB PATH="local/simhub/db" VERSION="20260831" COMMENT="XMLDB file for Moodle local/simhub"
        xsi:noNamespaceSchemaLocation="../../../lib/xmldb/xmldb.xsd" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
   <TABLES>
 
@@ -80,10 +80,12 @@
         <FIELD NAME="ordre" TYPE="int" LENGTH="6" NOTNULL="true" DEFAULT="0"/>
         <FIELD NAME="timecreated" TYPE="int" LENGTH="10" NOTNULL="true"/>
         <FIELD NAME="timemodified" TYPE="int" LENGTH="10" NOTNULL="true"/>
+        <FIELD NAME="usermodified" TYPE="int" LENGTH="10" NOTNULL="true"/>
       </FIELDS>
       <KEYS>
         <KEY NAME="primary" TYPE="primary" FIELDS="id"/>
         <KEY NAME="atelierid_fk" TYPE="foreign" FIELDS="atelierid" REFTABLE="local_simhub_atelier" REFFIELDS="id"/>
+        <KEY NAME="usermodified_fk" TYPE="foreign" FIELDS="usermodified" REFTABLE="user" REFFIELDS="id"/>
       </KEYS>
       <INDEXES>
         <INDEX NAME="type_visibilite" UNIQUE="false" FIELDS="type, visibilite"/>
@@ -172,12 +174,14 @@
         <FIELD NAME="controlepresence" TYPE="char" LENGTH="20" NOTNULL="false" COMMENT="reseau_local|code_seance|validation_encadrant|non_verifie (§7.3)"/>
         <FIELD NAME="timecreated" TYPE="int" LENGTH="10" NOTNULL="true"/>
         <FIELD NAME="timemodified" TYPE="int" LENGTH="10" NOTNULL="true"/>
+        <FIELD NAME="usermodified" TYPE="int" LENGTH="10" NOTNULL="true" COMMENT="Dernier auteur de la modification (étudiant ou encadrant validant)"/>
       </FIELDS>
       <KEYS>
         <KEY NAME="primary" TYPE="primary" FIELDS="id"/>
         <KEY NAME="userid_fk" TYPE="foreign" FIELDS="userid" REFTABLE="user" REFFIELDS="id"/>
         <KEY NAME="atelierid_fk" TYPE="foreign" FIELDS="atelierid" REFTABLE="local_simhub_atelier" REFFIELDS="id"/>
         <KEY NAME="parcoursid_fk" TYPE="foreign" FIELDS="parcoursid" REFTABLE="local_simhub_parcours" REFFIELDS="id"/>
+        <KEY NAME="usermodified_fk" TYPE="foreign" FIELDS="usermodified" REFTABLE="user" REFFIELDS="id"/>
       </KEYS>
       <INDEXES>
         <INDEX NAME="user_atelier" UNIQUE="false" FIELDS="userid, atelierid"/>
@@ -299,10 +303,12 @@
         <FIELD NAME="actif" TYPE="int" LENGTH="1" NOTNULL="true" DEFAULT="1"/>
         <FIELD NAME="timecreated" TYPE="int" LENGTH="10" NOTNULL="true"/>
         <FIELD NAME="timemodified" TYPE="int" LENGTH="10" NOTNULL="true"/>
+        <FIELD NAME="usermodified" TYPE="int" LENGTH="10" NOTNULL="true"/>
       </FIELDS>
       <KEYS>
         <KEY NAME="primary" TYPE="primary" FIELDS="id"/>
         <KEY NAME="ucid_fk" TYPE="foreign" FIELDS="ucid" REFTABLE="course" REFFIELDS="id"/>
+        <KEY NAME="usermodified_fk" TYPE="foreign" FIELDS="usermodified" REFTABLE="user" REFFIELDS="id"/>
       </KEYS>
       <INDEXES>
         <INDEX NAME="code_env" UNIQUE="true" FIELDS="envcode, code"/>
