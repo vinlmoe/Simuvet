@@ -38,6 +38,24 @@ if ($hassiteconfig) {
         0
     ));
 
+    $settings->add(new admin_setting_configtext(
+        'local_simhub/etablissementnom',
+        get_string('setting_etablissementnom', 'local_simhub'),
+        get_string('setting_etablissementnom_desc', 'local_simhub'),
+        ''
+    ));
+
+    // Logo de l'établissement (§4 "Paramétrable ENVF") : utilisé en en-tête des documents
+    // PDF (attestations, livret ASV, fiches ateliers) plutôt qu'un logo générique SimHub.
+    $settings->add(new admin_setting_configstoredfile(
+        'local_simhub/logo',
+        get_string('setting_logo', 'local_simhub'),
+        get_string('setting_logo_desc', 'local_simhub'),
+        'logo',
+        0,
+        ['maxfiles' => 1, 'accepted_types' => ['.png', '.jpg', '.jpeg', '.svg']]
+    ));
+
     // TODO : ajouter ici les référentiels paramétrables par école
     // (disciplines, espèces, salles/zones) plutôt qu'en dur dans le
     // code, conformément au principe "Paramétrable ENVF" (§4). Une UI

@@ -76,6 +76,7 @@ foreach ($atelierids as $aid) {
     $head[] = s($atelier->get('nomcourt'));
 }
 $head[] = 'Avancement';
+$head[] = '';
 $table->head = $head;
 
 foreach ($users as $user) {
@@ -101,6 +102,16 @@ foreach ($users as $user) {
 
     $pct = round(100 * $realises / count($atelierids));
     $row[] = $pct . ' %';
+
+    if ($pct >= 100) {
+        $attestationurl = new moodle_url('/local/simhub/manage/parcours_attestation_pdf.php', [
+            'parcoursid' => $parcoursid, 'userid' => $user->id,
+        ]);
+        $row[] = html_writer::link($attestationurl, 'Attestation (PDF)');
+    } else {
+        $row[] = '';
+    }
+
     $table->data[] = $row;
 }
 

@@ -14,6 +14,10 @@ $string['setting_asvtokenexpiry'] = 'Durée de validité d\'un lien de validatio
 $string['setting_asvtokenexpiry_desc'] = 'Durée pendant laquelle le lien envoyé à un validateur externe (vétérinaire, maître de stage...) reste actif avant expiration du jeton.';
 $string['setting_controlepresenceactif'] = 'Activer le contrôle anti-faux-scan';
 $string['setting_controlepresenceactif_desc'] = 'Si désactivé, aucune vérification de présence n\'est demandée lors du scan d\'un QR code (fonctionnalité classée V1+ souhaitable, §13).';
+$string['setting_etablissementnom'] = 'Nom de l\'établissement';
+$string['setting_etablissementnom_desc'] = 'Nom complet affiché en en-tête des documents PDF (attestations, livret ASV, fiches ateliers), ex. "École Nationale Vétérinaire d\'Alfort".';
+$string['setting_logo'] = 'Logo de l\'établissement';
+$string['setting_logo_desc'] = 'Image affichée en en-tête des documents PDF générés par SimHub (attestations de fin de parcours, livret ASV, fiches ateliers). Formats acceptés : PNG, JPG, SVG.';
 
 // Statuts atelier.
 $string['statut_actif'] = 'Actif';

@@ -11,6 +11,7 @@ require_once($CFG->libdir . '/pdflib.php');
 use local_simhub\persistent\asv_acte;
 use local_simhub\record\asv_valsim;
 use local_simhub\record\asv_valanimal;
+use local_simhub\local\pdf_helper;
 
 require_login();
 
@@ -45,6 +46,7 @@ $pdf->SetTitle(get_string('asv_livret', 'local_simhub') . ' — ' . fullname($us
 $pdf->setPrintHeader(false);
 $pdf->setPrintFooter(false);
 $pdf->AddPage();
+pdf_helper::ajouter_entete($pdf);
 
 $pdf->SetFont('helvetica', 'B', 16);
 $pdf->Cell(0, 10, get_string('asv_livret', 'local_simhub'), 0, 1);

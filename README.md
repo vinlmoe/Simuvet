@@ -47,6 +47,7 @@ local/simhub/
 │   ├── atelier_edit.php         Création/modification, gestion du statut indisponible (§6.1)
 │   ├── atelier_plan.php          Positionnement du repère plan par simple clic (§5.4)
 │   ├── atelier_fiche_pdf.php     Export PDF imprimable d'une fiche atelier (§12.3)
+│   ├── parcours_attestation_pdf.php  Attestation PDF de fin de parcours, si 100% d'avancement (§8.1)
 │   ├── ressources.php            Liste des ressources d'un atelier (§6.2)
 │   ├── ressource_edit.php        Ajout/modification d'une ressource, avec upload de fichier
 │   ├── rattachements.php         Rattachement UC/année/cohorte d'un atelier hors parcours (§6)
@@ -61,7 +62,8 @@ local/simhub/
 │   ├── valider_simulation.php    Validation ASV en simulation par un encadrant (§9.2)
 │   ├── demander_validation_animal.php  Génération du lien de validation animal vivant (§9.3)
 │   ├── valider_animal.php        Page publique à jeton, sans compte Moodle (§9.3)
-│   └── livret_pdf.php            Export PDF du livret de compétences ASV (§9.4)
+│   ├── livret_pdf.php            Export PDF du livret de compétences ASV (§9.4)
+│   └── attestation_pdf.php       Attestation PDF de certification globale par niveau (§9.4)
 ├── db/
 │   ├── install.xml               Schéma complet des 18 tables (V1)
 │   ├── access.php                Capacités, mappées aux profils du §11
@@ -78,6 +80,7 @@ local/simhub/
 │   ├── local/atelier_filter.php   Filtres de recherche étudiant (§5.2)
 │   ├── local/atelier_importer.php Import CSV souple des ateliers (§12.1)
 │   ├── local/liaison_importer.php Import CSV des rattachements et de la composition de parcours
+│   ├── local/pdf_helper.php       En-tête PDF commun (logo + nom d'établissement, §4)
 │   ├── output/                    Renderer + classe templatable de l'accueil étudiant
 │   ├── form/atelier_form.php      Formulaire moodleform de la fiche atelier
 │   ├── event/                     Événements métier (atelier créé, session, validations ASV)
@@ -200,6 +203,18 @@ le schéma :
   livret de compétences ASV (référentiel + validations simulation/animal
   vivant avec date et validateur, §9.4) et fiche atelier imprimable
   (§12.3), via le TCPDF fourni par Moodle (`lib/pdflib.php`).
+- **Logo et nom d'établissement configurables** (`settings.php`,
+  `classes/local/pdf_helper.php`) : un logo (PNG/JPG) et le nom complet
+  de l'établissement, paramétrables par l'administrateur fonctionnel
+  (§4 "Paramétrable ENVF"), affichés en en-tête de tous les documents
+  PDF plutôt qu'un habillage générique SimHub.
+- **Attestations de fin de parcours et de certification ASV**
+  (`manage/parcours_attestation_pdf.php`, `asv/attestation_pdf.php`) :
+  document PDF délivré uniquement si l'étudiant a effectivement terminé
+  le parcours (100% d'avancement, §8.1) ou validé la totalité d'un
+  niveau ASV en simulation **et** sur animal vivant (§9.1, §9.4
+  "certification globale de fin de A3") — sinon la page affiche l'état
+  d'avancement à la place du document.
 
 ## Ce qui reste à faire
 
@@ -207,9 +222,6 @@ le schéma :
 - [ ] Import XLSX natif (l'import actuel n'accepte que le CSV ; un
       export Excel non converti doit d'abord être enregistré en CSV).
 - [ ] Export XLSX (seul CSV et PDF sont couverts pour l'instant).
-- [ ] Attestation PDF individuelle de fin de parcours (le PDF ASV
-      couvre le livret par acte ; pas encore d'attestation récapitulative
-      "certification globale de fin de A3", §9.4).
 
 **Ergonomie et robustesse**
 - [ ] "Recommandés pour mon année" (§5.1) n'est pas encore une section

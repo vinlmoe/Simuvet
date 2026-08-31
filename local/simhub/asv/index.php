@@ -74,6 +74,16 @@ if (!$canpilot) {
         new moodle_url('/local/simhub/asv/valider_simulation.php'),
         get_string('asv_valider_simulation', 'local_simhub')
     );
+
+    echo html_writer::tag('h4', 'Certification globale de fin de A3', ['class' => 'mt-4']);
+    echo html_writer::start_tag('form', ['method' => 'get', 'action' => new moodle_url('/local/simhub/asv/attestation_pdf.php')]);
+    echo html_writer::empty_tag('input', ['type' => 'hidden', 'name' => 'envcode', 'value' => $envcode]);
+    echo html_writer::empty_tag('input', [
+        'type' => 'number', 'name' => 'userid', 'placeholder' => 'Id étudiant', 'class' => 'form-control d-inline-block w-auto mr-2', 'required' => 'required',
+    ]);
+    echo html_writer::empty_tag('input', ['type' => 'hidden', 'name' => 'niveau', 'value' => 'A3']);
+    echo html_writer::tag('button', 'Générer l\'attestation A3', ['type' => 'submit', 'class' => 'btn btn-primary']);
+    echo html_writer::end_tag('form');
 }
 
 echo $OUTPUT->footer();

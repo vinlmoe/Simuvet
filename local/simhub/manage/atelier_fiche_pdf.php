@@ -7,7 +7,8 @@ require(__DIR__ . '/../../../config.php');
 require_once($CFG->libdir . '/pdflib.php');
 
 use local_simhub\persistent\atelier;
-use local_simhub\record\ressource;
+use local_simhub\persistent\ressource;
+use local_simhub\local\pdf_helper;
 
 require_login();
 
@@ -23,6 +24,7 @@ $pdf->SetTitle(s($atelier->get('nomcourt')));
 $pdf->setPrintHeader(false);
 $pdf->setPrintFooter(false);
 $pdf->AddPage();
+pdf_helper::ajouter_entete($pdf);
 
 $pdf->SetFont('helvetica', 'B', 16);
 $pdf->Cell(0, 10, '#' . $atelier->get('numero') . ' — ' . $atelier->get('nomcourt'), 0, 1);
