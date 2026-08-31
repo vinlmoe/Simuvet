@@ -62,6 +62,7 @@ foreach ($ateliers as $atelier) {
 
     $editurl = new moodle_url('/local/simhub/manage/atelier_edit.php', ['id' => $atelier->get('id')]);
     $ressourcesurl = new moodle_url('/local/simhub/manage/ressources.php', ['atelierid' => $atelier->get('id')]);
+    $rattachementsurl = new moodle_url('/local/simhub/manage/rattachements.php', ['atelierid' => $atelier->get('id')]);
 
     $table->data[] = [
         s($atelier->get('numero')),
@@ -69,7 +70,12 @@ foreach ($ateliers as $atelier) {
         $statutlabel,
         s($atelier->get('salle')),
         html_writer::link($editurl, get_string('atelier_modifier', 'local_simhub')) . ' | '
-            . html_writer::link($ressourcesurl, get_string('bouton_ressources', 'local_simhub')),
+            . html_writer::link($ressourcesurl, get_string('bouton_ressources', 'local_simhub')) . ' | '
+            . html_writer::link($rattachementsurl, get_string('rattachements', 'local_simhub')) . ' | '
+            . html_writer::link(
+                new moodle_url('/local/simhub/manage/atelier_fiche_pdf.php', ['id' => $atelier->get('id')]),
+                'PDF'
+            ),
     ];
 }
 

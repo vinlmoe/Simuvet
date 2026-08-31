@@ -91,6 +91,7 @@ $string['event_asv_valide_animal'] = 'Acte ASV validé sur animal vivant';
 
 // Gestion des ateliers.
 $string['manage_ateliers'] = 'Gestion des ateliers';
+$string['rattachements'] = 'Rattachements';
 $string['atelier_nouveau'] = 'Nouvel atelier';
 $string['atelier_modifier'] = 'Modifier l\'atelier';
 $string['atelier_enregistre'] = 'Atelier enregistré.';

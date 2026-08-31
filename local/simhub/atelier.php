@@ -31,6 +31,12 @@ echo $OUTPUT->header();
 
 echo html_writer::tag('p', s($atelier->get('descriptioncourte')));
 
+echo html_writer::link(
+    new moodle_url('/local/simhub/manage/atelier_fiche_pdf.php', ['id' => $id]),
+    'Télécharger la fiche (PDF)',
+    ['class' => 'btn btn-outline-secondary btn-sm mb-3']
+);
+
 echo html_writer::start_div('card mb-3', ['id' => 'localisation']);
 echo html_writer::div(get_string('champ_salle', 'local_simhub'), 'card-header');
 echo html_writer::start_div('card-body');

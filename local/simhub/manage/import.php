@@ -1,12 +1,15 @@
 <?php
-// Import souple de fiches ateliers (§12.1) : les tableaux de suivi existants des quatre
-// ENV peuvent être hétérogènes et imparfaits. Cette page alimente une première fois la
-// base à partir d'un CSV, à charge pour le gestionnaire de corriger/enrichir ensuite via
-// manage/ateliers.php.
+// Import souple (§12.1) : les tableaux de suivi existants des quatre ENV peuvent être
+// hétérogènes et imparfaits. Cette page alimente une première fois la base à partir d'un
+// CSV — ateliers, rattachements UC/année/cohorte, ou composition de parcours — à charge
+// pour le gestionnaire de corriger/enrichir ensuite via les pages de gestion dédiées.
+// Les rattachements et parcours référencent les ateliers par (envcode, numero) : importer
+// d'abord les ateliers avant d'importer le reste.
 
 require(__DIR__ . '/../../../config.php');
 
 use local_simhub\local\atelier_importer;
+use local_simhub\local\liaison_importer;
 
 require_login();
 
@@ -21,6 +24,7 @@ $PAGE->set_heading(get_string('import_ateliers', 'local_simhub'));
 
 $submitted = optional_param('submit', 0, PARAM_BOOL);
 $result = null;
+$type = optional_param('type', 'ateliers', PARAM_ALPHA);
 
 if ($submitted) {
     require_sesskey();
@@ -38,18 +42,36 @@ if ($submitted) {
         if (!mb_check_encoding($content, 'UTF-8')) {
             $content = mb_convert_encoding($content, 'UTF-8', 'Windows-1252');
         }
-        $result = atelier_importer::importer($content, $delimiter, $envcode);
+
+        if ($type === 'rattachements') {
+            $result = liaison_importer::importer_rattachements($content, $delimiter, $envcode);
+        } else if ($type === 'parcours') {
+            $result = liaison_importer::importer_parcours($content, $delimiter, $envcode);
+        } else {
+            $type = 'ateliers';
+            $result = atelier_importer::importer($content, $delimiter, $envcode);
+        }
     }
 }
 
 echo $OUTPUT->header();
 
 if ($result !== null) {
-    echo html_writer::tag(
-        'p',
-        get_string('import_crees', 'local_simhub', $result['crees']) . ' — '
-            . get_string('import_mis_a_jour', 'local_simhub', $result['majs'])
-    );
+    if ($type === 'rattachements') {
+        echo html_writer::tag('p', $result['crees'] . ' rattachement(s) créé(s)');
+    } else if ($type === 'parcours') {
+        echo html_writer::tag(
+            'p',
+            $result['parcourscrees'] . ' parcours créé(s), ' . $result['crees'] . ' atelier(s) ajouté(s) à un parcours'
+        );
+    } else {
+        echo html_writer::tag(
+            'p',
+            get_string('import_crees', 'local_simhub', $result['crees']) . ' — '
+                . get_string('import_mis_a_jour', 'local_simhub', $result['majs'])
+        );
+    }
+
     if (!empty($result['erreurs'])) {
         echo html_writer::start_tag('ul', ['class' => 'text-warning']);
         foreach ($result['erreurs'] as $erreur) {
@@ -61,10 +83,24 @@ if ($result !== null) {
 }
 
 echo html_writer::tag('p', get_string('import_description', 'local_simhub'));
+echo html_writer::tag(
+    'p',
+    'Pour les rattachements ou la composition de parcours, importez d\'abord les ateliers : '
+    . 'ces deux imports retrouvent chaque atelier par son numéro et son établissement.'
+);
 
 echo html_writer::start_tag('form', ['method' => 'post', 'enctype' => 'multipart/form-data']);
 echo html_writer::empty_tag('input', ['type' => 'hidden', 'name' => 'sesskey', 'value' => sesskey()]);
 echo html_writer::empty_tag('input', ['type' => 'hidden', 'name' => 'submit', 'value' => 1]);
+
+echo html_writer::start_div('form-group');
+echo html_writer::tag('label', 'Type d\'import');
+echo html_writer::select([
+    'ateliers' => 'Ateliers',
+    'rattachements' => 'Rattachements (UC / année / cohorte)',
+    'parcours' => 'Composition de parcours',
+], 'type', $type, false, ['class' => 'form-control d-inline-block w-auto']);
+echo html_writer::end_div();
 
 echo html_writer::start_div('form-group');
 echo html_writer::tag('label', get_string('import_fichier', 'local_simhub'));

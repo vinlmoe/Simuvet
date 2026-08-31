@@ -45,7 +45,13 @@ local/simhub/
 ├── manage/
 │   ├── ateliers.php             Liste de gestion des fiches ateliers (§6)
 │   ├── atelier_edit.php         Création/modification, gestion du statut indisponible (§6.1)
-│   ├── import.php                Import CSV souple des ateliers (§12.1)
+│   ├── atelier_plan.php          Positionnement du repère plan par simple clic (§5.4)
+│   ├── atelier_fiche_pdf.php     Export PDF imprimable d'une fiche atelier (§12.3)
+│   ├── ressources.php            Liste des ressources d'un atelier (§6.2)
+│   ├── ressource_edit.php        Ajout/modification d'une ressource, avec upload de fichier
+│   ├── rattachements.php         Rattachement UC/année/cohorte d'un atelier hors parcours (§6)
+│   ├── import.php                Import CSV souple : ateliers, rattachements, parcours (§12.1)
+│   ├── export.php                Export CSV : liste des ateliers, suivi de parcours (§12.3)
 │   ├── parcours.php              Liste des parcours pédagogiques (§8)
 │   ├── parcours_edit.php         Création/modification d'un parcours
 │   ├── parcours_ateliers.php     Composition d'un parcours (ajout/ordre/retrait d'ateliers)
@@ -54,7 +60,8 @@ local/simhub/
 │   ├── index.php                 Pilotage du parcours ASV (§9.4)
 │   ├── valider_simulation.php    Validation ASV en simulation par un encadrant (§9.2)
 │   ├── demander_validation_animal.php  Génération du lien de validation animal vivant (§9.3)
-│   └── valider_animal.php        Page publique à jeton, sans compte Moodle (§9.3)
+│   ├── valider_animal.php        Page publique à jeton, sans compte Moodle (§9.3)
+│   └── livret_pdf.php            Export PDF du livret de compétences ASV (§9.4)
 ├── db/
 │   ├── install.xml               Schéma complet des 18 tables (V1)
 │   ├── access.php                Capacités, mappées aux profils du §11
@@ -69,6 +76,8 @@ local/simhub/
 │   ├── record/                    Entités plus légères (liaisons, historiques, réponses)
 │   │                               sans timemodified/usermodified : accès $DB direct.
 │   ├── local/atelier_filter.php   Filtres de recherche étudiant (§5.2)
+│   ├── local/atelier_importer.php Import CSV souple des ateliers (§12.1)
+│   ├── local/liaison_importer.php Import CSV des rattachements et de la composition de parcours
 │   ├── output/                    Renderer + classe templatable de l'accueil étudiant
 │   ├── form/atelier_form.php      Formulaire moodleform de la fiche atelier
 │   ├── event/                     Événements métier (atelier créé, session, validations ASV)
@@ -176,24 +185,33 @@ le schéma :
   image de plan) via l'API filestorage de Moodle (`filemanager`),
   avec visibilité étudiant/interne effective (§6.2), et upload de
   l'image de plan directement depuis la fiche atelier (§5.4).
+- **Repère sur plan positionnable au clic** (`manage/atelier_plan.php`) :
+  un clic sur l'image du plan déjà téléversée calcule et enregistre
+  directement les coordonnées `planrepx`/`planrepy`, sans saisie
+  manuelle de pourcentages (§5.4).
+- **Rattachements pédagogiques** (`manage/rattachements.php`) : UI de
+  gestion des liens atelier ↔ UC/année/cohorte hors parcours (§6),
+  jusque-là seulement exploités en lecture par les filtres étudiants.
+- **Import étendu** (`classes/local/liaison_importer.php`) : en plus
+  des ateliers, import CSV des rattachements et de la composition de
+  parcours (crée le parcours s'il n'existe pas), les deux retrouvant
+  l'atelier par (établissement, numéro) déjà importé (§12.1).
+- **Export PDF** (`asv/livret_pdf.php`, `manage/atelier_fiche_pdf.php`) :
+  livret de compétences ASV (référentiel + validations simulation/animal
+  vivant avec date et validateur, §9.4) et fiche atelier imprimable
+  (§12.3), via le TCPDF fourni par Moodle (`lib/pdflib.php`).
 
 ## Ce qui reste à faire
 
 **Import/export (§12)**
 - [ ] Import XLSX natif (l'import actuel n'accepte que le CSV ; un
       export Excel non converti doit d'abord être enregistré en CSV).
-- [ ] Import des rattachements pédagogiques et de la composition des
-      parcours (l'import actuel ne couvre que la fiche atelier).
-- [ ] Exports CSV/XLSX/PDF par étudiant, UC, parcours, cohorte (§12.3).
-- [ ] Génération PDF (fiches, attestations, livret ASV).
+- [ ] Export XLSX (seul CSV et PDF sont couverts pour l'instant).
+- [ ] Attestation PDF individuelle de fin de parcours (le PDF ASV
+      couvre le livret par acte ; pas encore d'attestation récapitulative
+      "certification globale de fin de A3", §9.4).
 
 **Ergonomie et robustesse**
-- [ ] Positionnement du repère sur le plan de salle au clic (actuellement
-      deux champs numériques `planrepx`/`planrepy`).
-- [ ] UI de gestion des rattachements UC/année/cohorte hors parcours
-      (`record/rattachement.php` existe mais sans page dédiée — seuls
-      les filtres étudiants et le suivi de parcours l'exploitent déjà
-      en lecture).
 - [ ] "Recommandés pour mon année" (§5.1) n'est pas encore une section
       distincte : l'année d'étude de l'étudiant n'a pas de source fiable
       dans ce squelette (pas de champ standard Moodle) ; à câbler une

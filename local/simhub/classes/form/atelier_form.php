@@ -75,13 +75,13 @@ class atelier_form extends \moodleform {
         $mform->addElement('textarea', 'indicationtextuelle', get_string('champ_indicationtextuelle', 'local_simhub'));
         $mform->setType('indicationtextuelle', PARAM_TEXT);
 
-        // Repère sur le plan de salle (§5.4) : coordonnées en % de l'image, modifiables
-        // facilement en cas de déplacement de l'atelier. Édition du plan lui-même (upload
-        // d'image) laissée à une itération ultérieure de l'UI (positionnement au clic).
-        $mform->addElement('text', 'planrepx', 'Repère plan - X (%)');
+        // Repère sur le plan de salle (§5.4) : coordonnées en % de l'image, conservées ici en
+        // champs cachés — leur valeur est fixée par un clic sur l'image dans
+        // manage/atelier_plan.php plutôt que saisie à la main, une fois l'atelier enregistré.
+        $mform->addElement('hidden', 'planrepx');
         $mform->setType('planrepx', PARAM_FLOAT);
 
-        $mform->addElement('text', 'planrepy', 'Repère plan - Y (%)');
+        $mform->addElement('hidden', 'planrepy');
         $mform->setType('planrepy', PARAM_FLOAT);
 
         $mform->addElement('filemanager', 'planimage', 'Image du plan de salle', null, [

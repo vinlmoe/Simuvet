@@ -84,6 +84,7 @@ $string['event_asv_valide_simulation'] = 'ASV act validated in simulation';
 $string['event_asv_valide_animal'] = 'ASV act validated on a live animal';
 
 $string['manage_ateliers'] = 'Workshop management';
+$string['rattachements'] = 'Course links';
 $string['atelier_nouveau'] = 'New workshop';
 $string['atelier_modifier'] = 'Edit workshop';
 $string['atelier_enregistre'] = 'Workshop saved.';

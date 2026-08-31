@@ -60,4 +60,16 @@ class rattachement {
 
         return $DB->get_records(self::TABLE, ['courseid' => $courseid]);
     }
+
+    /**
+     * Supprime un rattachement.
+     *
+     * @param int $id
+     * @return void
+     */
+    public static function supprimer(int $id): void {
+        global $DB;
+
+        $DB->delete_records(self::TABLE, ['id' => $id]);
+    }
 }

@@ -26,6 +26,12 @@ echo $OUTPUT->header();
 
 $actes = asv_acte::get_referentiel($envcode);
 
+echo $OUTPUT->single_button(
+    new moodle_url('/local/simhub/asv/livret_pdf.php', ['envcode' => $envcode] + ($canpilot ? [] : ['userid' => $USER->id])),
+    'Exporter mon livret (PDF)',
+    'get'
+);
+
 if (!$canpilot) {
     // Vue étudiant : sa propre progression sur le référentiel (§9.4 "état d'avancement individuel").
     $actesvalidessim = asv_valsim::get_actes_valides($USER->id);
