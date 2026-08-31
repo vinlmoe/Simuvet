@@ -14,6 +14,7 @@ use local_simhub\record\asv_valsim;
 use local_simhub\record\rattachement;
 use local_simhub\persistent\asv_acte;
 use local_simhub\local\annee_resolver;
+use local_simhub\local\cohort_helper;
 use renderable;
 use templatable;
 
@@ -118,14 +119,15 @@ class student_home_page implements renderable, templatable {
             }
         }
 
-        // 7. Recommandés pour mon année : ateliers rattachés à l'année d'étude déduite des
-        // groupes Moodle de l'étudiant (§5.1), pas encore réalisés.
-        $recommandesannee = [];
-        $annee = annee_resolver::get_annee_etudiant($this->userid);
-        if ($annee !== null) {
-            foreach (rattachement::get_pour_annee($annee) as $r) {
+        // 7. Recommandés pour mon groupe : ateliers rattachés à une cohorte choisie
+        // directement par le gestionnaire (manage/rattachements.php), dont l'étudiant est
+        // membre — appartenance réelle, sans déduction sur un nom de groupe (§5.1).
+        $recommandesgroupe = [];
+        $cohortids = cohort_helper::get_cohortes_utilisateur($this->userid);
+        if (!empty($cohortids)) {
+            foreach (rattachement::get_pour_cohortes($cohortids) as $r) {
                 if (isset($cardsbyid[$r->atelierid]) && $statutsparid[$r->atelierid] === 'pascommence') {
-                    $recommandesannee[$r->atelierid] = $cardsbyid[$r->atelierid];
+                    $recommandesgroupe[$r->atelierid] = $cardsbyid[$r->atelierid];
                 }
             }
         }
@@ -154,9 +156,8 @@ class student_home_page implements renderable, templatable {
             'areprendre' => array_values($areprendre),
             'hasareprendre' => !empty($areprendre),
 
-            'recommandesannee' => array_values($recommandesannee),
-            'hasrecommandesannee' => !empty($recommandesannee),
-            'anneelabel' => $annee !== null ? annee_resolver::get_label($annee) : '',
+            'recommandesgroupe' => array_values($recommandesgroupe),
+            'hasrecommandesgroupe' => !empty($recommandesgroupe),
 
             'parcoursencours' => $parcoursencours,
             'hasparcoursencours' => !empty($parcoursencours),
@@ -201,7 +202,7 @@ class student_home_page implements renderable, templatable {
                 'sectionasv' => get_string('section_asv', 'local_simhub'),
                 'sectioncommences' => get_string('section_commences', 'local_simhub'),
                 'sectionareprendre' => get_string('section_areprendre', 'local_simhub'),
-                'sectionrecommandes' => get_string('section_recommandes', 'local_simhub', $annee !== null ? annee_resolver::get_label($annee) : ''),
+                'sectionrecommandes' => get_string('section_recommandes', 'local_simhub'),
                 'sectiontous' => get_string('section_tous', 'local_simhub'),
                 'voirasv' => get_string('asv_parcours', 'local_simhub'),
             ],

@@ -3,8 +3,8 @@
 
     Accueil étudiant personnalisé (§5.1) : sept sections construites sur le même modèle de
     carte atelier (§5.3) - à faire pour mes UC, mes parcours en cours, parcours ASV,
-    ateliers commencés, ateliers à reprendre, recommandés pour mon année, et la liste
-    complète avec filtres (§5.2).
+    ateliers commencés, ateliers à reprendre, recommandés pour mon groupe (cohorte Moodle
+    choisie directement par le gestionnaire), et la liste complète avec filtres (§5.2).
 
     Context variables required for this template:
     * title, strings
@@ -13,7 +13,7 @@
     * asvtotal, asvvalides, hasasv, urlasv
     * commences, hascommences
     * areprendre, hasareprendre
-    * recommandesannee, hasrecommandesannee, anneelabel
+    * recommandesgroupe, hasrecommandesgroupe
     * ateliers, hasateliers, nomessage, formurl, filtre
 }}
 <div class="local-simhub-studenthome">
@@ -53,12 +53,12 @@
     </div>
     {{/hasareprendre}}
 
-    {{#hasrecommandesannee}}
+    {{#hasrecommandesgroupe}}
     <h4>{{strings.sectionrecommandes}}</h4>
     <div class="local-simhub-cartes mb-4">
-        {{#recommandesannee}}{{> local_simhub/atelier_card }}{{/recommandesannee}}
+        {{#recommandesgroupe}}{{> local_simhub/atelier_card }}{{/recommandesgroupe}}
     </div>
-    {{/hasrecommandesannee}}
+    {{/hasrecommandesgroupe}}
 
     <h4>{{strings.sectiontous}}</h4>
 

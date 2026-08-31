@@ -81,7 +81,8 @@ local/simhub/
 │   ├── local/atelier_importer.php Import CSV souple des ateliers (§12.1)
 │   ├── local/liaison_importer.php Import CSV des rattachements et de la composition de parcours
 │   ├── local/pdf_helper.php       En-tête PDF commun (logo + nom d'établissement, §4)
-│   ├── local/annee_resolver.php   Année d'étude (A1-A5) déduite des groupes Moodle (§5.1)
+│   ├── local/annee_resolver.php   Libellés/options d'année d'étude A1-A5 (saisie directe)
+│   ├── local/cohort_helper.php    Sélection directe d'une cohorte Moodle à recommander (§5.1)
 │   ├── output/                    Renderer + classe templatable de l'accueil étudiant
 │   ├── form/atelier_form.php      Formulaire moodleform de la fiche atelier
 │   ├── event/                     Événements métier (atelier créé, session, validations ASV)
@@ -152,19 +153,21 @@ le schéma :
   faire pour mes UC (via les rattachements et les UC où l'étudiant est
   inscrit), mes parcours en cours (avec % d'avancement), parcours ASV
   (résumé actes validés/total), ateliers déjà commencés, ateliers à
-  reprendre, recommandés pour mon année (voir ci-dessous), et enfin la
+  reprendre, recommandés pour mon groupe (voir ci-dessous), et enfin la
   liste complète avec formulaire de filtres (mot-clé, discipline,
   espèce, niveau, durée max, année) + cartes atelier avec statut
   personnel et boutons localisation/ressources/commencer-terminer
   (§5.2, §5.3).
-- **Année d'étude déduite des groupes Moodle** (`classes/local/annee_resolver.php`) :
-  Moodle n'ayant pas de champ standard pour l'année d'étude, elle est
-  déduite du nom des groupes de l'étudiant via une expression régulière
-  paramétrable (`local_simhub/groupeanneeregex`, reconnaît par défaut
-  "A1".."A5" ou "Année 1".."Année 5"). Les rattachements et parcours
-  utilisent désormais un sélecteur A1 à A5 plutôt qu'un champ numérique
-  libre (`manage/rattachements.php`, `classes/form/parcours_form.php`),
-  et l'import CSV des rattachements reconnaît les mêmes notations.
+- **Recommandation directe par cohorte Moodle** (`classes/local/cohort_helper.php`) :
+  plutôt que de déduire l'année d'étude d'un étudiant par inférence sur
+  le nom de ses groupes, le gestionnaire choisit directement, dans une
+  liste réelle de cohortes existantes, celle(s) à qui un atelier ou un
+  parcours est recommandé (`manage/rattachements.php`,
+  `classes/form/parcours_form.php`) ; la correspondance avec l'étudiant
+  se fait ensuite par appartenance effective à la cohorte
+  (`cohort_members`), sans réflexion. L'année d'étude (A1 à A5, via
+  `classes/local/annee_resolver.php`) reste un champ de classement
+  saisi directement par le gestionnaire, indépendant de ce mécanisme.
 - **Fiche atelier** (`atelier.php`) : bloc localisation (salle, zone,
   poste, plan + repère, §5.4) et bloc ressources visibles étudiant
   (§5.5), en respectant la visibilité `interne` des sources éditables
@@ -236,10 +239,11 @@ le schéma :
 **Ergonomie et robustesse**
 - [ ] Web services / API externe (`classes/external/`) pour un futur
       composant mobile et pour la synchronisation QR code hors-ligne.
-- [ ] UI d'administration pour affecter/consulter les groupes Moodle
-      "année" eux-mêmes (SimHub ne fait que lire le nom des groupes
-      existants — la création/l'affectation des groupes A1-A5 reste à
-      faire côté Moodle standard, hors périmètre de ce plugin).
+- [ ] Création/affectation des cohortes elles-mêmes : SimHub ne fait
+      que lire les cohortes Moodle existantes et leurs membres pour la
+      recommandation (§5.1) — leur création et l'inscription des
+      étudiants restent de la gestion Moodle standard, hors périmètre
+      de ce plugin.
 
 **V1+ souhaitable (§13)**
 - [ ] Contrôle anti-faux-scan renforcé (réseau local / code de séance

@@ -7,6 +7,7 @@ defined('MOODLE_INTERNAL') || die();
 require_once($CFG->libdir . '/formslib.php');
 
 use local_simhub\local\annee_resolver;
+use local_simhub\local\cohort_helper;
 
 /**
  * Formulaire de création/modification d'un parcours pédagogique (§8).
@@ -43,7 +44,12 @@ class parcours_form extends \moodleform {
         );
         $mform->setType('anneeetude', PARAM_INT);
 
-        $mform->addElement('text', 'cohortid', 'Id de la cohorte Moodle (optionnel)');
+        $mform->addElement(
+            'select',
+            'cohortid',
+            get_string('champ_cohorte', 'local_simhub') . ' (optionnel — pour recommander directement à ses membres)',
+            cohort_helper::get_options()
+        );
         $mform->setType('cohortid', PARAM_INT);
 
         $mform->addElement('text', 'envcode', get_string('champ_envcode', 'local_simhub'));

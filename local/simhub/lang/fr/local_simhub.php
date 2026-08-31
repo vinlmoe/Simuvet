@@ -18,8 +18,6 @@ $string['setting_etablissementnom'] = 'Nom de l\'établissement';
 $string['setting_etablissementnom_desc'] = 'Nom complet affiché en en-tête des documents PDF (attestations, livret ASV, fiches ateliers), ex. "École Nationale Vétérinaire d\'Alfort".';
 $string['setting_logo'] = 'Logo de l\'établissement';
 $string['setting_logo_desc'] = 'Image affichée en en-tête des documents PDF générés par SimHub (attestations de fin de parcours, livret ASV, fiches ateliers). Formats acceptés : PNG, JPG, SVG.';
-$string['setting_groupeanneeregex'] = 'Expression régulière de détection de l\'année d\'étude';
-$string['setting_groupeanneeregex_desc'] = 'Moodle n\'a pas de champ standard pour l\'année d\'étude (A1 à A5) : SimHub la déduit du nom des groupes Moodle de l\'étudiant à l\'aide de cette expression régulière PHP (le premier groupe correspondant l\'emporte). Le chiffre capturé doit être le premier groupe de l\'expression, entre 1 et 5. Par défaut, reconnaît des noms de groupe comme "A1", "A 3", "Année 5".';
 
 // Statuts atelier.
 $string['statut_actif'] = 'Actif';
@@ -151,7 +149,8 @@ $string['section_asv'] = 'Parcours ASV';
 $string['section_commences'] = 'Ateliers déjà commencés';
 $string['section_areprendre'] = 'Ateliers à reprendre';
 $string['section_tous'] = 'Tous les ateliers disponibles';
-$string['section_recommandes'] = 'Recommandés pour mon année ({$a})';
+$string['section_recommandes'] = 'Recommandés pour mon groupe';
+$string['champ_cohorte'] = 'Groupe (cohorte Moodle)';
 
 // Module ASV (§9).
 $string['asv_parcours'] = 'Parcours ASV';

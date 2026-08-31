@@ -62,8 +62,7 @@ class rattachement {
     }
 
     /**
-     * Rattachements pour une année d'étude donnée (A1 à A5), utilisés par l'accueil
-     * étudiant pour la section "Ateliers recommandés pour mon année" (§5.1).
+     * Rattachements pour une année d'étude donnée (A1 à A5).
      *
      * @param int $anneeetude
      * @return \stdClass[]
@@ -72,6 +71,27 @@ class rattachement {
         global $DB;
 
         return $DB->get_records(self::TABLE, ['anneeetude' => $anneeetude]);
+    }
+
+    /**
+     * Rattachements pointant vers l'une des cohortes données, utilisés par l'accueil
+     * étudiant pour la section "Recommandés pour mon groupe" (§5.1) : le gestionnaire
+     * choisit directement la cohorte concernée (manage/rattachements.php), la
+     * correspondance avec l'étudiant se faisant ensuite par appartenance réelle plutôt que
+     * par déduction.
+     *
+     * @param int[] $cohortids
+     * @return \stdClass[]
+     */
+    public static function get_pour_cohortes(array $cohortids): array {
+        global $DB;
+
+        if (empty($cohortids)) {
+            return [];
+        }
+
+        [$insql, $params] = $DB->get_in_or_equal($cohortids);
+        return $DB->get_records_select(self::TABLE, "cohortid $insql", $params);
     }
 
     /**
