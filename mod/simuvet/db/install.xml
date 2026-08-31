@@ -1,0 +1,398 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<XMLDB PATH="local/simhub/db" VERSION="20260831" COMMENT="XMLDB file for Moodle local/simhub - squelette V0"
+       xsi:noNamespaceSchemaLocation="../../../lib/xmldb/xmldb.xsd" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+  <TABLES>
+
+    <!-- ============================================================ -->
+    <!-- 1. ATELIER : objet central (cf. cahier des charges §6)        -->
+    <!-- ============================================================ -->
+    <TABLE NAME="local_simhub_atelier" COMMENT="Fiche atelier - identification, statut, localisation">
+      <FIELDS>
+        <FIELD NAME="id" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="true"/>
+        <FIELD NAME="numero" TYPE="char" LENGTH="50" NOTNULL="true" COMMENT="Identifiant unique invariant, indépendant du statut"/>
+        <FIELD NAME="nomcourt" TYPE="char" LENGTH="255" NOTNULL="true"/>
+        <FIELD NAME="nomlong" TYPE="text" NOTNULL="false"/>
+        <FIELD NAME="descriptioncourte" TYPE="text" NOTNULL="false"/>
+        <FIELD NAME="discipline" TYPE="char" LENGTH="100" NOTNULL="false"/>
+        <FIELD NAME="espece" TYPE="char" LENGTH="255" NOTNULL="false" COMMENT="Liste séparée par virgules en V1 ; table dédiée envisageable en V2"/>
+        <FIELD NAME="niveaudifficulte" TYPE="char" LENGTH="20" NOTNULL="false" COMMENT="facile|intermediaire|avance"/>
+        <FIELD NAME="dureeindicative" TYPE="int" LENGTH="6" NOTNULL="false" COMMENT="Minutes"/>
+        <FIELD NAME="statut" TYPE="char" LENGTH="20" NOTNULL="true" DEFAULT="non_utilise" COMMENT="actif|non_utilise|indisponible|archive"/>
+        <FIELD NAME="envcode" TYPE="char" LENGTH="20" NOTNULL="true" COMMENT="Code établissement (ENVA|ENVT|ONIRIS|VETAGROSUP) - paramétrable ENVF"/>
+        <FIELD NAME="salle" TYPE="char" LENGTH="150" NOTNULL="false"/>
+        <FIELD NAME="zone" TYPE="char" LENGTH="150" NOTNULL="false"/>
+        <FIELD NAME="codeposte" TYPE="char" LENGTH="50" NOTNULL="false"/>
+        <FIELD NAME="indicationtextuelle" TYPE="text" NOTNULL="false"/>
+        <FIELD NAME="planimageitemid" TYPE="int" LENGTH="10" NOTNULL="false" COMMENT="itemid Moodle filestorage du plan de salle"/>
+        <FIELD NAME="planrepx" TYPE="number" LENGTH="6" DECIMALS="2" NOTNULL="false" COMMENT="Position repère X en % de l'image du plan"/>
+        <FIELD NAME="planrepy" TYPE="number" LENGTH="6" DECIMALS="2" NOTNULL="false" COMMENT="Position repère Y en % de l'image du plan"/>
+        <FIELD NAME="referentuserid" TYPE="int" LENGTH="10" NOTNULL="false"/>
+        <FIELD NAME="commentaireadmin" TYPE="text" NOTNULL="false"/>
+        <FIELD NAME="timecreated" TYPE="int" LENGTH="10" NOTNULL="true"/>
+        <FIELD NAME="timemodified" TYPE="int" LENGTH="10" NOTNULL="true"/>
+        <FIELD NAME="usermodified" TYPE="int" LENGTH="10" NOTNULL="true"/>
+      </FIELDS>
+      <KEYS>
+        <KEY NAME="primary" TYPE="primary" FIELDS="id"/>
+        <KEY NAME="referentuserid_fk" TYPE="foreign" FIELDS="referentuserid" REFTABLE="user" REFFIELDS="id"/>
+        <KEY NAME="usermodified_fk" TYPE="foreign" FIELDS="usermodified" REFTABLE="user" REFFIELDS="id"/>
+      </KEYS>
+      <INDEXES>
+        <INDEX NAME="numero_env" UNIQUE="true" FIELDS="envcode, numero" COMMENT="Numéro unique par établissement"/>
+        <INDEX NAME="statut" UNIQUE="false" FIELDS="statut"/>
+        <INDEX NAME="discipline" UNIQUE="false" FIELDS="discipline"/>
+      </INDEXES>
+    </TABLE>
+
+    <!-- ============================================================ -->
+    <!-- 2. INDISPONIBILITÉ : historique des statuts "indisponible"    -->
+    <!-- ============================================================ -->
+    <TABLE NAME="local_simhub_indispo" COMMENT="Historique des indisponibilités d'un atelier (§6.1)">
+      <FIELDS>
+        <FIELD NAME="id" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="true"/>
+        <FIELD NAME="atelierid" TYPE="int" LENGTH="10" NOTNULL="true"/>
+        <FIELD NAME="commentaire" TYPE="text" NOTNULL="false"/>
+        <FIELD NAME="referentuserid" TYPE="int" LENGTH="10" NOTNULL="false"/>
+        <FIELD NAME="datemaj" TYPE="int" LENGTH="10" NOTNULL="true"/>
+        <FIELD NAME="echeanceprevue" TYPE="int" LENGTH="10" NOTNULL="false"/>
+        <FIELD NAME="cloturee" TYPE="int" LENGTH="1" NOTNULL="true" DEFAULT="0"/>
+        <FIELD NAME="timecreated" TYPE="int" LENGTH="10" NOTNULL="true"/>
+      </FIELDS>
+      <KEYS>
+        <KEY NAME="primary" TYPE="primary" FIELDS="id"/>
+        <KEY NAME="atelierid_fk" TYPE="foreign" FIELDS="atelierid" REFTABLE="local_simhub_atelier" REFFIELDS="id"/>
+        <KEY NAME="referentuserid_fk" TYPE="foreign" FIELDS="referentuserid" REFTABLE="user" REFFIELDS="id"/>
+      </KEYS>
+    </TABLE>
+
+    <!-- ============================================================ -->
+    <!-- 3. RESSOURCE : ressources étudiantes + sources éditables      -->
+    <!-- ============================================================ -->
+    <TABLE NAME="local_simhub_ressource" COMMENT="Ressources pédagogiques associées à un atelier (§6.2)">
+      <FIELDS>
+        <FIELD NAME="id" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="true"/>
+        <FIELD NAME="atelierid" TYPE="int" LENGTH="10" NOTNULL="true"/>
+        <FIELD NAME="type" TYPE="char" LENGTH="30" NOTNULL="true" COMMENT="fiche_methode|pdf_etudiant|video|consignes|criteres_reussite|erreurs_frequentes|liens_utiles|complementaire|source_editable"/>
+        <FIELD NAME="visibilite" TYPE="char" LENGTH="20" NOTNULL="true" DEFAULT="etudiant" COMMENT="etudiant|interne (source éditable masquée par défaut)"/>
+        <FIELD NAME="titre" TYPE="char" LENGTH="255" NOTNULL="true"/>
+        <FIELD NAME="url" TYPE="text" NOTNULL="false" COMMENT="Lien externe ou Moodle éventuel"/>
+        <FIELD NAME="fileitemid" TYPE="int" LENGTH="10" NOTNULL="false" COMMENT="itemid Moodle filestorage si fichier hébergé"/>
+        <FIELD NAME="ordre" TYPE="int" LENGTH="6" NOTNULL="true" DEFAULT="0"/>
+        <FIELD NAME="timecreated" TYPE="int" LENGTH="10" NOTNULL="true"/>
+        <FIELD NAME="timemodified" TYPE="int" LENGTH="10" NOTNULL="true"/>
+      </FIELDS>
+      <KEYS>
+        <KEY NAME="primary" TYPE="primary" FIELDS="id"/>
+        <KEY NAME="atelierid_fk" TYPE="foreign" FIELDS="atelierid" REFTABLE="local_simhub_atelier" REFFIELDS="id"/>
+      </KEYS>
+      <INDEXES>
+        <INDEX NAME="type_visibilite" UNIQUE="false" FIELDS="type, visibilite"/>
+      </INDEXES>
+    </TABLE>
+
+    <!-- ============================================================ -->
+    <!-- 4. PARCOURS + LIAISON ATELIER                                  -->
+    <!-- ============================================================ -->
+    <TABLE NAME="local_simhub_parcours" COMMENT="Parcours pédagogiques (§8)">
+      <FIELDS>
+        <FIELD NAME="id" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="true"/>
+        <FIELD NAME="nom" TYPE="char" LENGTH="255" NOTNULL="true"/>
+        <FIELD NAME="description" TYPE="text" NOTNULL="false"/>
+        <FIELD NAME="type" TYPE="char" LENGTH="30" NOTNULL="true" COMMENT="recommande|obligatoire|lie_uc|lie_annee|certifiant|asv"/>
+        <FIELD NAME="courseid" TYPE="int" LENGTH="10" NOTNULL="false" COMMENT="UC Moodle rattachée, si applicable"/>
+        <FIELD NAME="anneeetude" TYPE="int" LENGTH="2" NOTNULL="false"/>
+        <FIELD NAME="cohortid" TYPE="int" LENGTH="10" NOTNULL="false"/>
+        <FIELD NAME="envcode" TYPE="char" LENGTH="20" NOTNULL="true"/>
+        <FIELD NAME="timecreated" TYPE="int" LENGTH="10" NOTNULL="true"/>
+        <FIELD NAME="timemodified" TYPE="int" LENGTH="10" NOTNULL="true"/>
+        <FIELD NAME="usermodified" TYPE="int" LENGTH="10" NOTNULL="true"/>
+      </FIELDS>
+      <KEYS>
+        <KEY NAME="primary" TYPE="primary" FIELDS="id"/>
+        <KEY NAME="courseid_fk" TYPE="foreign" FIELDS="courseid" REFTABLE="course" REFFIELDS="id"/>
+        <KEY NAME="cohortid_fk" TYPE="foreign" FIELDS="cohortid" REFTABLE="cohort" REFFIELDS="id"/>
+      </KEYS>
+    </TABLE>
+
+    <TABLE NAME="local_simhub_parc_atelier" COMMENT="Liaison N-N parcours / ateliers, avec ordre">
+      <FIELDS>
+        <FIELD NAME="id" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="true"/>
+        <FIELD NAME="parcoursid" TYPE="int" LENGTH="10" NOTNULL="true"/>
+        <FIELD NAME="atelierid" TYPE="int" LENGTH="10" NOTNULL="true"/>
+        <FIELD NAME="ordre" TYPE="int" LENGTH="6" NOTNULL="true" DEFAULT="0"/>
+        <FIELD NAME="obligatoire" TYPE="int" LENGTH="1" NOTNULL="true" DEFAULT="0"/>
+        <FIELD NAME="echeance" TYPE="int" LENGTH="10" NOTNULL="false" COMMENT="Échéance pédagogique optionnelle"/>
+      </FIELDS>
+      <KEYS>
+        <KEY NAME="primary" TYPE="primary" FIELDS="id"/>
+        <KEY NAME="parcoursid_fk" TYPE="foreign" FIELDS="parcoursid" REFTABLE="local_simhub_parcours" REFFIELDS="id"/>
+        <KEY NAME="atelierid_fk" TYPE="foreign" FIELDS="atelierid" REFTABLE="local_simhub_atelier" REFFIELDS="id"/>
+      </KEYS>
+      <INDEXES>
+        <INDEX NAME="parcours_atelier_uniq" UNIQUE="true" FIELDS="parcoursid, atelierid"/>
+      </INDEXES>
+    </TABLE>
+
+    <!-- ============================================================ -->
+    <!-- 5. RATTACHEMENT PÉDAGOGIQUE ATELIER <-> UC/ANNÉE/COHORTE       -->
+    <!-- ============================================================ -->
+    <TABLE NAME="local_simhub_rattachement" COMMENT="Rattachement pédagogique d'un atelier (§6, hors parcours)">
+      <FIELDS>
+        <FIELD NAME="id" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="true"/>
+        <FIELD NAME="atelierid" TYPE="int" LENGTH="10" NOTNULL="true"/>
+        <FIELD NAME="courseid" TYPE="int" LENGTH="10" NOTNULL="false"/>
+        <FIELD NAME="anneeetude" TYPE="int" LENGTH="2" NOTNULL="false"/>
+        <FIELD NAME="cohortid" TYPE="int" LENGTH="10" NOTNULL="false"/>
+        <FIELD NAME="caractere" TYPE="char" LENGTH="20" NOTNULL="true" DEFAULT="recommande" COMMENT="recommande|obligatoire"/>
+        <FIELD NAME="niveauattendu" TYPE="char" LENGTH="50" NOTNULL="false"/>
+        <FIELD NAME="timecreated" TYPE="int" LENGTH="10" NOTNULL="true"/>
+      </FIELDS>
+      <KEYS>
+        <KEY NAME="primary" TYPE="primary" FIELDS="id"/>
+        <KEY NAME="atelierid_fk" TYPE="foreign" FIELDS="atelierid" REFTABLE="local_simhub_atelier" REFFIELDS="id"/>
+        <KEY NAME="courseid_fk" TYPE="foreign" FIELDS="courseid" REFTABLE="course" REFFIELDS="id"/>
+        <KEY NAME="cohortid_fk" TYPE="foreign" FIELDS="cohortid" REFTABLE="cohort" REFFIELDS="id"/>
+      </KEYS>
+    </TABLE>
+
+    <!-- ============================================================ -->
+    <!-- 6. SESSION : réalisation d'un atelier par un étudiant          -->
+    <!-- ============================================================ -->
+    <TABLE NAME="local_simhub_session" COMMENT="Session de réalisation d'un atelier par un étudiant (§7.1)">
+      <FIELDS>
+        <FIELD NAME="id" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="true"/>
+        <FIELD NAME="userid" TYPE="int" LENGTH="10" NOTNULL="true"/>
+        <FIELD NAME="atelierid" TYPE="int" LENGTH="10" NOTNULL="true"/>
+        <FIELD NAME="parcoursid" TYPE="int" LENGTH="10" NOTNULL="false"/>
+        <FIELD NAME="courseid" TYPE="int" LENGTH="10" NOTNULL="false" COMMENT="UC dans laquelle la réalisation s'inscrit, si connue"/>
+        <FIELD NAME="timestart" TYPE="int" LENGTH="10" NOTNULL="true"/>
+        <FIELD NAME="timeend" TYPE="int" LENGTH="10" NOTNULL="false"/>
+        <FIELD NAME="statut" TYPE="char" LENGTH="20" NOTNULL="true" DEFAULT="commence" COMMENT="commence|realise|certifie|non_termine"/>
+        <FIELD NAME="methodescan" TYPE="char" LENGTH="20" NOTNULL="false" COMMENT="qr|manuel"/>
+        <FIELD NAME="controlepresence" TYPE="char" LENGTH="20" NOTNULL="false" COMMENT="reseau_local|code_seance|validation_encadrant|non_verifie (§7.3)"/>
+        <FIELD NAME="timecreated" TYPE="int" LENGTH="10" NOTNULL="true"/>
+        <FIELD NAME="timemodified" TYPE="int" LENGTH="10" NOTNULL="true"/>
+      </FIELDS>
+      <KEYS>
+        <KEY NAME="primary" TYPE="primary" FIELDS="id"/>
+        <KEY NAME="userid_fk" TYPE="foreign" FIELDS="userid" REFTABLE="user" REFFIELDS="id"/>
+        <KEY NAME="atelierid_fk" TYPE="foreign" FIELDS="atelierid" REFTABLE="local_simhub_atelier" REFFIELDS="id"/>
+        <KEY NAME="parcoursid_fk" TYPE="foreign" FIELDS="parcoursid" REFTABLE="local_simhub_parcours" REFFIELDS="id"/>
+      </KEYS>
+      <INDEXES>
+        <INDEX NAME="user_atelier" UNIQUE="false" FIELDS="userid, atelierid"/>
+        <INDEX NAME="statut" UNIQUE="false" FIELDS="statut"/>
+      </INDEXES>
+    </TABLE>
+
+    <!-- ============================================================ -->
+    <!-- 7. AUTO-ÉVALUATION GUIDÉE (modèle + réponses) (§5.6, §7.2)     -->
+    <!-- ============================================================ -->
+    <TABLE NAME="local_simhub_ae_modele" COMMENT="Modèle d'auto-évaluation guidée, un par atelier en V1">
+      <FIELDS>
+        <FIELD NAME="id" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="true"/>
+        <FIELD NAME="atelierid" TYPE="int" LENGTH="10" NOTNULL="true"/>
+        <FIELD NAME="titre" TYPE="char" LENGTH="255" NOTNULL="true"/>
+        <FIELD NAME="actif" TYPE="int" LENGTH="1" NOTNULL="true" DEFAULT="1"/>
+        <FIELD NAME="timecreated" TYPE="int" LENGTH="10" NOTNULL="true"/>
+        <FIELD NAME="timemodified" TYPE="int" LENGTH="10" NOTNULL="true"/>
+        <FIELD NAME="usermodified" TYPE="int" LENGTH="10" NOTNULL="true"/>
+      </FIELDS>
+      <KEYS>
+        <KEY NAME="primary" TYPE="primary" FIELDS="id"/>
+        <KEY NAME="atelierid_fk" TYPE="foreign-unique" FIELDS="atelierid" REFTABLE="local_simhub_atelier" REFFIELDS="id"/>
+      </KEYS>
+    </TABLE>
+
+    <TABLE NAME="local_simhub_ae_rubrique" COMMENT="Rubriques (grandes étapes du geste) d'un modèle d'auto-évaluation">
+      <FIELDS>
+        <FIELD NAME="id" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="true"/>
+        <FIELD NAME="modeleid" TYPE="int" LENGTH="10" NOTNULL="true"/>
+        <FIELD NAME="titre" TYPE="char" LENGTH="255" NOTNULL="true"/>
+        <FIELD NAME="ordre" TYPE="int" LENGTH="6" NOTNULL="true" DEFAULT="0"/>
+        <FIELD NAME="estrubriquerisques" TYPE="int" LENGTH="1" NOTNULL="true" DEFAULT="0" COMMENT="Rubrique dédiée aux erreurs/risques"/>
+      </FIELDS>
+      <KEYS>
+        <KEY NAME="primary" TYPE="primary" FIELDS="id"/>
+        <KEY NAME="modeleid_fk" TYPE="foreign" FIELDS="modeleid" REFTABLE="local_simhub_ae_modele" REFFIELDS="id"/>
+      </KEYS>
+    </TABLE>
+
+    <TABLE NAME="local_simhub_ae_critere" COMMENT="Critères observables d'une rubrique">
+      <FIELDS>
+        <FIELD NAME="id" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="true"/>
+        <FIELD NAME="rubriqueid" TYPE="int" LENGTH="10" NOTNULL="true"/>
+        <FIELD NAME="libelle" TYPE="text" NOTNULL="true"/>
+        <FIELD NAME="ordre" TYPE="int" LENGTH="6" NOTNULL="true" DEFAULT="0"/>
+      </FIELDS>
+      <KEYS>
+        <KEY NAME="primary" TYPE="primary" FIELDS="id"/>
+        <KEY NAME="rubriqueid_fk" TYPE="foreign" FIELDS="rubriqueid" REFTABLE="local_simhub_ae_rubrique" REFFIELDS="id"/>
+      </KEYS>
+    </TABLE>
+
+    <TABLE NAME="local_simhub_ae_reponse" COMMENT="Réponse étudiante à un critère, pour une session donnée">
+      <FIELDS>
+        <FIELD NAME="id" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="true"/>
+        <FIELD NAME="sessionid" TYPE="int" LENGTH="10" NOTNULL="true"/>
+        <FIELD NAME="critereid" TYPE="int" LENGTH="10" NOTNULL="true"/>
+        <FIELD NAME="niveau" TYPE="char" LENGTH="20" NOTNULL="true" COMMENT="reussi|a_consolider|a_reprendre"/>
+        <FIELD NAME="timecreated" TYPE="int" LENGTH="10" NOTNULL="true"/>
+      </FIELDS>
+      <KEYS>
+        <KEY NAME="primary" TYPE="primary" FIELDS="id"/>
+        <KEY NAME="sessionid_fk" TYPE="foreign" FIELDS="sessionid" REFTABLE="local_simhub_session" REFFIELDS="id"/>
+        <KEY NAME="critereid_fk" TYPE="foreign" FIELDS="critereid" REFTABLE="local_simhub_ae_critere" REFFIELDS="id"/>
+      </KEYS>
+      <INDEXES>
+        <INDEX NAME="session_critere_uniq" UNIQUE="true" FIELDS="sessionid, critereid"/>
+      </INDEXES>
+    </TABLE>
+
+    <TABLE NAME="local_simhub_ae_bilan" COMMENT="Auto-bilan final libre (3 champs) associé à une session">
+      <FIELDS>
+        <FIELD NAME="id" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="true"/>
+        <FIELD NAME="sessionid" TYPE="int" LENGTH="10" NOTNULL="true"/>
+        <FIELD NAME="pointmaitrise" TYPE="text" NOTNULL="false"/>
+        <FIELD NAME="pointaretravailler" TYPE="text" NOTNULL="false"/>
+        <FIELD NAME="pointattention" TYPE="text" NOTNULL="false"/>
+        <FIELD NAME="timecreated" TYPE="int" LENGTH="10" NOTNULL="true"/>
+      </FIELDS>
+      <KEYS>
+        <KEY NAME="primary" TYPE="primary" FIELDS="id"/>
+        <KEY NAME="sessionid_fk" TYPE="foreign-unique" FIELDS="sessionid" REFTABLE="local_simhub_session" REFFIELDS="id"/>
+      </KEYS>
+    </TABLE>
+
+    <!-- ============================================================ -->
+    <!-- 8. VALIDATION ENCADRANT (générique, hors ASV)                  -->
+    <!-- ============================================================ -->
+    <TABLE NAME="local_simhub_val_encadrant" COMMENT="Validation d'une session par un encadrant Moodle">
+      <FIELDS>
+        <FIELD NAME="id" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="true"/>
+        <FIELD NAME="sessionid" TYPE="int" LENGTH="10" NOTNULL="true"/>
+        <FIELD NAME="validateuruserid" TYPE="int" LENGTH="10" NOTNULL="true"/>
+        <FIELD NAME="datevalidation" TYPE="int" LENGTH="10" NOTNULL="true"/>
+        <FIELD NAME="statut" TYPE="char" LENGTH="20" NOTNULL="true" COMMENT="valide|refuse"/>
+        <FIELD NAME="commentaire" TYPE="text" NOTNULL="false"/>
+        <FIELD NAME="timecreated" TYPE="int" LENGTH="10" NOTNULL="true"/>
+      </FIELDS>
+      <KEYS>
+        <KEY NAME="primary" TYPE="primary" FIELDS="id"/>
+        <KEY NAME="sessionid_fk" TYPE="foreign" FIELDS="sessionid" REFTABLE="local_simhub_session" REFFIELDS="id"/>
+        <KEY NAME="validateuruserid_fk" TYPE="foreign" FIELDS="validateuruserid" REFTABLE="user" REFFIELDS="id"/>
+      </KEYS>
+    </TABLE>
+
+    <!-- ============================================================ -->
+    <!-- 9. MODULE ASV (§9)                                             -->
+    <!-- ============================================================ -->
+    <TABLE NAME="local_simhub_asv_acte" COMMENT="Référentiel des actes vétérinaires délégables ASV">
+      <FIELDS>
+        <FIELD NAME="id" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="true"/>
+        <FIELD NAME="code" TYPE="char" LENGTH="50" NOTNULL="true"/>
+        <FIELD NAME="nom" TYPE="char" LENGTH="255" NOTNULL="true"/>
+        <FIELD NAME="espece" TYPE="char" LENGTH="100" NOTNULL="false"/>
+        <FIELD NAME="niveau" TYPE="char" LENGTH="10" NOTNULL="true" COMMENT="A1|A2|A3"/>
+        <FIELD NAME="ucid" TYPE="int" LENGTH="10" NOTNULL="false" COMMENT="UC Moodle de repérage, si connue"/>
+        <FIELD NAME="envcode" TYPE="char" LENGTH="20" NOTNULL="true"/>
+        <FIELD NAME="actif" TYPE="int" LENGTH="1" NOTNULL="true" DEFAULT="1"/>
+        <FIELD NAME="timecreated" TYPE="int" LENGTH="10" NOTNULL="true"/>
+        <FIELD NAME="timemodified" TYPE="int" LENGTH="10" NOTNULL="true"/>
+      </FIELDS>
+      <KEYS>
+        <KEY NAME="primary" TYPE="primary" FIELDS="id"/>
+        <KEY NAME="ucid_fk" TYPE="foreign" FIELDS="ucid" REFTABLE="course" REFFIELDS="id"/>
+      </KEYS>
+      <INDEXES>
+        <INDEX NAME="code_env" UNIQUE="true" FIELDS="envcode, code"/>
+      </INDEXES>
+    </TABLE>
+
+    <TABLE NAME="local_simhub_asv_valsim" COMMENT="Validation ASV en simulation (§9.2)">
+      <FIELDS>
+        <FIELD NAME="id" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="true"/>
+        <FIELD NAME="userid" TYPE="int" LENGTH="10" NOTNULL="true"/>
+        <FIELD NAME="acteid" TYPE="int" LENGTH="10" NOTNULL="true"/>
+        <FIELD NAME="atelierid" TYPE="int" LENGTH="10" NOTNULL="false"/>
+        <FIELD NAME="sessionid" TYPE="int" LENGTH="10" NOTNULL="false" COMMENT="Session SimHub liée, si applicable"/>
+        <FIELD NAME="datevalidation" TYPE="int" LENGTH="10" NOTNULL="true"/>
+        <FIELD NAME="validateuruserid" TYPE="int" LENGTH="10" NOTNULL="true"/>
+        <FIELD NAME="statut" TYPE="char" LENGTH="20" NOTNULL="true" DEFAULT="non_valide" COMMENT="valide|non_valide"/>
+        <FIELD NAME="timecreated" TYPE="int" LENGTH="10" NOTNULL="true"/>
+      </FIELDS>
+      <KEYS>
+        <KEY NAME="primary" TYPE="primary" FIELDS="id"/>
+        <KEY NAME="userid_fk" TYPE="foreign" FIELDS="userid" REFTABLE="user" REFFIELDS="id"/>
+        <KEY NAME="acteid_fk" TYPE="foreign" FIELDS="acteid" REFTABLE="local_simhub_asv_acte" REFFIELDS="id"/>
+        <KEY NAME="atelierid_fk" TYPE="foreign" FIELDS="atelierid" REFTABLE="local_simhub_atelier" REFFIELDS="id"/>
+        <KEY NAME="validateuruserid_fk" TYPE="foreign" FIELDS="validateuruserid" REFTABLE="user" REFFIELDS="id"/>
+      </KEYS>
+      <INDEXES>
+        <INDEX NAME="user_acte" UNIQUE="false" FIELDS="userid, acteid"/>
+      </INDEXES>
+    </TABLE>
+
+    <TABLE NAME="local_simhub_asv_valanimal" COMMENT="Validation ASV sur animal vivant, éventuellement par validateur externe (§9.3)">
+      <FIELDS>
+        <FIELD NAME="id" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="true"/>
+        <FIELD NAME="userid" TYPE="int" LENGTH="10" NOTNULL="true" COMMENT="Étudiant concerné"/>
+        <FIELD NAME="acteid" TYPE="int" LENGTH="10" NOTNULL="true"/>
+        <FIELD NAME="datevalidation" TYPE="int" LENGTH="10" NOTNULL="false"/>
+        <FIELD NAME="nomvalidateur" TYPE="char" LENGTH="255" NOTNULL="false"/>
+        <FIELD NAME="prenomvalidateur" TYPE="char" LENGTH="255" NOTNULL="false"/>
+        <FIELD NAME="certificationcochee" TYPE="int" LENGTH="1" NOTNULL="true" DEFAULT="0" COMMENT="Case attestant que le validateur est vétérinaire/encadrant autorisé"/>
+        <FIELD NAME="signature" TYPE="text" NOTNULL="false" COMMENT="Tracé de signature (SVG/PNG base64) - niveau de preuve simple, non qualifié"/>
+        <FIELD NAME="statut" TYPE="char" LENGTH="20" NOTNULL="true" DEFAULT="en_attente" COMMENT="en_attente|valide"/>
+        <FIELD NAME="token" TYPE="char" LENGTH="255" NOTNULL="true" COMMENT="Jeton unique du lien d'accès externe, sans compte Moodle"/>
+        <FIELD NAME="tokenexpire" TYPE="int" LENGTH="10" NOTNULL="false"/>
+        <FIELD NAME="timecreated" TYPE="int" LENGTH="10" NOTNULL="true"/>
+      </FIELDS>
+      <KEYS>
+        <KEY NAME="primary" TYPE="primary" FIELDS="id"/>
+        <KEY NAME="userid_fk" TYPE="foreign" FIELDS="userid" REFTABLE="user" REFFIELDS="id"/>
+        <KEY NAME="acteid_fk" TYPE="foreign" FIELDS="acteid" REFTABLE="local_simhub_asv_acte" REFFIELDS="id"/>
+      </KEYS>
+      <INDEXES>
+        <INDEX NAME="token_uniq" UNIQUE="true" FIELDS="token"/>
+      </INDEXES>
+    </TABLE>
+
+    <!-- ============================================================ -->
+    <!-- 10. QR CODES ET CONTRÔLE ANTI-FAUX-SCAN (§7, §7.3)             -->
+    <!-- ============================================================ -->
+    <TABLE NAME="local_simhub_qrtoken" COMMENT="Jeton QR code associé à un atelier">
+      <FIELDS>
+        <FIELD NAME="id" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="true"/>
+        <FIELD NAME="atelierid" TYPE="int" LENGTH="10" NOTNULL="true"/>
+        <FIELD NAME="token" TYPE="char" LENGTH="255" NOTNULL="true"/>
+        <FIELD NAME="actif" TYPE="int" LENGTH="1" NOTNULL="true" DEFAULT="1"/>
+        <FIELD NAME="timecreated" TYPE="int" LENGTH="10" NOTNULL="true"/>
+      </FIELDS>
+      <KEYS>
+        <KEY NAME="primary" TYPE="primary" FIELDS="id"/>
+        <KEY NAME="atelierid_fk" TYPE="foreign-unique" FIELDS="atelierid" REFTABLE="local_simhub_atelier" REFFIELDS="id"/>
+      </KEYS>
+      <INDEXES>
+        <INDEX NAME="token_uniq" UNIQUE="true" FIELDS="token"/>
+      </INDEXES>
+    </TABLE>
+
+    <TABLE NAME="local_simhub_seancecode" COMMENT="Code de séance temporaire, mécanisme anti-faux-scan (§7.3)">
+      <FIELDS>
+        <FIELD NAME="id" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="true"/>
+        <FIELD NAME="salle" TYPE="char" LENGTH="150" NOTNULL="true"/>
+        <FIELD NAME="code" TYPE="char" LENGTH="20" NOTNULL="true"/>
+        <FIELD NAME="validfrom" TYPE="int" LENGTH="10" NOTNULL="true"/>
+        <FIELD NAME="validto" TYPE="int" LENGTH="10" NOTNULL="true"/>
+        <FIELD NAME="createuruserid" TYPE="int" LENGTH="10" NOTNULL="true"/>
+        <FIELD NAME="timecreated" TYPE="int" LENGTH="10" NOTNULL="true"/>
+      </FIELDS>
+      <KEYS>
+        <KEY NAME="primary" TYPE="primary" FIELDS="id"/>
+        <KEY NAME="createuruserid_fk" TYPE="foreign" FIELDS="createuruserid" REFTABLE="user" REFFIELDS="id"/>
+      </KEYS>
+    </TABLE>
+
+  </TABLES>
+</XMLDB>
