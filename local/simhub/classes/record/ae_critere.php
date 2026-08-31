@@ -40,4 +40,17 @@ class ae_critere {
 
         return $DB->get_records(self::TABLE, ['rubriqueid' => $rubriqueid], 'ordre ASC');
     }
+
+    /**
+     * Supprime un critère (les réponses déjà enregistrées dessus, historiques, sont
+     * conservées : seul le référentiel de la grille change).
+     *
+     * @param int $id
+     * @return void
+     */
+    public static function supprimer(int $id): void {
+        global $DB;
+
+        $DB->delete_records(self::TABLE, ['id' => $id]);
+    }
 }

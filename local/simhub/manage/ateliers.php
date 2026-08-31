@@ -68,6 +68,10 @@ foreach ($ateliers as $atelier) {
         . html_writer::link($ressourcesurl, get_string('bouton_ressources', 'local_simhub')) . ' | '
         . html_writer::link($rattachementsurl, get_string('rattachements', 'local_simhub')) . ' | '
         . html_writer::link(
+            new moodle_url('/local/simhub/manage/ae_modele_edit.php', ['atelierid' => $atelier->get('id')]),
+            get_string('ae_modele', 'local_simhub')
+        ) . ' | '
+        . html_writer::link(
             new moodle_url('/local/simhub/manage/atelier_fiche_pdf.php', ['id' => $atelier->get('id')]),
             'PDF'
         );

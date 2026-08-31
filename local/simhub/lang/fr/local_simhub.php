@@ -96,6 +96,17 @@ $string['event_asv_valide_animal'] = 'Acte ASV validé sur animal vivant';
 // Gestion des ateliers.
 $string['manage_ateliers'] = 'Gestion des ateliers';
 $string['rattachements'] = 'Rattachements';
+// Grille d'auto-évaluation guidée (§5.6, §7.2).
+$string['ae_modele'] = 'Grille d\'auto-évaluation';
+$string['ae_champ_titre'] = 'Titre';
+$string['ae_champ_actif'] = 'Grille active';
+$string['ae_champ_risques'] = 'Rubrique dédiée aux erreurs/risques';
+$string['ae_champ_critere'] = 'Nouveau critère';
+$string['ae_gerer_rubriques'] = 'Gérer les rubriques et critères';
+$string['ae_ajouter_rubrique'] = 'Ajouter une rubrique';
+$string['ae_ajouter_critere'] = 'Ajouter';
+$string['ae_badge_risques'] = 'Erreurs/risques';
+
 $string['qr_lien_intro'] = 'Ce lien ouvre la fiche de l\'atelier et démarre une session lors du scan (§7). Encodez-le dans un générateur de QR code pour produire l\'image à imprimer et coller sur l\'atelier.';
 $string['qr_regenerer'] = 'Régénérer le lien (invalide l\'ancien QR code imprimé)';
 $string['qr_pasdimage'] = 'Ce squelette ne génère pas d\'image QR imprimable (aucune bibliothèque de génération n\'est fournie par Moodle) : utilisez le lien ci-dessus avec un générateur de QR code externe le temps qu\'une bibliothèque soit intégrée.';

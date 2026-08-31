@@ -48,6 +48,8 @@ local/simhub/
 │   ├── atelier_edit.php         Création/modification, gestion du statut indisponible (§6.1)
 │   ├── atelier_plan.php          Positionnement du repère plan par simple clic (§5.4)
 │   ├── atelier_qr.php             Lien de scan QR d'un atelier, régénération (§7)
+│   ├── ae_modele_edit.php         Création/activation de la grille d'auto-évaluation (§5.6)
+│   ├── ae_rubriques.php           Rubriques et critères de la grille (§5.6, §7.2)
 │   ├── atelier_fiche_pdf.php     Export PDF imprimable d'une fiche atelier (§12.3)
 │   ├── parcours_attestation_pdf.php  Attestation PDF de fin de parcours, si 100% d'avancement (§8.1)
 │   ├── ressources.php            Liste des ressources d'un atelier (§6.2)
@@ -184,6 +186,12 @@ le schéma :
 - **Sessions et auto-évaluation guidée** (`session.php`) : démarrage,
   fin, formulaire dynamique rubriques/critères à trois niveaux
   (Réussi/À consolider/À reprendre) et auto-bilan libre (§5.6, §7.2).
+- **Gestion de la grille d'auto-évaluation** (`manage/ae_modele_edit.php`,
+  `manage/ae_rubriques.php`) : création du modèle d'un atelier, ajout de
+  rubriques (avec la rubrique dédiée aux erreurs/risques du §5.6) et de
+  leurs critères observables — la partie manquait entièrement jusqu'ici :
+  la grille était lisible et remplissable côté étudiant, mais rien ne
+  permettait de la créer.
 - **Gestion des ateliers** (`manage/`) : liste + formulaire de
   création/modification, avec ouverture/clôture automatique de
   l'indisponibilité selon le changement de statut (§6.1).
