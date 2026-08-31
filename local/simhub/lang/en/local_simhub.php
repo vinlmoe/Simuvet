@@ -174,6 +174,15 @@ $string['dashboard_salle'] = 'Room dashboard';
 $string['dashboard_sansressource'] = 'No resource';
 $string['dashboard_sansuc'] = 'No course link';
 $string['dashboard_peuutilise'] = 'Rarely used';
+
+$string['badge_aucun'] = 'None';
+$string['champ_badge'] = 'Badge awarded on completion (optional)';
+$string['setting_badgeasva1'] = 'ASV badge — level A1';
+$string['setting_badgeasva1_desc'] = 'Site badge automatically awarded to the student when they generate the A1 certification attestation (§9.4).';
+$string['setting_badgeasva2'] = 'ASV badge — level A2';
+$string['setting_badgeasva2_desc'] = 'Site badge automatically awarded to the student when they generate the A2 certification attestation (§9.4).';
+$string['setting_badgeasva3'] = 'ASV badge — level A3';
+$string['setting_badgeasva3_desc'] = 'Site badge automatically awarded to the student when they generate the A3 certification attestation (§9.4, "certification globale de fin de A3").';
 $string['sessions_aucune_a_valider'] = 'No session awaiting validation.';
 $string['session_valider'] = 'Validate';
 $string['session_refuser'] = 'Reject';

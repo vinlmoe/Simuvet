@@ -23,6 +23,7 @@ class parcours extends \core\persistent {
             'anneeetude' => ['type' => PARAM_INT, 'default' => 0, 'null' => NULL_ALLOWED],
             'cohortid' => ['type' => PARAM_INT, 'default' => 0, 'null' => NULL_ALLOWED],
             'envcode' => ['type' => PARAM_ALPHANUMEXT],
+            'badgeid' => ['type' => PARAM_INT, 'default' => 0, 'null' => NULL_ALLOWED],
         ];
     }
 

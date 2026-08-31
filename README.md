@@ -88,6 +88,7 @@ local/simhub/
 │   ├── local/pdf_helper.php       En-tête PDF commun (logo + nom d'établissement, §4)
 │   ├── local/annee_resolver.php   Libellés/options d'année d'étude A1-A5 (saisie directe)
 │   ├── local/cohort_helper.php    Sélection directe d'une cohorte Moodle à recommander (§5.1)
+│   ├── local/badge_helper.php     Délivrance d'un badge Moodle existant (§13)
 │   ├── output/                    Renderer + classe templatable de l'accueil étudiant
 │   ├── form/atelier_form.php      Formulaire moodleform de la fiche atelier
 │   ├── event/                     Événements métier (atelier créé, session, validations ASV)
@@ -123,7 +124,9 @@ s'appuyer sur `core\persistent` comme `atelier`, `parcours` et
 `ae_modele`. Les tables plus légères (liaisons N-N, historiques,
 réponses d'auto-évaluation, validations) n'ont pas ce triptyque complet
 et sont gérées par des classes `classes/record/*` en accès `$DB`
-direct plutôt que par `core\persistent`.
+direct plutôt que par `core\persistent`. `local_simhub_parcours` porte
+également un champ `badgeid`, nullable, référençant un badge de site
+Moodle existant à délivrer à la réalisation complète du parcours (§13).
 
 Points d'attention repris du cahier des charges et déjà traduits dans
 le schéma :
@@ -211,6 +214,14 @@ le schéma :
   donne au responsable de salle des tuiles et des listes actionnables
   (ateliers en maintenance, sans ressource, sans rattachement UC, peu
   utilisés).
+- **Badges Moodle** (`classes/local/badge_helper.php`, §13) : SimHub
+  délivre un badge de site Moodle existant — jamais créé par le plugin
+  lui-même — quand un étudiant génère l'attestation de fin de parcours
+  (badge choisi parcours par parcours, `classes/form/parcours_form.php`)
+  ou l'attestation de certification ASV par niveau (un réglage par
+  niveau A1/A2/A3, `settings.php`). N'échoue jamais silencieusement la
+  génération d'une attestation si les badges sont désactivés ou le
+  badge introuvable.
 - **Parcours pédagogiques** (`manage/parcours*.php`, §8) : création,
   composition (ajout/ordre/obligatoire), et suivi de progression par
   étudiant avec pourcentage d'avancement (§8.1), à partir des membres
@@ -269,7 +280,6 @@ le schéma :
       (§7.3) : seuls le code de séance et la validation encadrant sont
       implémentés pour l'instant ; le contrôle par plage IP de salle
       demanderait de connaître l'infrastructure réseau réelle des ENV.
-- [ ] Badges Moodle.
 
 **Hors périmètre V1** (rappel §14, pour éviter la dérive de périmètre)
 Ticketing complet, mode OSCE, signature électronique qualifiée,
@@ -288,7 +298,11 @@ sophistiquée, gestion documentaire avec versioning complet.
   les fichiers PHP passent `php -l` et `db/install.xml` est un XML
   bien formé, mais aucune vérification contre l'API Moodle réelle
   (signatures exactes, comportements de `core\persistent`,
-  `moodleform`, `core_privacy`...) n'a pu être faite. Première étape
+  `moodleform`, `core_privacy`...) n'a pu être faite — en particulier
+  `classes/local/badge_helper.php`, écrit d'après la classe `\badge`
+  documentée de `lib/badgeslib.php` (`issue()`, `is_issued()`,
+  `BADGE_TYPE_SITE`, `BADGE_STATUS_INACTIVE`) mais jamais exécutée
+  contre un site avec les badges activés. Première étape
   indispensable avant d'aller plus loin : installer sur une instance
   de test (`php admin/cli/upgrade.php`) et corriger les éventuelles
   erreurs d'API.

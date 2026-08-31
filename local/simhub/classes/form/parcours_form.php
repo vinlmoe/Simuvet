@@ -8,6 +8,7 @@ require_once($CFG->libdir . '/formslib.php');
 
 use local_simhub\local\annee_resolver;
 use local_simhub\local\cohort_helper;
+use local_simhub\local\badge_helper;
 
 /**
  * Formulaire de création/modification d'un parcours pédagogique (§8).
@@ -51,6 +52,14 @@ class parcours_form extends \moodleform {
             cohort_helper::get_options()
         );
         $mform->setType('cohortid', PARAM_INT);
+
+        $mform->addElement(
+            'select',
+            'badgeid',
+            get_string('champ_badge', 'local_simhub'),
+            badge_helper::get_options()
+        );
+        $mform->setType('badgeid', PARAM_INT);
 
         $mform->addElement('text', 'envcode', get_string('champ_envcode', 'local_simhub'));
         $mform->setType('envcode', PARAM_ALPHANUMEXT);

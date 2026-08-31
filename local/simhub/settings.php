@@ -56,6 +56,21 @@ if ($hassiteconfig) {
         ['maxfiles' => 1, 'accepted_types' => ['.png', '.jpg', '.jpeg', '.svg']]
     ));
 
+    // Badges Moodle délivrés à la certification globale d'un niveau ASV (§9.4, §13) : un
+    // badge de site existant par niveau, choisi dans une liste réelle plutôt que saisi par
+    // id. La délivrance à la fin d'un parcours se configure parcours par parcours, dans
+    // classes/form/parcours_form.php.
+    $badgeoptions = \local_simhub\local\badge_helper::get_options();
+    foreach (['a1' => 'A1', 'a2' => 'A2', 'a3' => 'A3'] as $key => $label) {
+        $settings->add(new admin_setting_configselect(
+            'local_simhub/badgeasv' . $key,
+            get_string('setting_badgeasv' . $key, 'local_simhub'),
+            get_string('setting_badgeasv' . $key . '_desc', 'local_simhub'),
+            '',
+            $badgeoptions
+        ));
+    }
+
     // TODO : ajouter ici les référentiels paramétrables par école
     // (disciplines, espèces, salles/zones) plutôt qu'en dur dans le
     // code, conformément au principe "Paramétrable ENVF" (§4). Une UI

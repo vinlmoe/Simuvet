@@ -12,6 +12,7 @@ use local_simhub\persistent\asv_acte;
 use local_simhub\record\asv_valsim;
 use local_simhub\record\asv_valanimal;
 use local_simhub\local\pdf_helper;
+use local_simhub\local\badge_helper;
 
 require_login();
 
@@ -78,6 +79,11 @@ if (!empty($manquants)) {
     echo $OUTPUT->footer();
     exit;
 }
+
+// Le niveau étant effectivement complet (vérifié ci-dessus), on délivre le badge Moodle
+// configuré pour ce niveau, s'il y en a un (§13).
+$badgeid = (int) (get_config('local_simhub', 'badgeasv' . strtolower($niveau)) ?: 0);
+badge_helper::delivrer($badgeid ?: null, $userid);
 
 $pdf = new pdf();
 $pdf->SetCreator('SimHub');

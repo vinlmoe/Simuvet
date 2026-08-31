@@ -105,6 +105,7 @@
         <FIELD NAME="anneeetude" TYPE="int" LENGTH="2" NOTNULL="false"/>
         <FIELD NAME="cohortid" TYPE="int" LENGTH="10" NOTNULL="false"/>
         <FIELD NAME="envcode" TYPE="char" LENGTH="20" NOTNULL="true"/>
+        <FIELD NAME="badgeid" TYPE="int" LENGTH="10" NOTNULL="false" COMMENT="Badge Moodle (site) délivré à la réalisation complète du parcours, si configuré (§13)"/>
         <FIELD NAME="timecreated" TYPE="int" LENGTH="10" NOTNULL="true"/>
         <FIELD NAME="timemodified" TYPE="int" LENGTH="10" NOTNULL="true"/>
         <FIELD NAME="usermodified" TYPE="int" LENGTH="10" NOTNULL="true"/>

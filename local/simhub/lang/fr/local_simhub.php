@@ -184,6 +184,16 @@ $string['dashboard_salle'] = 'Tableau de bord salle';
 $string['dashboard_sansressource'] = 'Sans ressource';
 $string['dashboard_sansuc'] = 'Sans UC';
 $string['dashboard_peuutilise'] = 'Peu utilisés';
+
+// Badges Moodle (§13).
+$string['badge_aucun'] = 'Aucun';
+$string['champ_badge'] = 'Badge délivré à la réalisation complète (optionnel)';
+$string['setting_badgeasva1'] = 'Badge ASV — niveau A1';
+$string['setting_badgeasva1_desc'] = 'Badge de site délivré automatiquement à l\'étudiant lorsqu\'il génère l\'attestation de certification A1 (§9.4).';
+$string['setting_badgeasva2'] = 'Badge ASV — niveau A2';
+$string['setting_badgeasva2_desc'] = 'Badge de site délivré automatiquement à l\'étudiant lorsqu\'il génère l\'attestation de certification A2 (§9.4).';
+$string['setting_badgeasva3'] = 'Badge ASV — niveau A3';
+$string['setting_badgeasva3_desc'] = 'Badge de site délivré automatiquement à l\'étudiant lorsqu\'il génère l\'attestation de certification A3 (§9.4, certification globale de fin de A3).';
 $string['sessions_aucune_a_valider'] = 'Aucune session en attente de validation.';
 $string['session_valider'] = 'Valider';
 $string['session_refuser'] = 'Refuser';

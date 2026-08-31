@@ -10,6 +10,7 @@ use local_simhub\persistent\parcours;
 use local_simhub\persistent\atelier;
 use local_simhub\persistent\session;
 use local_simhub\local\pdf_helper;
+use local_simhub\local\badge_helper;
 
 require_login();
 
@@ -63,6 +64,11 @@ if ($total === 0 || $pct < 100) {
     echo $OUTPUT->footer();
     exit;
 }
+
+// Le parcours étant effectivement terminé (100%, vérifié ci-dessus), on délivre le badge
+// Moodle configuré pour ce parcours, s'il y en a un (§13) — sans jamais faire échouer la
+// génération de l'attestation si la délivrance du badge pose problème.
+badge_helper::delivrer($parcours->get('badgeid') ?: null, $userid);
 
 $pdf = new pdf();
 $pdf->SetCreator('SimHub');
