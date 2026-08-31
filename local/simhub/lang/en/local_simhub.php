@@ -130,6 +130,12 @@ $string['bouton_localisation'] = 'Show location';
 $string['bouton_ressources'] = 'View resources';
 $string['bouton_commencer'] = 'Start';
 $string['bouton_terminer'] = 'Finish workshop and self-assess';
+$string['section_mesuc'] = 'To do for my courses';
+$string['section_parcours'] = 'My ongoing pathways';
+$string['section_asv'] = 'ASV pathway';
+$string['section_commences'] = 'Workshops already started';
+$string['section_areprendre'] = 'Workshops to redo';
+$string['section_tous'] = 'All available workshops';
 
 $string['asv_parcours'] = 'ASV pathway';
 $string['asv_livret'] = 'ASV competency logbook';
@@ -152,3 +158,5 @@ $string['import_description'] = 'Imports a list of workshops from a CSV file. Re
 $string['import_fichier'] = 'CSV file';
 $string['import_crees'] = '{$a} workshop(s) created';
 $string['import_mis_a_jour'] = '{$a} workshop(s) updated';
+
+$string['export_csv'] = 'Export (CSV)';

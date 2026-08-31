@@ -25,8 +25,14 @@ $PAGE->set_heading($title);
 $atelier = $id ? new atelier($id) : new atelier();
 $oldstatut = $atelier->get('id') ? $atelier->get('statut') : null;
 
+$planoptions = ['subdirs' => 0, 'maxfiles' => 1, 'accepted_types' => ['.png', '.jpg', '.jpeg']];
+$plandraftid = file_get_submitted_draft_itemid('planimage');
+file_prepare_draft_area($plandraftid, $context->id, 'local_simhub', 'plan', $id ?: null, $planoptions);
+
 $form = new atelier_form();
-$form->set_data($atelier->to_record());
+$formdata = $atelier->to_record();
+$formdata->planimage = $plandraftid;
+$form->set_data($formdata);
 
 if ($form->is_cancelled()) {
     redirect(new moodle_url('/local/simhub/manage/ateliers.php'));
@@ -51,6 +57,14 @@ if ($form->is_cancelled()) {
     } else {
         $atelier->update();
     }
+
+    // L'itemid de la zone de fichiers 'plan' est l'id de l'atelier lui-même (§5.4), une fois
+    // celui-ci connu (création comprise).
+    file_save_draft_area_files($data->planimage, $context->id, 'local_simhub', 'plan', $atelier->get('id'), $planoptions);
+    $fs = get_file_storage();
+    $planfiles = $fs->get_area_files($context->id, 'local_simhub', 'plan', $atelier->get('id'), 'filepath, filename', false);
+    $atelier->set('planimageitemid', !empty($planfiles) ? $atelier->get('id') : 0);
+    $atelier->update();
 
     // Ouverture/clôture automatique de l'indisponibilité selon le changement de statut (§6.1) :
     // le formulaire ne demande pas explicitement le commentaire pour rester simple ; un

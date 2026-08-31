@@ -25,6 +25,12 @@ $PAGE->set_heading(s($parcours->get('nom')));
 
 echo $OUTPUT->header();
 
+echo $OUTPUT->single_button(
+    new moodle_url('/local/simhub/manage/export.php', ['type' => 'parcours', 'parcoursid' => $parcoursid]),
+    get_string('export_csv', 'local_simhub'),
+    'get'
+);
+
 global $DB;
 
 $composition = $parcours->get_ateliers();

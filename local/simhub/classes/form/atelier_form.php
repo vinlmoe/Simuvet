@@ -84,6 +84,12 @@ class atelier_form extends \moodleform {
         $mform->addElement('text', 'planrepy', 'Repère plan - Y (%)');
         $mform->setType('planrepy', PARAM_FLOAT);
 
+        $mform->addElement('filemanager', 'planimage', 'Image du plan de salle', null, [
+            'subdirs' => 0,
+            'maxfiles' => 1,
+            'accepted_types' => ['.png', '.jpg', '.jpeg'],
+        ]);
+
         $mform->addElement('header', 'administration', get_string('champ_commentaireadmin', 'local_simhub'));
 
         $mform->addElement('textarea', 'commentaireadmin', get_string('champ_commentaireadmin', 'local_simhub'));

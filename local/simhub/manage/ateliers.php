@@ -31,6 +31,14 @@ echo $OUTPUT->single_button(
     get_string('atelier_nouveau', 'local_simhub')
 );
 
+if (has_capability('local/simhub:exportsuivi', $context)) {
+    echo $OUTPUT->single_button(
+        new moodle_url('/local/simhub/manage/export.php', ['type' => 'ateliers', 'envcode' => $envcode]),
+        get_string('export_csv', 'local_simhub'),
+        'get'
+    );
+}
+
 $params = $envcode !== '' ? ['envcode' => $envcode] : [];
 $ateliers = atelier::get_records($params, 'nomcourt');
 
@@ -53,13 +61,15 @@ foreach ($ateliers as $atelier) {
     }
 
     $editurl = new moodle_url('/local/simhub/manage/atelier_edit.php', ['id' => $atelier->get('id')]);
+    $ressourcesurl = new moodle_url('/local/simhub/manage/ressources.php', ['atelierid' => $atelier->get('id')]);
 
     $table->data[] = [
         s($atelier->get('numero')),
         s($atelier->get('nomcourt')),
         $statutlabel,
         s($atelier->get('salle')),
-        html_writer::link($editurl, get_string('atelier_modifier', 'local_simhub')),
+        html_writer::link($editurl, get_string('atelier_modifier', 'local_simhub')) . ' | '
+            . html_writer::link($ressourcesurl, get_string('bouton_ressources', 'local_simhub')),
     ];
 }
 

@@ -135,10 +135,14 @@ le schéma :
   sessions, auto-évaluations, validations et données de validateur ASV.
 - Événements métier (`classes/event/`) pour atelier créé, session
   démarrée/terminée, validations ASV.
-- **Accueil étudiant** (`index.php`) : formulaire de filtres (mot-clé,
-  discipline, espèce, niveau, durée max) + cartes atelier avec statut
-  personnel, boutons localisation/ressources/commencer-terminer (§5.2,
-  §5.3).
+- **Accueil étudiant** (`index.php`) : les sept sections du §5.1 — à
+  faire pour mes UC (via les rattachements et les UC où l'étudiant est
+  inscrit), mes parcours en cours (avec % d'avancement), parcours ASV
+  (résumé actes validés/total), ateliers déjà commencés, ateliers à
+  reprendre, et enfin la liste complète avec formulaire de filtres
+  (mot-clé, discipline, espèce, niveau, durée max) + cartes atelier
+  avec statut personnel et boutons localisation/ressources/commencer-
+  terminer (§5.2, §5.3).
 - **Fiche atelier** (`atelier.php`) : bloc localisation (salle, zone,
   poste, plan + repère, §5.4) et bloc ressources visibles étudiant
   (§5.5), en respectant la visibilité `interne` des sources éditables
@@ -161,10 +165,17 @@ le schéma :
   (accents/casse/espaces ignorés) pour s'adapter aux tableaux
   hétérogènes des quatre écoles (§12.1) ; upsert par (établissement,
   numéro) pour permettre des imports répétés sans doublons.
+- **Export CSV** (`manage/export.php`) : liste des ateliers, et suivi
+  de progression d'un parcours (§12.3).
 - **Parcours pédagogiques** (`manage/parcours*.php`, §8) : création,
   composition (ajout/ordre/obligatoire), et suivi de progression par
   étudiant avec pourcentage d'avancement (§8.1), à partir des membres
   d'une cohorte Moodle si le parcours y est rattaché.
+- **Ressources et plan de salle** (`manage/ressources.php`,
+  `manage/ressource_edit.php`) : upload réel de fichiers (PDF, vidéo,
+  image de plan) via l'API filestorage de Moodle (`filemanager`),
+  avec visibilité étudiant/interne effective (§6.2), et upload de
+  l'image de plan directement depuis la fiche atelier (§5.4).
 
 ## Ce qui reste à faire
 
@@ -177,19 +188,16 @@ le schéma :
 - [ ] Génération PDF (fiches, attestations, livret ASV).
 
 **Ergonomie et robustesse**
-- [ ] Upload effectif des ressources et du plan de salle (formulaires
-      actuels acceptent des `fileitemid`/URLs, mais aucune UI d'upload
-      avec `file_manager`/`filepicker` n'est encore branchée).
 - [ ] Positionnement du repère sur le plan de salle au clic (actuellement
       deux champs numériques `planrepx`/`planrepy`).
-- [ ] Accueil étudiant : les sept sections personnalisées du §5.1 ("À
-      faire pour mes UC", "Mes parcours en cours", "Parcours ASV"...)
-      restent à construire au-dessus du filtre générique actuel, une
-      fois les rattachements réels connus après import.
 - [ ] UI de gestion des rattachements UC/année/cohorte hors parcours
       (`record/rattachement.php` existe mais sans page dédiée — seuls
       les filtres étudiants et le suivi de parcours l'exploitent déjà
       en lecture).
+- [ ] "Recommandés pour mon année" (§5.1) n'est pas encore une section
+      distincte : l'année d'étude de l'étudiant n'a pas de source fiable
+      dans ce squelette (pas de champ standard Moodle) ; à câbler une
+      fois la source retenue (profil personnalisé, cohorte annuelle...).
 - [ ] Web services / API externe (`classes/external/`) pour un futur
       composant mobile et pour la synchronisation QR code hors-ligne.
 

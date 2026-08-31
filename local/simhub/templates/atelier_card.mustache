@@ -1,0 +1,40 @@
+{{!
+    @template local_simhub/atelier_card
+
+    Carte atelier étudiante (§5.3), utilisée par toutes les sections de l'accueil (§5.1).
+
+    Context variables required for this template:
+    * numero, nomcourt, discipline, espece, dureeindicative
+    * statutpersolabel, estindisponible, commentaireindispo
+    * estcommence
+    * urllocalisation, urlressources, urlcommencer, urlterminer
+}}
+<div class="card local-simhub-carte mb-3 {{#estindisponible}}border-warning{{/estindisponible}}">
+    <div class="card-body">
+        <h5 class="card-title">
+            <span class="text-muted">#{{numero}}</span> {{nomcourt}}
+            <span class="badge badge-{{#estindisponible}}warning{{/estindisponible}}{{^estindisponible}}success{{/estindisponible}} float-right">
+                {{statutpersolabel}}
+            </span>
+        </h5>
+        <p class="card-text">
+            {{discipline}} {{#espece}}&middot; {{espece}}{{/espece}}
+            {{#dureeindicative}}&middot; {{dureeindicative}} min{{/dureeindicative}}
+        </p>
+        {{#estindisponible}}
+            <p class="text-warning">{{commentaireindispo}}</p>
+        {{/estindisponible}}
+        <div class="btn-group" role="group">
+            <a class="btn btn-outline-secondary btn-sm" href="{{urllocalisation}}">{{strings.boutonlocalisation}}</a>
+            <a class="btn btn-outline-secondary btn-sm" href="{{urlressources}}">{{strings.boutonressources}}</a>
+            {{#estcommence}}
+                <a class="btn btn-primary btn-sm" href="{{urlterminer}}">{{strings.boutonterminer}}</a>
+            {{/estcommence}}
+            {{^estcommence}}
+                {{^estindisponible}}
+                    <a class="btn btn-primary btn-sm" href="{{urlcommencer}}">{{strings.boutoncommencer}}</a>
+                {{/estindisponible}}
+            {{/estcommence}}
+        </div>
+    </div>
+</div>

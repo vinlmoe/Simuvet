@@ -138,6 +138,12 @@ $string['bouton_localisation'] = 'Voir où il est';
 $string['bouton_ressources'] = 'Voir les ressources';
 $string['bouton_commencer'] = 'Commencer';
 $string['bouton_terminer'] = 'Terminer l\'atelier et s\'auto-évaluer';
+$string['section_mesuc'] = 'À faire pour mes UC';
+$string['section_parcours'] = 'Mes parcours en cours';
+$string['section_asv'] = 'Parcours ASV';
+$string['section_commences'] = 'Ateliers déjà commencés';
+$string['section_areprendre'] = 'Ateliers à reprendre';
+$string['section_tous'] = 'Tous les ateliers disponibles';
 
 // Module ASV (§9).
 $string['asv_parcours'] = 'Parcours ASV';
@@ -162,3 +168,6 @@ $string['import_description'] = 'Importe une liste d\'ateliers depuis un fichier
 $string['import_fichier'] = 'Fichier CSV';
 $string['import_crees'] = '{$a} atelier(s) créé(s)';
 $string['import_mis_a_jour'] = '{$a} atelier(s) mis à jour';
+
+// Export (§12.3).
+$string['export_csv'] = 'Exporter (CSV)';

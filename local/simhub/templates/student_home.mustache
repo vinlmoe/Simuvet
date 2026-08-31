@@ -1,12 +1,58 @@
 {{!
     @template local_simhub/student_home
 
-    Accueil étudiant personnalisé (§5) : filtres + liste de cartes atelier.
+    Accueil étudiant personnalisé (§5.1) : sept sections construites sur le même modèle de
+    carte atelier (§5.3) - à faire pour mes UC, mes parcours en cours, parcours ASV,
+    ateliers commencés, ateliers à reprendre, et la liste complète avec filtres (§5.2).
 
     Context variables required for this template:
-    * title, ateliers, hasateliers, nomessage, formurl, filtre, strings
+    * title, strings
+    * mesuc, hasmesuc
+    * parcoursencours, hasparcoursencours
+    * asvtotal, asvvalides, hasasv, urlasv
+    * commences, hascommences
+    * areprendre, hasareprendre
+    * ateliers, hasateliers, nomessage, formurl, filtre
 }}
 <div class="local-simhub-studenthome">
+
+    {{#hasmesuc}}
+    <h4>{{strings.sectionmesuc}}</h4>
+    <div class="local-simhub-cartes mb-4">
+        {{#mesuc}}{{> local_simhub/atelier_card }}{{/mesuc}}
+    </div>
+    {{/hasmesuc}}
+
+    {{#hasparcoursencours}}
+    <h4>{{strings.sectionparcours}}</h4>
+    <ul class="list-unstyled mb-4">
+        {{#parcoursencours}}
+        <li><a href="{{url}}">{{nom}}</a> — {{pct}} %</li>
+        {{/parcoursencours}}
+    </ul>
+    {{/hasparcoursencours}}
+
+    {{#hasasv}}
+    <h4>{{strings.sectionasv}}</h4>
+    <p class="mb-4"><a href="{{urlasv}}">{{strings.voirasv}}</a> — {{asvvalides}} / {{asvtotal}}</p>
+    {{/hasasv}}
+
+    {{#hascommences}}
+    <h4>{{strings.sectioncommences}}</h4>
+    <div class="local-simhub-cartes mb-4">
+        {{#commences}}{{> local_simhub/atelier_card }}{{/commences}}
+    </div>
+    {{/hascommences}}
+
+    {{#hasareprendre}}
+    <h4>{{strings.sectionareprendre}}</h4>
+    <div class="local-simhub-cartes mb-4">
+        {{#areprendre}}{{> local_simhub/atelier_card }}{{/areprendre}}
+    </div>
+    {{/hasareprendre}}
+
+    <h4>{{strings.sectiontous}}</h4>
+
     <form method="get" action="{{formurl}}" class="local-simhub-filtres form-inline mb-3">
         <div class="form-group mr-2 mb-2">
             <input type="text" name="motcle" class="form-control" placeholder="{{strings.filtremotcle}}"
@@ -43,36 +89,6 @@
     {{/hasateliers}}
 
     <div class="local-simhub-cartes">
-        {{#ateliers}}
-        <div class="card local-simhub-carte mb-3 {{#estindisponible}}border-warning{{/estindisponible}}">
-            <div class="card-body">
-                <h5 class="card-title">
-                    <span class="text-muted">#{{numero}}</span> {{nomcourt}}
-                    <span class="badge badge-{{#estindisponible}}warning{{/estindisponible}}{{^estindisponible}}success{{/estindisponible}} float-right">
-                        {{statutpersolabel}}
-                    </span>
-                </h5>
-                <p class="card-text">
-                    {{discipline}} {{#espece}}&middot; {{espece}}{{/espece}}
-                    {{#dureeindicative}}&middot; {{dureeindicative}} min{{/dureeindicative}}
-                </p>
-                {{#estindisponible}}
-                    <p class="text-warning">{{commentaireindispo}}</p>
-                {{/estindisponible}}
-                <div class="btn-group" role="group">
-                    <a class="btn btn-outline-secondary btn-sm" href="{{urllocalisation}}">{{strings.boutonlocalisation}}</a>
-                    <a class="btn btn-outline-secondary btn-sm" href="{{urlressources}}">{{strings.boutonressources}}</a>
-                    {{#estcommence}}
-                        <a class="btn btn-primary btn-sm" href="{{urlterminer}}">{{strings.boutonterminer}}</a>
-                    {{/estcommence}}
-                    {{^estcommence}}
-                        {{^estindisponible}}
-                            <a class="btn btn-primary btn-sm" href="{{urlcommencer}}">{{strings.boutoncommencer}}</a>
-                        {{/estindisponible}}
-                    {{/estcommence}}
-                </div>
-            </div>
-        </div>
-        {{/ateliers}}
+        {{#ateliers}}{{> local_simhub/atelier_card }}{{/ateliers}}
     </div>
 </div>

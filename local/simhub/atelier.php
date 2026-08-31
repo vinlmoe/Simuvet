@@ -9,7 +9,7 @@
 require(__DIR__ . '/../../config.php');
 
 use local_simhub\persistent\atelier;
-use local_simhub\record\ressource;
+use local_simhub\persistent\ressource;
 
 require_login();
 
@@ -47,23 +47,33 @@ if ($atelier->get('codeposte')) {
 if ($atelier->get('indicationtextuelle')) {
     echo html_writer::tag('p', s($atelier->get('indicationtextuelle')));
 }
-if ($atelier->get('planimageitemid') && $atelier->get('planrepx') !== null && $atelier->get('planrepy') !== null) {
+if ($atelier->get('planimageitemid')) {
     // Plan de salle sous forme d'image, avec repère éditable (§5.4) : approche pragmatique,
     // sans géolocalisation intérieure sophistiquée (hors périmètre V1, §14).
-    $planurl = moodle_url::make_pluginfile_url(
-        $context->id, 'local_simhub', 'plan', $atelier->get('planimageitemid'), '/', 'plan.png'
+    $fs = get_file_storage();
+    $planfiles = $fs->get_area_files(
+        $context->id, 'local_simhub', 'plan', $atelier->get('planimageitemid'), 'filepath, filename', false
     );
-    echo html_writer::start_div('local-simhub-plan', ['style' => 'position:relative;display:inline-block;']);
-    echo html_writer::empty_tag('img', ['src' => $planurl->out(false), 'style' => 'max-width:100%;']);
-    echo html_writer::span('', 'local-simhub-repere', [
-        'style' => sprintf(
-            'position:absolute;left:%s%%;top:%s%%;width:14px;height:14px;border-radius:50%%;'
-            . 'background:red;transform:translate(-50%%,-50%%);',
-            $atelier->get('planrepx'),
-            $atelier->get('planrepy')
-        ),
-    ]);
-    echo html_writer::end_div();
+    $planfile = reset($planfiles);
+
+    if ($planfile) {
+        $planurl = moodle_url::make_pluginfile_url(
+            $context->id, 'local_simhub', 'plan', $atelier->get('planimageitemid'), '/', $planfile->get_filename()
+        );
+        echo html_writer::start_div('local-simhub-plan', ['style' => 'position:relative;display:inline-block;']);
+        echo html_writer::empty_tag('img', ['src' => $planurl->out(false), 'style' => 'max-width:100%;']);
+        if ($atelier->get('planrepx') !== null && $atelier->get('planrepy') !== null) {
+            echo html_writer::span('', 'local-simhub-repere', [
+                'style' => sprintf(
+                    'position:absolute;left:%s%%;top:%s%%;width:14px;height:14px;border-radius:50%%;'
+                    . 'background:red;transform:translate(-50%%,-50%%);',
+                    $atelier->get('planrepx'),
+                    $atelier->get('planrepy')
+                ),
+            ]);
+        }
+        echo html_writer::end_div();
+    }
 }
 echo html_writer::end_div();
 echo html_writer::end_div();
@@ -76,13 +86,20 @@ $ressources = ressource::get_pour_etudiant($id);
 if (empty($ressources)) {
     echo $OUTPUT->notification(get_string('aucun_atelier', 'local_simhub'), \core\output\notification::NOTIFY_INFO);
 } else {
+    $fs = get_file_storage();
     echo html_writer::start_tag('ul', ['class' => 'list-unstyled']);
     foreach ($ressources as $r) {
         $href = $r->get('url');
         if (!$href && $r->get('fileitemid')) {
-            $href = moodle_url::make_pluginfile_url(
-                $context->id, 'local_simhub', 'ressource', $r->get('fileitemid'), '/', $r->get('titre')
-            )->out(false);
+            $resfiles = $fs->get_area_files(
+                $context->id, 'local_simhub', 'ressource', $r->get('fileitemid'), 'filepath, filename', false
+            );
+            $resfile = reset($resfiles);
+            if ($resfile) {
+                $href = moodle_url::make_pluginfile_url(
+                    $context->id, 'local_simhub', 'ressource', $r->get('fileitemid'), '/', $resfile->get_filename()
+                )->out(false);
+            }
         }
         echo html_writer::tag('li', $href ? html_writer::link($href, s($r->get('titre'))) : s($r->get('titre')));
     }
