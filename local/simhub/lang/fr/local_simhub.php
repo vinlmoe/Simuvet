@@ -180,6 +180,12 @@ $string['section_recommandes'] = 'Recommandés pour mon groupe';
 $string['champ_cohorte'] = 'Groupe (cohorte Moodle)';
 
 // Module ASV (§9).
+$string['asv_gerer_actes'] = 'Gérer le référentiel des actes';
+$string['asv_acte_nouveau'] = 'Nouvel acte';
+$string['asv_acte_inactif'] = 'Inactif';
+$string['asv_champ_code'] = 'Code';
+$string['asv_champ_niveau'] = 'Niveau';
+$string['asv_champ_ucid'] = 'UC (id de cours)';
 $string['asv_parcours'] = 'Parcours ASV';
 $string['asv_livret'] = 'Livret de compétences ASV';
 $string['asv_valider_simulation'] = 'Valider en simulation';

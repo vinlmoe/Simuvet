@@ -170,6 +170,12 @@ $string['section_tous'] = 'All available workshops';
 $string['section_recommandes'] = 'Recommended for my group';
 $string['champ_cohorte'] = 'Group (Moodle cohort)';
 
+$string['asv_gerer_actes'] = 'Manage act catalogue';
+$string['asv_acte_nouveau'] = 'New act';
+$string['asv_acte_inactif'] = 'Inactive';
+$string['asv_champ_code'] = 'Code';
+$string['asv_champ_niveau'] = 'Level';
+$string['asv_champ_ucid'] = 'Course (UC id)';
 $string['asv_parcours'] = 'ASV pathway';
 $string['asv_livret'] = 'ASV competency logbook';
 $string['asv_valider_simulation'] = 'Validate in simulation';

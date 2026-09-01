@@ -29,6 +29,14 @@ echo $OUTPUT->single_button(
     'get'
 );
 
+if (has_capability('local/simhub:manageasv', $context)) {
+    echo $OUTPUT->single_button(
+        new moodle_url('/local/simhub/manage/asv_actes.php', ['envcode' => $envcode]),
+        get_string('asv_gerer_actes', 'local_simhub'),
+        'get'
+    );
+}
+
 if (!$canpilot) {
     // Vue étudiant : sa propre progression sur le référentiel (§9.4 "état d'avancement individuel").
     $actesvalidessim = asv_valsim::get_actes_valides($USER->id);

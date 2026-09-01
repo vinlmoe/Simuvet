@@ -77,6 +77,10 @@ class navigation {
             $ajouter('asv', get_string('asv_parcours', 'local_simhub'), '/local/simhub/asv/index.php');
         }
 
+        if (has_capability('local/simhub:manageasv', $context)) {
+            $ajouter('asvactes', get_string('asv_gerer_actes', 'local_simhub'), '/local/simhub/manage/asv_actes.php');
+        }
+
         if (has_capability('local/simhub:importexport', $context)) {
             $ajouter('import', get_string('import_ateliers', 'local_simhub'), '/local/simhub/manage/import.php');
         }
