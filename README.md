@@ -399,6 +399,29 @@ ajouter dans *Administration du site → Présentation → Réglages du thème �
 SimHub|/local/simhub/index.php
 ```
 
+## Tables manquantes en base sur une instance déjà installée (signalé en usage réel)
+
+Signalé ainsi : une rubrique ajoutée sur `manage/ae_rubriques.php` n'apparaissait jamais
+dans la liste après validation, sans aucune erreur affichée.
+
+Cause : plusieurs tables (`local_simhub_ae_modele`, `_ae_rubrique`, `_ae_critere`,
+`_ae_reponse`, `_ae_bilan`, `_val_encadrant`, les tables ASV...) ont été ajoutées à
+`db/install.xml` au fil du développement de ce squelette, après que l'instance de test
+avait déjà installé une version antérieure du plugin. Moodle ne relit `install.xml` qu'à
+l'installation initiale d'un plugin ; toute table ajoutée ensuite doit être créée via un
+pas de `db/upgrade.php`, ce qui n'avait pas été fait ici : `version.php` n'avait jamais été
+incrémenté malgré ces ajouts de tables. Sur une instance installée avant leur ajout, ces
+tables n'existaient donc simplement pas — `$DB->insert_record()` sur une table absente
+lève en principe une exception, mais selon la configuration d'affichage des erreurs du
+site, celle-ci peut rester invisible côté utilisateur, qui ne voit alors que « rien ne
+s'est passé ».
+
+Correctif : `db/upgrade.php` rejoue désormais `install_from_xmldb_file()` sur
+`db/install.xml` (version 2026090101) — cette fonction Moodle vérifie l'existence de
+chaque table avant de la créer, donc sans risque pour les tables déjà en place. Après mise
+à jour du code, il faut visiter *Administration du site → Notifications* pour que Moodle
+détecte le changement de version et exécute cette mise à jour.
+
 ## Mise en page des pages de gestion (signalé en usage réel)
 
 Les 17 pages sous `manage/` utilisaient `$PAGE->set_pagelayout('admin')`.
