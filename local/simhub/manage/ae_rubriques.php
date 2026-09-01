@@ -23,7 +23,11 @@ if (!$modele) {
     redirect(new moodle_url('/local/simhub/manage/ae_modele_edit.php', ['atelierid' => $atelierid]));
 }
 
-$action = optional_param('action', '', PARAM_ALPHA);
+// PARAM_ALPHA n'autorise que les lettres a-z/A-Z : il aurait silencieusement supprimé le
+// « _ » des valeurs d'action ci-dessous (ajouter_rubrique devenant ajouterrubrique), qui
+// n'aurait alors plus jamais matché aucune branche - postée sans erreur ni redirection,
+// juste un réaffichage silencieux de la page. PARAM_ALPHANUMEXT autorise aussi le « _ ».
+$action = optional_param('action', '', PARAM_ALPHANUMEXT);
 
 if ($action === 'ajouter_rubrique') {
     require_sesskey();

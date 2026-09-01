@@ -69,7 +69,10 @@ if ($submitted) {
         foreach ($rubriques as $rubrique) {
             $criteres = ae_critere::get_pour_rubrique($rubrique->id);
             foreach ($criteres as $critere) {
-                $niveau = optional_param('critere_' . $critere->id, '', PARAM_ALPHA);
+                // PARAM_ALPHA aurait tronqué le « _ » de a_consolider/a_reprendre (valeurs
+                // du radio ci-dessous), stockant des niveaux corrompus ne correspondant à
+                // aucune des constantes ae_reponse::NIVEAU_*.
+                $niveau = optional_param('critere_' . $critere->id, '', PARAM_ALPHANUMEXT);
                 if ($niveau !== '') {
                     ae_reponse::repondre($sessionid, $critere->id, $niveau);
                 }

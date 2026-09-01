@@ -17,8 +17,11 @@ class parcours extends \core\persistent {
         return [
             'nom' => ['type' => PARAM_TEXT],
             'description' => ['type' => PARAM_RAW, 'default' => '', 'null' => NULL_ALLOWED],
+            // PARAM_ALPHA n'autorise pas le « _ » présent dans lie_uc/lie_annee : core\persistent
+            // nettoie la valeur et la compare à l'original lors de la validation, ce qui aurait
+            // rejeté tout parcours créé avec l'un de ces deux types (invalid_persistent_exception).
             'type' => [
-                'type' => PARAM_ALPHA,
+                'type' => PARAM_ALPHANUMEXT,
                 'choices' => ['recommande', 'obligatoire', 'lie_uc', 'lie_annee', 'certifiant', 'asv'],
             ],
             'courseid' => ['type' => PARAM_INT, 'default' => 0, 'null' => NULL_ALLOWED],
