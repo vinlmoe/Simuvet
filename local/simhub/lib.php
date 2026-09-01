@@ -6,13 +6,18 @@
 defined('MOODLE_INTERNAL') || die();
 
 /**
- * Ajoute SimHub à la navigation primaire pour les utilisateurs disposant de la capacité
+ * Ajoute SimHub à la navigation pour les utilisateurs disposant de la capacité
  * local/simhub:view, avec des sous-entrées conditionnées à la capacité de gestion
- * correspondante (§11 : chaque profil ne voit que les pages qui le concernent).
+ * correspondante (§11 : chaque profil ne voit que les pages qui le concernent). Chaque
+ * page reste de toute façon protégée indépendamment par son propre require_capability() —
+ * ce menu n'est qu'un raccourci, jamais le seul contrôle d'accès.
+ *
+ * showinflatnavigation est activé sur chaque nœud pour que le lien apparaisse dans la
+ * navigation "primaire" de Moodle 4 (barre du haut / menu déroulant), et pas seulement
+ * dans le tiroir de navigation latéral où un nœud ajouté via extend_navigation() peut
+ * facilement passer inaperçu selon le thème.
  */
 function local_simhub_extend_navigation(global_navigation $nav) {
-    global $PAGE;
-
     $context = context_system::instance();
     if (!has_capability('local/simhub:view', $context)) {
         return;
@@ -26,82 +31,66 @@ function local_simhub_extend_navigation(global_navigation $nav) {
         'local_simhub',
         new pix_icon('i/report', '')
     );
+    $node->showinflatnavigation = true;
+
+    $entrees = [];
 
     if (has_capability('local/simhub:manageateliers', $context)) {
-        $node->add(
+        $entrees['local_simhub_manage'] = [
             get_string('manage_ateliers', 'local_simhub'),
-            new moodle_url('/local/simhub/manage/ateliers.php'),
-            navigation_node::TYPE_CUSTOM,
-            null,
-            'local_simhub_manage'
-        );
+            '/local/simhub/manage/ateliers.php',
+        ];
     }
 
     if (has_capability('local/simhub:manageparcours', $context) || has_capability('local/simhub:viewprogression', $context)) {
-        $node->add(
+        $entrees['local_simhub_parcours'] = [
             get_string('filtre_parcours', 'local_simhub'),
-            new moodle_url('/local/simhub/manage/parcours.php'),
-            navigation_node::TYPE_CUSTOM,
-            null,
-            'local_simhub_parcours'
-        );
+            '/local/simhub/manage/parcours.php',
+        ];
     }
 
     if (has_capability('local/simhub:viewprogression', $context)) {
-        $node->add(
+        $entrees['local_simhub_dashboard'] = [
             get_string('dashboard_parcours', 'local_simhub'),
-            new moodle_url('/local/simhub/manage/dashboard.php'),
-            navigation_node::TYPE_CUSTOM,
-            null,
-            'local_simhub_dashboard'
-        );
+            '/local/simhub/manage/dashboard.php',
+        ];
     }
 
     if (has_capability('local/simhub:manageateliers', $context)) {
-        $node->add(
+        $entrees['local_simhub_dashboardsalle'] = [
             get_string('dashboard_salle', 'local_simhub'),
-            new moodle_url('/local/simhub/manage/dashboard_salle.php'),
-            navigation_node::TYPE_CUSTOM,
-            null,
-            'local_simhub_dashboardsalle'
-        );
+            '/local/simhub/manage/dashboard_salle.php',
+        ];
     }
 
     if (has_capability('local/simhub:importexport', $context)) {
-        $node->add(
+        $entrees['local_simhub_import'] = [
             get_string('import_ateliers', 'local_simhub'),
-            new moodle_url('/local/simhub/manage/import.php'),
-            navigation_node::TYPE_CUSTOM,
-            null,
-            'local_simhub_import'
-        );
+            '/local/simhub/manage/import.php',
+        ];
     }
 
     if (has_capability('local/simhub:validatesession', $context)) {
-        $node->add(
+        $entrees['local_simhub_seancecode'] = [
             get_string('seancecode_generer', 'local_simhub'),
-            new moodle_url('/local/simhub/manage/seancecode_generer.php'),
-            navigation_node::TYPE_CUSTOM,
-            null,
-            'local_simhub_seancecode'
-        );
-        $node->add(
+            '/local/simhub/manage/seancecode_generer.php',
+        ];
+        $entrees['local_simhub_sessionsavalider'] = [
             get_string('sessions_a_valider', 'local_simhub'),
-            new moodle_url('/local/simhub/manage/sessions_a_valider.php'),
-            navigation_node::TYPE_CUSTOM,
-            null,
-            'local_simhub_sessionsavalider'
-        );
+            '/local/simhub/manage/sessions_a_valider.php',
+        ];
     }
 
     if (has_capability('local/simhub:manageasv', $context) || has_capability('local/simhub:validateasvsimulation', $context)) {
-        $node->add(
+        $entrees['local_simhub_asv'] = [
             get_string('asv_parcours', 'local_simhub'),
-            new moodle_url('/local/simhub/asv/index.php'),
-            navigation_node::TYPE_CUSTOM,
-            null,
-            'local_simhub_asv'
-        );
+            '/local/simhub/asv/index.php',
+        ];
+    }
+
+    foreach ($entrees as $key => [$label, $url]) {
+        $enfant = $node->add($label, new moodle_url($url), navigation_node::TYPE_CUSTOM, null, $key);
+        $enfant->showinflatnavigation = true;
     }
 
     $nav->add_node($node);

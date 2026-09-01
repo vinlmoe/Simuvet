@@ -179,6 +179,16 @@ le schéma :
   (`cohort_members`), sans réflexion. L'année d'étude (A1 à A5, via
   `classes/local/annee_resolver.php`) reste un champ de classement
   saisi directement par le gestionnaire, indépendant de ce mécanisme.
+- **Menu de navigation** (`lib.php::local_simhub_extend_navigation`) :
+  une entrée SimHub avec des sous-entrées qui n'apparaissent que si
+  l'utilisateur a la capacité de gestion correspondante (§11) —
+  `showinflatnavigation` est activé sur chaque nœud pour qu'il
+  apparaisse dans la navigation "primaire" de Moodle 4 (barre du haut /
+  menu déroulant) plutôt que seulement dans le tiroir latéral, où un
+  nœud ajouté via `extend_navigation()` peut facilement passer
+  inaperçu selon le thème. Ce menu reste un simple raccourci : chaque
+  page vérifie sa propre capacité indépendamment (`require_capability`),
+  y compris quand elle n'est pas atteinte depuis le menu.
 - **Fiche atelier** (`atelier.php`) : bloc localisation (salle, zone,
   poste, plan + repère, §5.4) et bloc ressources visibles étudiant
   (§5.5), en respectant la visibilité `interne` des sources éditables
