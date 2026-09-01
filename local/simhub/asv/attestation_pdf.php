@@ -9,10 +9,9 @@ require(__DIR__ . '/../../../config.php');
 require_once($CFG->libdir . '/pdflib.php');
 
 use local_simhub\persistent\asv_acte;
-use local_simhub\record\asv_valsim;
-use local_simhub\record\asv_valanimal;
 use local_simhub\local\pdf_helper;
 use local_simhub\local\badge_helper;
+use local_simhub\local\asv_certification_helper;
 
 require_login();
 
@@ -39,23 +38,7 @@ if (empty($actes)) {
     );
 }
 
-$actesvalidessim = asv_valsim::get_actes_valides($userid);
-$actesvalidesanimal = [];
-foreach (asv_valanimal::get_pour_etudiant($userid) as $v) {
-    if ($v->statut === asv_valanimal::STATUT_VALIDE) {
-        $actesvalidesanimal[$v->acteid] = true;
-    }
-}
-
-$manquants = [];
-foreach ($actes as $acte) {
-    $simok = in_array($acte->get('id'), $actesvalidessim, true);
-    $animalok = !empty($actesvalidesanimal[$acte->get('id')]);
-    if (!$simok || !$animalok) {
-        $manquants[] = $acte->get('nom') . ($simok ? '' : ' (simulation manquante)')
-            . ($animalok ? '' : ' (animal vivant manquant)');
-    }
-}
+$manquants = asv_certification_helper::get_actes_manquants($userid, $niveau, $envcode);
 
 if (!empty($manquants)) {
     $PAGE->set_context($context);
@@ -85,43 +68,5 @@ if (!empty($manquants)) {
 $badgeid = (int) (get_config('local_simhub', 'badgeasv' . strtolower($niveau)) ?: 0);
 badge_helper::delivrer($badgeid ?: null, $userid);
 
-$pdf = new pdf();
-$pdf->SetCreator('SimHub');
-$pdf->SetTitle('Certification ' . $niveau . ' — ' . fullname($user));
-$pdf->setPrintHeader(false);
-$pdf->setPrintFooter(false);
-$pdf->AddPage();
-pdf_helper::ajouter_entete($pdf);
-
-$pdf->Ln(15);
-$pdf->SetFont('helvetica', 'B', 20);
-$pdf->Cell(0, 12, 'Attestation de certification', 0, 1, 'C');
-$pdf->SetFont('helvetica', '', 13);
-$pdf->Cell(0, 8, 'Actes vétérinaires délégables ASV — niveau ' . $niveau, 0, 1, 'C');
-$pdf->Ln(10);
-
-$pdf->SetFont('helvetica', '', 12);
-$pdf->writeHTML(
-    '<p>' . pdf_helper::get_etablissement_nom() . ' certifie que</p>'
-    . '<p style="text-align:center;font-size:15pt;"><b>' . s(fullname($user)) . '</b></p>'
-    . '<p>a validé, en simulation puis sur animal vivant, l\'ensemble des actes vétérinaires '
-    . 'délégables du niveau ' . s($niveau) . ' listés ci-dessous :</p>',
-    true,
-    false,
-    true,
-    false,
-    ''
-);
-
-$html = '<table border="1" cellpadding="4"><tr style="font-weight:bold;">'
-    . '<th width="70%">Acte</th><th width="30%">Espèce</th></tr>';
-foreach ($actes as $acte) {
-    $html .= '<tr><td>' . s($acte->get('nom')) . '</td><td>' . s($acte->get('espece')) . '</td></tr>';
-}
-$html .= '</table>';
-$pdf->writeHTML($html, true, false, true, false, '');
-
-$pdf->Ln(10);
-$pdf->Cell(0, 6, 'Délivrée le ' . userdate(time(), get_string('strftimedate', 'langconfig')), 0, 1);
-
+$pdf = pdf_helper::construire_attestation_asv($user, $niveau, $actes);
 $pdf->Output('simhub_certification_' . $niveau . '_' . $userid . '.pdf', 'D');

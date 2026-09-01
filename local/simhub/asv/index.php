@@ -35,6 +35,11 @@ if (has_capability('local/simhub:manageasv', $context)) {
         get_string('asv_gerer_actes', 'local_simhub'),
         'get'
     );
+    echo $OUTPUT->single_button(
+        new moodle_url('/local/simhub/manage/asv_attestations.php', ['envcode' => $envcode]),
+        get_string('asv_attestations_groupees', 'local_simhub'),
+        'get'
+    );
 }
 
 if (!$canpilot) {

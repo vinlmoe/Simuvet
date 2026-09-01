@@ -1,0 +1,56 @@
+<?php
+// Téléchargement groupé (ZIP) des attestations de certification ASV pour tous les
+// étudiants éligibles à un niveau (§9.4), au lieu de les télécharger un par un depuis
+// manage/asv_attestations.php.
+
+require(__DIR__ . '/../../../config.php');
+require_once($CFG->libdir . '/pdflib.php');
+
+use local_simhub\persistent\asv_acte;
+use local_simhub\local\asv_certification_helper;
+use local_simhub\local\pdf_helper;
+use local_simhub\local\badge_helper;
+
+require_login();
+
+$context = context_system::instance();
+require_capability('local/simhub:manageasv', $context);
+
+$envcode = optional_param('envcode', get_config('local_simhub', 'envcode') ?: '', PARAM_ALPHANUMEXT);
+$niveau = optional_param('niveau', 'A3', PARAM_ALPHANUM);
+
+$eligibles = asv_certification_helper::get_etudiants_eligibles($niveau, $envcode);
+if (empty($eligibles)) {
+    redirect(
+        new moodle_url('/local/simhub/manage/asv_attestations.php', ['envcode' => $envcode, 'niveau' => $niveau]),
+        get_string('asv_aucun_eligible', 'local_simhub'),
+        null,
+        \core\output\notification::NOTIFY_INFO
+    );
+}
+
+$actes = asv_acte::get_referentiel($envcode, $niveau);
+$badgeid = (int) (get_config('local_simhub', 'badgeasv' . strtolower($niveau)) ?: 0);
+
+$zippath = tempnam(make_temp_directory('local_simhub'), 'asv_attestations_');
+$zip = new ZipArchive();
+$zip->open($zippath, ZipArchive::OVERWRITE);
+
+foreach ($eligibles as $userid) {
+    $user = \core_user::get_user($userid);
+    if (!$user) {
+        continue;
+    }
+
+    // Même certification qu'à l'unité (asv/attestation_pdf.php) : badge délivré (§13) et
+    // document identique, pour que les deux chemins de génération restent cohérents.
+    badge_helper::delivrer($badgeid ?: null, $userid);
+
+    $pdf = pdf_helper::construire_attestation_asv($user, $niveau, $actes);
+    $contenu = $pdf->Output('simhub_certification_' . $niveau . '_' . $userid . '.pdf', 'S');
+    $zip->addFromString('certification_' . $niveau . '_' . preg_replace('/[^a-zA-Z0-9_-]/', '_', fullname($user)) . '_' . $userid . '.pdf', $contenu);
+}
+
+$zip->close();
+
+send_temp_file($zippath, 'simhub_certifications_' . $niveau . '.zip');

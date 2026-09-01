@@ -79,6 +79,7 @@ class navigation {
 
         if (has_capability('local/simhub:manageasv', $context)) {
             $ajouter('asvactes', get_string('asv_gerer_actes', 'local_simhub'), '/local/simhub/manage/asv_actes.php');
+            $ajouter('asvattestations', get_string('asv_attestations_groupees', 'local_simhub'), '/local/simhub/manage/asv_attestations.php');
         }
 
         if (has_capability('local/simhub:importexport', $context)) {
