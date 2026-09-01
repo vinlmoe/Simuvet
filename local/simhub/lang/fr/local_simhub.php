@@ -3,6 +3,12 @@
 defined('MOODLE_INTERNAL') || die();
 
 $string['pluginname'] = 'SimHub';
+$string['nav_accueil'] = 'Accueil SimHub';
+$string['nav_seance'] = 'Séance en cours';
+$string['nav_qrcode'] = 'QR code de l\'atelier';
+$string['nav_plan'] = 'Repère sur le plan de salle';
+$string['nav_ressources'] = 'Ressources pédagogiques';
+$string['nav_retour'] = 'Retour';
 $string['simhub:studenthome'] = 'Mon espace ateliers';
 
 // Réglages.

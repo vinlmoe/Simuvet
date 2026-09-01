@@ -13,11 +13,9 @@ require_login();
 $context = context_system::instance();
 require_capability('local/simhub:validateasvsimulation', $context);
 
-$PAGE->set_context($context);
-$PAGE->set_url(new moodle_url('/local/simhub/asv/valider_simulation.php'));
-$PAGE->set_pagelayout('standard');
-$PAGE->set_title(get_string('asv_valider_simulation', 'local_simhub'));
-$PAGE->set_heading(get_string('asv_valider_simulation', 'local_simhub'));
+\local_simhub\local\navigation::preparer($PAGE, new moodle_url('/local/simhub/asv/valider_simulation.php'), get_string('asv_valider_simulation', 'local_simhub'), [
+    [get_string('asv_parcours', 'local_simhub'), new moodle_url('/local/simhub/asv/index.php')],
+]);
 
 $envcode = get_config('local_simhub', 'envcode') ?: '';
 $actes = asv_acte::get_referentiel($envcode);
@@ -54,6 +52,7 @@ if ($submitted) {
 }
 
 echo $OUTPUT->header();
+echo \local_simhub\local\navigation::barre();
 
 echo html_writer::start_tag('form', ['method' => 'post']);
 echo html_writer::empty_tag('input', ['type' => 'hidden', 'name' => 'sesskey', 'value' => sesskey()]);

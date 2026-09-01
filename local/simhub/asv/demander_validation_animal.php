@@ -16,13 +16,12 @@ require_capability('local/simhub:view', $context);
 $acteid = required_param('acteid', PARAM_INT);
 $acte = new asv_acte($acteid);
 
-$PAGE->set_context($context);
-$PAGE->set_url(new moodle_url('/local/simhub/asv/demander_validation_animal.php', ['acteid' => $acteid]));
-$PAGE->set_pagelayout('standard');
-$PAGE->set_title(get_string('asv_demander_validation_animal', 'local_simhub'));
-$PAGE->set_heading(get_string('asv_demander_validation_animal', 'local_simhub'));
+\local_simhub\local\navigation::preparer($PAGE, new moodle_url('/local/simhub/asv/demander_validation_animal.php', ['acteid' => $acteid]), get_string('asv_demander_validation_animal', 'local_simhub'), [
+    [get_string('asv_parcours', 'local_simhub'), new moodle_url('/local/simhub/asv/index.php')],
+]);
 
 echo $OUTPUT->header();
+echo \local_simhub\local\navigation::barre();
 
 $demande = asv_valanimal::creer_demande($USER->id, $acteid);
 $lien = new moodle_url('/local/simhub/asv/valider_animal.php', ['token' => $demande->token]);

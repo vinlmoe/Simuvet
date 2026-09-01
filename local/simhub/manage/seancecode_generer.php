@@ -14,11 +14,7 @@ require_login();
 $context = context_system::instance();
 require_capability('local/simhub:validatesession', $context);
 
-$PAGE->set_context($context);
-$PAGE->set_url(new moodle_url('/local/simhub/manage/seancecode_generer.php'));
-$PAGE->set_pagelayout('standard');
-$PAGE->set_title(get_string('seancecode_generer', 'local_simhub'));
-$PAGE->set_heading(get_string('seancecode_generer', 'local_simhub'));
+\local_simhub\local\navigation::preparer($PAGE, new moodle_url('/local/simhub/manage/seancecode_generer.php'), get_string('seancecode_generer', 'local_simhub'));
 
 $submitted = optional_param('submit', 0, PARAM_BOOL);
 $genere = null;
@@ -32,6 +28,7 @@ if ($submitted) {
 }
 
 echo $OUTPUT->header();
+echo \local_simhub\local\navigation::barre();
 
 if ($genere) {
     echo $OUTPUT->notification(

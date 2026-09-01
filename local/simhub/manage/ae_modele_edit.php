@@ -16,12 +16,11 @@ require_capability('local/simhub:manageateliers', $context);
 $atelierid = required_param('atelierid', PARAM_INT);
 $atelier = new atelier($atelierid);
 
-$PAGE->set_context($context);
-$PAGE->set_url(new moodle_url('/local/simhub/manage/ae_modele_edit.php', ['atelierid' => $atelierid]));
-$PAGE->set_pagelayout('standard');
-$title = get_string('ae_modele', 'local_simhub') . ' — ' . s($atelier->get('nomcourt'));
-$PAGE->set_title($title);
-$PAGE->set_heading($title);
+$title = get_string('ae_modele', 'local_simhub');
+\local_simhub\local\navigation::preparer($PAGE, new moodle_url('/local/simhub/manage/ae_modele_edit.php', ['atelierid' => $atelierid]), $title, [
+    [get_string('manage_ateliers', 'local_simhub'), new moodle_url('/local/simhub/manage/ateliers.php')],
+    [s($atelier->get('nomcourt')), new moodle_url('/local/simhub/manage/atelier_edit.php', ['id' => $atelierid])],
+]);
 
 $modele = ae_modele::get_pour_atelier($atelierid);
 
@@ -54,6 +53,7 @@ if ($submitted) {
 }
 
 echo $OUTPUT->header();
+echo \local_simhub\local\navigation::barre();
 
 echo html_writer::start_tag('form', ['method' => 'post']);
 echo html_writer::empty_tag('input', ['type' => 'hidden', 'name' => 'sesskey', 'value' => sesskey()]);

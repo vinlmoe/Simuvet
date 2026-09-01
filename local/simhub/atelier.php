@@ -21,13 +21,10 @@ $onglet = optional_param('onglet', '', PARAM_ALPHA);
 
 $atelier = new atelier($id);
 
-$PAGE->set_context($context);
-$PAGE->set_url(new moodle_url('/local/simhub/atelier.php', ['id' => $id]));
-$PAGE->set_pagelayout('standard');
-$PAGE->set_title(s($atelier->get('nomcourt')));
-$PAGE->set_heading(s($atelier->get('nomcourt')));
+\local_simhub\local\navigation::preparer($PAGE, new moodle_url('/local/simhub/atelier.php', ['id' => $id]), s($atelier->get('nomcourt')));
 
 echo $OUTPUT->header();
+echo \local_simhub\local\navigation::barre();
 
 echo html_writer::tag('p', s($atelier->get('descriptioncourte')));
 

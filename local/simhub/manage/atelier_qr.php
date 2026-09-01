@@ -24,14 +24,14 @@ if ($action === 'regenerer') {
     redirect(new moodle_url('/local/simhub/manage/atelier_qr.php', ['id' => $id]));
 }
 
-$PAGE->set_context($context);
-$PAGE->set_url(new moodle_url('/local/simhub/manage/atelier_qr.php', ['id' => $id]));
-$PAGE->set_pagelayout('standard');
-$title = s($atelier->get('nomcourt'));
-$PAGE->set_title($title);
-$PAGE->set_heading($title);
+$title = get_string('nav_qrcode', 'local_simhub');
+\local_simhub\local\navigation::preparer($PAGE, new moodle_url('/local/simhub/manage/atelier_qr.php', ['id' => $id]), $title, [
+    [get_string('manage_ateliers', 'local_simhub'), new moodle_url('/local/simhub/manage/ateliers.php')],
+    [s($atelier->get('nomcourt')), new moodle_url('/local/simhub/manage/atelier_edit.php', ['id' => $id])],
+]);
 
 echo $OUTPUT->header();
+echo \local_simhub\local\navigation::barre();
 
 // La bibliothèque est intégrée directement dans la page (plutôt que via
 // $PAGE->requires->js()) pour garantir qu'elle est définie avant le script d'utilisation

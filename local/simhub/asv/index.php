@@ -16,13 +16,10 @@ require_capability('local/simhub:view', $context);
 $envcode = optional_param('envcode', get_config('local_simhub', 'envcode') ?: '', PARAM_ALPHANUMEXT);
 $canpilot = has_capability('local/simhub:manageasv', $context) || has_capability('local/simhub:validateasvsimulation', $context);
 
-$PAGE->set_context($context);
-$PAGE->set_url(new moodle_url('/local/simhub/asv/index.php'));
-$PAGE->set_pagelayout('standard');
-$PAGE->set_title(get_string('asv_parcours', 'local_simhub'));
-$PAGE->set_heading(get_string('asv_parcours', 'local_simhub'));
+\local_simhub\local\navigation::preparer($PAGE, new moodle_url('/local/simhub/asv/index.php'), get_string('asv_parcours', 'local_simhub'));
 
 echo $OUTPUT->header();
+echo \local_simhub\local\navigation::barre();
 
 $actes = asv_acte::get_referentiel($envcode);
 

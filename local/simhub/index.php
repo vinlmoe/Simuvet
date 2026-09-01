@@ -16,16 +16,13 @@ require_login();
 $context = context_system::instance();
 require_capability('local/simhub:view', $context);
 
-$PAGE->set_context($context);
-$PAGE->set_url(new moodle_url('/local/simhub/index.php'));
-$PAGE->set_pagelayout('standard');
-$PAGE->set_title(get_string('pluginname', 'local_simhub'));
-$PAGE->set_heading(get_string('pluginname', 'local_simhub'));
+\local_simhub\local\navigation::preparer($PAGE, new moodle_url('/local/simhub/index.php'), get_string('pluginname', 'local_simhub'));
 
 $filter = atelier_filter::from_request();
 $page = new student_home_page($USER->id, $filter);
 
 echo $OUTPUT->header();
+echo \local_simhub\local\navigation::barre();
 
 $renderer = $PAGE->get_renderer('local_simhub');
 echo $renderer->render_student_home_page($page);

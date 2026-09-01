@@ -16,11 +16,7 @@ require_login();
 $context = context_system::instance();
 require_capability('local/simhub:importexport', $context);
 
-$PAGE->set_context($context);
-$PAGE->set_url(new moodle_url('/local/simhub/manage/import.php'));
-$PAGE->set_pagelayout('standard');
-$PAGE->set_title(get_string('import_ateliers', 'local_simhub'));
-$PAGE->set_heading(get_string('import_ateliers', 'local_simhub'));
+\local_simhub\local\navigation::preparer($PAGE, new moodle_url('/local/simhub/manage/import.php'), get_string('import_ateliers', 'local_simhub'));
 
 $submitted = optional_param('submit', 0, PARAM_BOOL);
 $result = null;
@@ -55,6 +51,7 @@ if ($submitted) {
 }
 
 echo $OUTPUT->header();
+echo \local_simhub\local\navigation::barre();
 
 if ($result !== null) {
     if ($type === 'rattachements') {

@@ -23,11 +23,9 @@ $sessionid = optional_param('sessionid', 0, PARAM_INT);
 
 $atelier = new atelier($atelierid);
 
-$PAGE->set_context($context);
-$PAGE->set_url(new moodle_url('/local/simhub/session.php', ['atelierid' => $atelierid, 'action' => $action]));
-$PAGE->set_pagelayout('standard');
-$PAGE->set_title(s($atelier->get('nomcourt')));
-$PAGE->set_heading(s($atelier->get('nomcourt')));
+\local_simhub\local\navigation::preparer($PAGE, new moodle_url('/local/simhub/session.php', ['atelierid' => $atelierid, 'action' => $action]), get_string('nav_seance', 'local_simhub'), [
+    [s($atelier->get('nomcourt')), new moodle_url('/local/simhub/atelier.php', ['id' => $atelierid])],
+]);
 
 if ($action === 'demarrer') {
     require_capability('local/simhub:startsession', $context);
@@ -101,6 +99,7 @@ if ($submitted) {
 }
 
 echo $OUTPUT->header();
+echo \local_simhub\local\navigation::barre();
 
 if (!$modele) {
     // Pas de grille associée à cet atelier : on clôture directement la session (§7.2, la

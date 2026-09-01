@@ -27,14 +27,14 @@ if ($action === 'supprimer') {
     redirect(new moodle_url('/local/simhub/manage/ressources.php', ['atelierid' => $atelierid]));
 }
 
-$PAGE->set_context($context);
-$PAGE->set_url(new moodle_url('/local/simhub/manage/ressources.php', ['atelierid' => $atelierid]));
-$PAGE->set_pagelayout('standard');
-$title = get_string('champ_nomcourt', 'local_simhub') . ' — ' . s($atelier->get('nomcourt'));
-$PAGE->set_title($title);
-$PAGE->set_heading($title);
+$title = get_string('nav_ressources', 'local_simhub');
+\local_simhub\local\navigation::preparer($PAGE, new moodle_url('/local/simhub/manage/ressources.php', ['atelierid' => $atelierid]), $title, [
+    [get_string('manage_ateliers', 'local_simhub'), new moodle_url('/local/simhub/manage/ateliers.php')],
+    [s($atelier->get('nomcourt')), new moodle_url('/local/simhub/manage/atelier_edit.php', ['id' => $atelierid])],
+]);
 
 echo $OUTPUT->header();
+echo \local_simhub\local\navigation::barre();
 
 echo $OUTPUT->single_button(
     new moodle_url('/local/simhub/manage/ressource_edit.php', ['atelierid' => $atelierid]),

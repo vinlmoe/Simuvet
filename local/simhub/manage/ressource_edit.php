@@ -34,12 +34,12 @@ $record = $id ? $DB->get_record(ressource::TABLE, ['id' => $id, 'atelierid' => $
     'ordre' => 0,
 ];
 
-$PAGE->set_context($context);
-$PAGE->set_url(new moodle_url('/local/simhub/manage/ressource_edit.php', ['atelierid' => $atelierid, 'id' => $id]));
-$PAGE->set_pagelayout('standard');
-$title = get_string('champ_nomcourt', 'local_simhub') . ' — ' . s($atelier->get('nomcourt'));
-$PAGE->set_title($title);
-$PAGE->set_heading($title);
+$title = $id ? get_string('edit') : get_string('ressource_nouvelle', 'local_simhub');
+\local_simhub\local\navigation::preparer($PAGE, new moodle_url('/local/simhub/manage/ressource_edit.php', ['atelierid' => $atelierid, 'id' => $id]), $title, [
+    [get_string('manage_ateliers', 'local_simhub'), new moodle_url('/local/simhub/manage/ateliers.php')],
+    [s($atelier->get('nomcourt')), new moodle_url('/local/simhub/manage/atelier_edit.php', ['id' => $atelierid])],
+    [get_string('bouton_ressources', 'local_simhub'), new moodle_url('/local/simhub/manage/ressources.php', ['atelierid' => $atelierid])],
+]);
 
 $draftitemid = file_get_submitted_draft_itemid('fichier');
 file_prepare_draft_area($draftitemid, $context->id, 'local_simhub', 'ressource', $id ?: null, $fileoptions);
@@ -86,5 +86,6 @@ if ($form->is_cancelled()) {
 }
 
 echo $OUTPUT->header();
+echo \local_simhub\local\navigation::barre();
 $form->display();
 echo $OUTPUT->footer();

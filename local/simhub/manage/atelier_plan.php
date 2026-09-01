@@ -16,12 +16,11 @@ require_capability('local/simhub:manageateliers', $context);
 $id = required_param('id', PARAM_INT);
 $atelier = new atelier($id);
 
-$PAGE->set_context($context);
-$PAGE->set_url(new moodle_url('/local/simhub/manage/atelier_plan.php', ['id' => $id]));
-$PAGE->set_pagelayout('standard');
-$title = s($atelier->get('nomcourt'));
-$PAGE->set_title($title);
-$PAGE->set_heading($title);
+$title = get_string('nav_plan', 'local_simhub');
+\local_simhub\local\navigation::preparer($PAGE, new moodle_url('/local/simhub/manage/atelier_plan.php', ['id' => $id]), $title, [
+    [get_string('manage_ateliers', 'local_simhub'), new moodle_url('/local/simhub/manage/ateliers.php')],
+    [s($atelier->get('nomcourt')), new moodle_url('/local/simhub/manage/atelier_edit.php', ['id' => $id])],
+]);
 
 $submitted = optional_param('submit', 0, PARAM_BOOL);
 if ($submitted) {
@@ -43,6 +42,7 @@ if ($submitted) {
 }
 
 echo $OUTPUT->header();
+echo \local_simhub\local\navigation::barre();
 
 if (!$atelier->get('planimageitemid')) {
     echo $OUTPUT->notification(

@@ -16,11 +16,9 @@ require_capability('local/simhub:manageparcours', $context);
 $parcoursid = required_param('parcoursid', PARAM_INT);
 $parcours = new parcours($parcoursid);
 
-$PAGE->set_context($context);
-$PAGE->set_url(new moodle_url('/local/simhub/manage/parcours_ateliers.php', ['parcoursid' => $parcoursid]));
-$PAGE->set_pagelayout('standard');
-$PAGE->set_title(s($parcours->get('nom')));
-$PAGE->set_heading(s($parcours->get('nom')));
+\local_simhub\local\navigation::preparer($PAGE, new moodle_url('/local/simhub/manage/parcours_ateliers.php', ['parcoursid' => $parcoursid]), s($parcours->get('nom')), [
+    [get_string('filtre_parcours', 'local_simhub'), new moodle_url('/local/simhub/manage/parcours.php')],
+]);
 
 $action = optional_param('action', '', PARAM_ALPHA);
 
@@ -45,6 +43,7 @@ if ($action === 'ajouter') {
 }
 
 echo $OUTPUT->header();
+echo \local_simhub\local\navigation::barre();
 
 echo html_writer::tag('h3', 'Ateliers du parcours');
 

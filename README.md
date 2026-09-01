@@ -354,6 +354,51 @@ de table SQL utilisés correspondent au schéma.
   (`edit`, `add`, `savechanges`, `changessaved`) là où c'est pertinent
   plutôt que de dupliquer du texte.
 
+## Navigation interne (signalé en usage réel)
+
+Aucune page du plugin n'appelait `$PAGE->navbar->add()` : le fil d'Ariane
+Moodle s'arrêtait donc à « Accueil », sans indiquer dans quelle rubrique ni
+sur quel atelier on se trouvait, et aucune page n'offrait de retour vers la
+précédente. Ajout de `classes/local/navigation.php`, par lequel passent
+désormais toutes les pages :
+
+- `navigation::preparer($PAGE, $url, $titre, $etapes)` remplace la suite
+  `set_context()/set_url()/set_pagelayout()/set_title()/set_heading()` et
+  construit le fil d'Ariane complet — par exemple
+  « Accueil / SimHub / Ateliers / Suture cutanée / QR code de l'atelier ».
+  Les sous-pages d'un atelier affichent le nom de l'atelier, pas un libellé
+  générique.
+- `navigation::barre()`, affichée juste après `$OUTPUT->header()`, rend un
+  bouton **Retour** (calculé à partir de la dernière étape cliquable du fil
+  d'Ariane, donc jamais désynchronisé du chemin réel) et les raccourcis vers
+  les sections auxquelles l'utilisateur a droit, la section courante étant
+  surlignée.
+- `navigation::sections()` est la source unique de vérité de cette liste :
+  `local_simhub_extend_navigation()` (menu Moodle) la réutilise, les deux ne
+  peuvent donc plus diverger. Chaque page reste protégée indépendamment par
+  son propre `require_capability()`.
+
+Titres de page revus au passage pour nommer l'activité en cours (« QR code de
+l'atelier », « Ressources pédagogiques », « Repère sur le plan de salle »,
+« Gérer les rubriques et critères »...) au lieu de répéter le nom de
+l'atelier, désormais porté par le fil d'Ariane.
+
+Deux pages restent volontairement hors de ce dispositif :
+`asv/valider_animal.php` (page publique à jeton, mise en page `login`, sans
+navigation Moodle) et les branches d'erreur des exports PDF.
+
+### Entrée dans le menu du haut
+
+Moodle 4 n'expose pas de hook pour la navigation primaire : selon le thème,
+un nœud ajouté via `extend_navigation()` peut n'apparaître que dans le tiroir
+latéral des cours. Pour un accès permanent depuis n'importe quelle page,
+ajouter dans *Administration du site → Présentation → Réglages du thème →
+Éléments de menu personnalisés* :
+
+```
+SimHub|/local/simhub/index.php
+```
+
 ## Mise en page des pages de gestion (signalé en usage réel)
 
 Les 17 pages sous `manage/` utilisaient `$PAGE->set_pagelayout('admin')`.

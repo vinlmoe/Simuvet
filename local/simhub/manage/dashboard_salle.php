@@ -21,13 +21,10 @@ $envcode = optional_param('envcode', get_config('local_simhub', 'envcode') ?: ''
 // une fois de premières données réelles disponibles (§15).
 $seuilpeuutilise = 3;
 
-$PAGE->set_context($context);
-$PAGE->set_url(new moodle_url('/local/simhub/manage/dashboard_salle.php'));
-$PAGE->set_pagelayout('standard');
-$PAGE->set_title(get_string('dashboard_salle', 'local_simhub'));
-$PAGE->set_heading(get_string('dashboard_salle', 'local_simhub'));
+\local_simhub\local\navigation::preparer($PAGE, new moodle_url('/local/simhub/manage/dashboard_salle.php'), get_string('dashboard_salle', 'local_simhub'));
 
 echo $OUTPUT->header();
+echo \local_simhub\local\navigation::barre();
 
 global $DB;
 

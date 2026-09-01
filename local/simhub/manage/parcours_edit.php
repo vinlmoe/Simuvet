@@ -13,12 +13,10 @@ require_capability('local/simhub:manageparcours', $context);
 
 $id = optional_param('id', 0, PARAM_INT);
 
-$PAGE->set_context($context);
-$PAGE->set_url(new moodle_url('/local/simhub/manage/parcours_edit.php', ['id' => $id]));
-$PAGE->set_pagelayout('standard');
 $title = $id ? get_string('edit') : get_string('parcours_nouveau', 'local_simhub');
-$PAGE->set_title($title);
-$PAGE->set_heading($title);
+\local_simhub\local\navigation::preparer($PAGE, new moodle_url('/local/simhub/manage/parcours_edit.php', ['id' => $id]), $title, [
+    [get_string('filtre_parcours', 'local_simhub'), new moodle_url('/local/simhub/manage/parcours.php')],
+]);
 
 $parcours = $id ? new parcours($id) : new parcours();
 
@@ -54,5 +52,6 @@ if ($form->is_cancelled()) {
 }
 
 echo $OUTPUT->header();
+echo \local_simhub\local\navigation::barre();
 $form->display();
 echo $OUTPUT->footer();

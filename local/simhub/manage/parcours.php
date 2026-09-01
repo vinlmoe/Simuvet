@@ -16,13 +16,10 @@ if (!$canmanage && !has_capability('local/simhub:viewprogression', $context)) {
 
 $envcode = optional_param('envcode', get_config('local_simhub', 'envcode') ?: '', PARAM_ALPHANUMEXT);
 
-$PAGE->set_context($context);
-$PAGE->set_url(new moodle_url('/local/simhub/manage/parcours.php'));
-$PAGE->set_pagelayout('standard');
-$PAGE->set_title(get_string('filtre_parcours', 'local_simhub'));
-$PAGE->set_heading(get_string('filtre_parcours', 'local_simhub'));
+\local_simhub\local\navigation::preparer($PAGE, new moodle_url('/local/simhub/manage/parcours.php'), get_string('filtre_parcours', 'local_simhub'));
 
 echo $OUTPUT->header();
+echo \local_simhub\local\navigation::barre();
 
 if ($canmanage) {
     echo $OUTPUT->single_button(
