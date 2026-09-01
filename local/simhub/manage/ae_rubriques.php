@@ -100,6 +100,7 @@ foreach ($rubriques as $rubrique) {
 
     echo html_writer::start_tag('form', ['method' => 'post', 'class' => 'form-inline']);
     echo html_writer::empty_tag('input', ['type' => 'hidden', 'name' => 'sesskey', 'value' => sesskey()]);
+    echo html_writer::empty_tag('input', ['type' => 'hidden', 'name' => 'atelierid', 'value' => $atelierid]);
     echo html_writer::empty_tag('input', ['type' => 'hidden', 'name' => 'action', 'value' => 'ajouter_critere']);
     echo html_writer::empty_tag('input', ['type' => 'hidden', 'name' => 'rubriqueid', 'value' => $rubrique->id]);
     echo html_writer::empty_tag('input', [
@@ -119,6 +120,7 @@ echo html_writer::tag('h4', get_string('ae_ajouter_rubrique', 'local_simhub'));
 
 echo html_writer::start_tag('form', ['method' => 'post', 'class' => 'form-inline']);
 echo html_writer::empty_tag('input', ['type' => 'hidden', 'name' => 'sesskey', 'value' => sesskey()]);
+echo html_writer::empty_tag('input', ['type' => 'hidden', 'name' => 'atelierid', 'value' => $atelierid]);
 echo html_writer::empty_tag('input', ['type' => 'hidden', 'name' => 'action', 'value' => 'ajouter_rubrique']);
 echo html_writer::empty_tag('input', [
     'type' => 'text', 'name' => 'titre', 'class' => 'form-control mr-2',

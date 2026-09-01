@@ -42,6 +42,7 @@ echo html_writer::tag('p', html_writer::link($scanurl, $scanurl->out(false)));
 
 echo html_writer::start_tag('form', ['method' => 'post']);
 echo html_writer::empty_tag('input', ['type' => 'hidden', 'name' => 'sesskey', 'value' => sesskey()]);
+echo html_writer::empty_tag('input', ['type' => 'hidden', 'name' => 'id', 'value' => $id]);
 echo html_writer::empty_tag('input', ['type' => 'hidden', 'name' => 'action', 'value' => 'regenerer']);
 echo html_writer::tag('button', get_string('qr_regenerer', 'local_simhub'), [
     'type' => 'submit', 'class' => 'btn btn-outline-danger',

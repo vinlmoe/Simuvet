@@ -78,6 +78,7 @@ echo html_writer::tag('p', 'Cliquez sur le plan à l\'endroit où se trouve l\'a
 
 echo html_writer::start_tag('form', ['method' => 'post', 'id' => 'local-simhub-plan-form']);
 echo html_writer::empty_tag('input', ['type' => 'hidden', 'name' => 'sesskey', 'value' => sesskey()]);
+echo html_writer::empty_tag('input', ['type' => 'hidden', 'name' => 'id', 'value' => $id]);
 echo html_writer::empty_tag('input', ['type' => 'hidden', 'name' => 'submit', 'value' => 1]);
 echo html_writer::empty_tag('input', ['type' => 'hidden', 'name' => 'planrepx', 'id' => 'local-simhub-planrepx']);
 echo html_writer::empty_tag('input', ['type' => 'hidden', 'name' => 'planrepy', 'id' => 'local-simhub-planrepy']);

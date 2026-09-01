@@ -121,6 +121,9 @@ if (!$modele) {
 
 echo html_writer::start_tag('form', ['method' => 'post']);
 echo html_writer::empty_tag('input', ['type' => 'hidden', 'name' => 'sesskey', 'value' => sesskey()]);
+echo html_writer::empty_tag('input', ['type' => 'hidden', 'name' => 'atelierid', 'value' => $atelierid]);
+echo html_writer::empty_tag('input', ['type' => 'hidden', 'name' => 'action', 'value' => 'terminer']);
+echo html_writer::empty_tag('input', ['type' => 'hidden', 'name' => 'sessionid', 'value' => $sessionid]);
 echo html_writer::empty_tag('input', ['type' => 'hidden', 'name' => 'submit_autoeval', 'value' => 1]);
 
 echo html_writer::tag('h3', s($modele->titre));
