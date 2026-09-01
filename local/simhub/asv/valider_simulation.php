@@ -47,7 +47,7 @@ if ($submitted) {
 
     redirect(
         new moodle_url('/local/simhub/asv/index.php'),
-        get_string('atelier_enregistre', 'local_simhub'),
+        get_string('asv_validation_enregistree', 'local_simhub'),
         null,
         \core\output\notification::NOTIFY_SUCCESS
     );

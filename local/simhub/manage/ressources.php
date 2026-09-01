@@ -38,7 +38,7 @@ echo $OUTPUT->header();
 
 echo $OUTPUT->single_button(
     new moodle_url('/local/simhub/manage/ressource_edit.php', ['atelierid' => $atelierid]),
-    get_string('atelier_nouveau', 'local_simhub')
+    get_string('ressource_nouvelle', 'local_simhub')
 );
 
 global $DB;
@@ -55,8 +55,8 @@ foreach ($ressources as $r) {
         s($r->titre),
         s($r->type),
         s($r->visibilite),
-        html_writer::link($editurl, get_string('atelier_modifier', 'local_simhub')) . ' | '
-            . html_writer::link($delurl, 'Supprimer'),
+        html_writer::link($editurl, get_string('edit')) . ' | '
+            . html_writer::link($delurl, get_string('delete')),
     ];
 }
 echo html_writer::table($table);

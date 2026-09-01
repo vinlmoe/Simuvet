@@ -53,7 +53,7 @@ if ($submitted) {
         ]);
         redirect(
             new moodle_url('/local/simhub/atelier.php', ['id' => $atelierid]),
-            get_string('atelier_enregistre', 'local_simhub'),
+            get_string('session_demarree', 'local_simhub'),
             null,
             \core\output\notification::NOTIFY_SUCCESS
         );

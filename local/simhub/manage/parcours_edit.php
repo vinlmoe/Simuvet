@@ -16,7 +16,7 @@ $id = optional_param('id', 0, PARAM_INT);
 $PAGE->set_context($context);
 $PAGE->set_url(new moodle_url('/local/simhub/manage/parcours_edit.php', ['id' => $id]));
 $PAGE->set_pagelayout('admin');
-$title = $id ? get_string('atelier_modifier', 'local_simhub') : get_string('atelier_nouveau', 'local_simhub');
+$title = $id ? get_string('edit') : get_string('parcours_nouveau', 'local_simhub');
 $PAGE->set_title($title);
 $PAGE->set_heading($title);
 
@@ -47,7 +47,7 @@ if ($form->is_cancelled()) {
 
     redirect(
         new moodle_url('/local/simhub/manage/parcours_ateliers.php', ['parcoursid' => $parcours->get('id')]),
-        get_string('atelier_enregistre', 'local_simhub'),
+        get_string('changessaved'),
         null,
         \core\output\notification::NOTIFY_SUCCESS
     );

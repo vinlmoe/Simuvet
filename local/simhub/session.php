@@ -94,7 +94,7 @@ if ($submitted) {
 
     redirect(
         new moodle_url('/local/simhub/index.php'),
-        get_string('atelier_enregistre', 'local_simhub'),
+        get_string('autoeval_enregistree', 'local_simhub'),
         null,
         \core\output\notification::NOTIFY_SUCCESS
     );
@@ -113,7 +113,7 @@ if (!$modele) {
             'context' => $context,
         ])->trigger();
     }
-    echo $OUTPUT->notification(get_string('atelier_enregistre', 'local_simhub'), \core\output\notification::NOTIFY_SUCCESS);
+    echo $OUTPUT->notification(get_string('session_terminee', 'local_simhub'), \core\output\notification::NOTIFY_SUCCESS);
     echo $OUTPUT->continue_button(new moodle_url('/local/simhub/index.php'));
     echo $OUTPUT->footer();
     exit;

@@ -79,7 +79,7 @@ if ($form->is_cancelled()) {
 
     redirect(
         new moodle_url('/local/simhub/manage/ressources.php', ['atelierid' => $atelierid]),
-        get_string('atelier_enregistre', 'local_simhub'),
+        get_string('changessaved'),
         null,
         \core\output\notification::NOTIFY_SUCCESS
     );

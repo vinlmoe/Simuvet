@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE libraries SYSTEM "https://moodle.org/dtd/thirdpartylibs.dtd">
+<libraries>
+  <library>
+    <location>js/vendor/qrcode.js</location>
+    <name>qrcode-generator</name>
+    <version>2.0.4</version>
+    <license>MIT</license>
+    <licenseversion></licenseversion>
+  </library>
+</libraries>

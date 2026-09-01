@@ -47,7 +47,7 @@ if ($submitted) {
 
     redirect(
         new moodle_url('/local/simhub/manage/ae_rubriques.php', ['atelierid' => $atelierid]),
-        get_string('atelier_enregistre', 'local_simhub'),
+        get_string('changessaved'),
         null,
         \core\output\notification::NOTIFY_SUCCESS
     );
@@ -77,7 +77,7 @@ echo html_writer::empty_tag('input', array_merge(
 echo ' ' . get_string('ae_champ_actif', 'local_simhub');
 echo html_writer::end_tag('label');
 
-echo html_writer::tag('div', html_writer::tag('button', get_string('atelier_nouveau', 'local_simhub'), [
+echo html_writer::tag('div', html_writer::tag('button', get_string('savechanges'), [
     'type' => 'submit', 'class' => 'btn btn-primary',
 ]), ['class' => 'mt-3']);
 echo html_writer::end_tag('form');

@@ -67,7 +67,7 @@ echo $OUTPUT->header();
 echo html_writer::tag('p', s($modele->get('titre')));
 echo $OUTPUT->single_button(
     new moodle_url('/local/simhub/manage/ae_modele_edit.php', ['atelierid' => $atelierid]),
-    get_string('atelier_modifier', 'local_simhub')
+    get_string('edit')
 );
 
 $rubriques = ae_rubrique::get_pour_modele($modele->get('id'));

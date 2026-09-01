@@ -98,6 +98,8 @@ local/simhub/
 │   └── privacy/provider.php       Fournisseur RGPD (export/suppression des données perso)
 ├── templates/
 │   └── student_home.mustache      Template de l'accueil étudiant
+├── js/vendor/qrcode.js             Bibliothèque QR vendorisée (MIT, §7)
+├── thirdpartylibs.xml               Déclaration de la bibliothèque tierce
 └── README.md                      Ce document
 ```
 
@@ -296,9 +298,11 @@ plusieurs bugs réels, au-delà des simples ajustements de confort :
   Corrigé via un hook `atelier::after_create()` (le `before_create()`
   d'origine ne pouvait de toute façon pas fonctionner : l'id de
   l'atelier n'existe pas encore à ce stade). Une page
-  `manage/atelier_qr.php` a été ajoutée pour retrouver/régénérer le
-  lien de scan (aucune bibliothèque de rendu d'image QR n'étant fournie
-  par Moodle, elle affiche le lien à encoder dans un générateur externe).
+  `manage/atelier_qr.php` a été ajoutée pour afficher, imprimer et
+  télécharger le QR code, généré entièrement côté navigateur via la
+  bibliothèque vendorisée `js/vendor/qrcode.js` (qrcode-generator de
+  Kazuhiko Arase, MIT — voir `thirdpartylibs.xml`), sans dépendance
+  réseau ni service externe.
 - **Champ "échéance" invisible** : `manage/parcours_ateliers.php` lisait
   un paramètre `echeance` côté serveur, mais le formulaire ne
   comportait aucun champ pour le saisir — impossible à renseigner
@@ -323,8 +327,43 @@ local_simhub\...` référence une classe qui existe réellement, que
 chaque `get_string()` (y compris à clé dynamique) a une entrée dans les
 deux fichiers de langue, que chaque capacité utilisée dans le code est
 bien déclarée dans `db/access.php` et réciproquement, et que les noms
-de table SQL utilisés correspondent au schéma — sans trouver d'autre
-divergence.
+de table SQL utilisés correspondent au schéma.
+
+**Deux séries de corrections signalées en usage réel** s'y ajoutent :
+
+- **Paramètre requis manquant sur les formulaires écrits à la main** :
+  contrairement aux formulaires basés sur `moodleform` (qui gèrent
+  cela automatiquement), sept formulaires HTML bruts omettaient un
+  champ caché pour un paramètre que la page exige dès sa première
+  ligne (`required_param()`) — les soumettre faisait planter la page
+  immédiatement. Touchés : ajout de rubrique/critère à une grille
+  d'auto-évaluation (`manage/ae_modele_edit.php`,
+  `manage/ae_rubriques.php` — signalé en usage réel), positionnement du
+  repère sur le plan et régénération du QR (`manage/atelier_plan.php`,
+  `manage/atelier_qr.php`), soumission de l'auto-évaluation et démarrage
+  de session (`session.php`, `session_code.php`), et la page publique
+  de validation ASV sur animal vivant (`asv/valider_animal.php`, la
+  plus sensible : aucune connexion Moodle en secours si le jeton se
+  perd).
+- **Libellés génériques mal réutilisés** : de nombreux boutons/titres
+  affichaient "Nouvel atelier" / "Modifier l'atelier" / "Atelier
+  enregistré" sur des pages qui n'ont rien à voir avec un atelier
+  (parcours, ressources, grille d'auto-évaluation, rattachements,
+  sessions, validations ASV...). Remplacés par des libellés propres à
+  chaque contexte, en réutilisant les chaînes génériques de Moodle
+  (`edit`, `add`, `savechanges`, `changessaved`) là où c'est pertinent
+  plutôt que de dupliquer du texte.
+
+## Génération du QR code (§7)
+
+`manage/atelier_qr.php` affiche, imprime et permet de télécharger le
+QR code d'un atelier, généré **entièrement côté navigateur** — aucune
+donnée n'est envoyée à un service tiers. La bibliothèque
+`js/vendor/qrcode.js` (paquet npm `qrcode-generator` v2.0.4, MIT,
+Kazuhiko Arase) a été récupérée depuis le registre npm officiel et
+vendorisée telle quelle (déclarée dans `thirdpartylibs.xml`, convention
+standard des plugins Moodle) plutôt que réécrite de mémoire, pour
+garantir un code réellement scannable.
 
 ## Ce qui reste à faire
 

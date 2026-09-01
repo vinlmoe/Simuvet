@@ -127,7 +127,7 @@ echo html_writer::tag('label', 'Niveau attendu (optionnel)');
 echo html_writer::empty_tag('input', ['type' => 'text', 'name' => 'niveauattendu', 'class' => 'form-control d-inline-block w-auto mr-2']);
 echo html_writer::end_div();
 
-echo html_writer::tag('button', get_string('atelier_nouveau', 'local_simhub'), ['type' => 'submit', 'class' => 'btn btn-primary']);
+echo html_writer::tag('button', get_string('add'), ['type' => 'submit', 'class' => 'btn btn-primary']);
 echo html_writer::end_tag('form');
 
 echo $OUTPUT->footer();

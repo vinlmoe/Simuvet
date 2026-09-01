@@ -27,7 +27,7 @@ echo $OUTPUT->header();
 if ($canmanage) {
     echo $OUTPUT->single_button(
         new moodle_url('/local/simhub/manage/parcours_edit.php'),
-        get_string('atelier_nouveau', 'local_simhub')
+        get_string('parcours_nouveau', 'local_simhub')
     );
 }
 
@@ -45,7 +45,7 @@ foreach ($parcourslist as $p) {
     if ($canmanage) {
         $editurl = new moodle_url('/local/simhub/manage/parcours_edit.php', ['id' => $p->get('id')]);
         $ateliersurl = new moodle_url('/local/simhub/manage/parcours_ateliers.php', ['parcoursid' => $p->get('id')]);
-        $gestionlinks = html_writer::link($editurl, get_string('atelier_modifier', 'local_simhub')) . ' | '
+        $gestionlinks = html_writer::link($editurl, get_string('edit')) . ' | '
             . html_writer::link($ateliersurl, 'Composition');
     }
 
