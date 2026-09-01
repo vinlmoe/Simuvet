@@ -416,11 +416,17 @@ lève en principe une exception, mais selon la configuration d'affichage des err
 site, celle-ci peut rester invisible côté utilisateur, qui ne voit alors que « rien ne
 s'est passé ».
 
-Correctif : `db/upgrade.php` rejoue désormais `install_from_xmldb_file()` sur
-`db/install.xml` (version 2026090101) — cette fonction Moodle vérifie l'existence de
-chaque table avant de la créer, donc sans risque pour les tables déjà en place. Après mise
-à jour du code, il faut visiter *Administration du site → Notifications* pour que Moodle
-détecte le changement de version et exécute cette mise à jour.
+Premier correctif (version 2026090101) insuffisant : `install_from_xmldb_file()`
+rejoue TOUTES les tables du fichier XML sans vérifier au préalable lesquelles existent
+déjà, et échoue dès la première déjà en place (« Table ... already exists »), comme
+constaté en usage réel lors de l'exécution de la mise à jour.
+
+Correctif définitif (version 2026090102) : `db/upgrade.php` charge la structure du
+fichier `db/install.xml` via `xmldb_file`/`getStructure()`, puis ne crée, une par une,
+que les tables pour lesquelles `$dbman->table_exists()` renvoie faux — aucun risque pour
+les tables déjà en place, aucun échec sur celles déjà créées. Après mise à jour du code,
+il faut visiter *Administration du site → Notifications* pour que Moodle détecte le
+changement de version et exécute cette mise à jour.
 
 ## Mise en page des pages de gestion (signalé en usage réel)
 
