@@ -36,7 +36,7 @@ $record = $id ? $DB->get_record(ressource::TABLE, ['id' => $id, 'atelierid' => $
 
 $PAGE->set_context($context);
 $PAGE->set_url(new moodle_url('/local/simhub/manage/ressource_edit.php', ['atelierid' => $atelierid, 'id' => $id]));
-$PAGE->set_pagelayout('admin');
+$PAGE->set_pagelayout('standard');
 $title = get_string('champ_nomcourt', 'local_simhub') . ' — ' . s($atelier->get('nomcourt'));
 $PAGE->set_title($title);
 $PAGE->set_heading($title);

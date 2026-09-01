@@ -23,7 +23,7 @@ $seuilpeuutilise = 3;
 
 $PAGE->set_context($context);
 $PAGE->set_url(new moodle_url('/local/simhub/manage/dashboard_salle.php'));
-$PAGE->set_pagelayout('admin');
+$PAGE->set_pagelayout('standard');
 $PAGE->set_title(get_string('dashboard_salle', 'local_simhub'));
 $PAGE->set_heading(get_string('dashboard_salle', 'local_simhub'));
 

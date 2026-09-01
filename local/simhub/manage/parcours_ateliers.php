@@ -18,7 +18,7 @@ $parcours = new parcours($parcoursid);
 
 $PAGE->set_context($context);
 $PAGE->set_url(new moodle_url('/local/simhub/manage/parcours_ateliers.php', ['parcoursid' => $parcoursid]));
-$PAGE->set_pagelayout('admin');
+$PAGE->set_pagelayout('standard');
 $PAGE->set_title(s($parcours->get('nom')));
 $PAGE->set_heading(s($parcours->get('nom')));
 

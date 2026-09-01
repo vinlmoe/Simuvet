@@ -354,6 +354,18 @@ de table SQL utilisés correspondent au schéma.
   (`edit`, `add`, `savechanges`, `changessaved`) là où c'est pertinent
   plutôt que de dupliquer du texte.
 
+## Mise en page des pages de gestion (signalé en usage réel)
+
+Les 17 pages sous `manage/` utilisaient `$PAGE->set_pagelayout('admin')`.
+C'est la mise en page réservée aux écrans d'administration du site :
+selon le thème, elle masque le tiroir de navigation latéral standard
+et affiche le fil d'Ariane "Administration du site" à la place — ce
+qui explique à la fois pourquoi SimHub restait invisible dans le menu
+latéral une fois sur ces pages, et pourquoi le bandeau affiché n'avait
+aucun rapport avec SimHub. Remplacé par `'standard'` partout, la mise
+en page normale utilisée par le reste du plugin (`index.php`,
+`atelier.php`, `asv/*.php`...).
+
 ## Génération du QR code (§7)
 
 `manage/atelier_qr.php` affiche, imprime et permet de télécharger le

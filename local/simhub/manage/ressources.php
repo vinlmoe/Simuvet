@@ -29,7 +29,7 @@ if ($action === 'supprimer') {
 
 $PAGE->set_context($context);
 $PAGE->set_url(new moodle_url('/local/simhub/manage/ressources.php', ['atelierid' => $atelierid]));
-$PAGE->set_pagelayout('admin');
+$PAGE->set_pagelayout('standard');
 $title = get_string('champ_nomcourt', 'local_simhub') . ' — ' . s($atelier->get('nomcourt'));
 $PAGE->set_title($title);
 $PAGE->set_heading($title);

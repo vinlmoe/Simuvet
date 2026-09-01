@@ -57,7 +57,7 @@ if ($action === 'ajouter_rubrique') {
 
 $PAGE->set_context($context);
 $PAGE->set_url(new moodle_url('/local/simhub/manage/ae_rubriques.php', ['atelierid' => $atelierid]));
-$PAGE->set_pagelayout('admin');
+$PAGE->set_pagelayout('standard');
 $title = get_string('ae_modele', 'local_simhub') . ' — ' . s($atelier->get('nomcourt'));
 $PAGE->set_title($title);
 $PAGE->set_heading($title);

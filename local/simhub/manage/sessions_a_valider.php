@@ -33,7 +33,7 @@ if ($action === 'valider' || $action === 'refuser') {
 
 $PAGE->set_context($context);
 $PAGE->set_url(new moodle_url('/local/simhub/manage/sessions_a_valider.php'));
-$PAGE->set_pagelayout('admin');
+$PAGE->set_pagelayout('standard');
 $PAGE->set_title(get_string('sessions_a_valider', 'local_simhub'));
 $PAGE->set_heading(get_string('sessions_a_valider', 'local_simhub'));
 

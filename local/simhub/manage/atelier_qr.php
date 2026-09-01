@@ -26,7 +26,7 @@ if ($action === 'regenerer') {
 
 $PAGE->set_context($context);
 $PAGE->set_url(new moodle_url('/local/simhub/manage/atelier_qr.php', ['id' => $id]));
-$PAGE->set_pagelayout('admin');
+$PAGE->set_pagelayout('standard');
 $title = s($atelier->get('nomcourt'));
 $PAGE->set_title($title);
 $PAGE->set_heading($title);

@@ -18,7 +18,7 @@ $id = optional_param('id', 0, PARAM_INT);
 
 $PAGE->set_context($context);
 $PAGE->set_url(new moodle_url('/local/simhub/manage/atelier_edit.php', ['id' => $id]));
-$PAGE->set_pagelayout('admin');
+$PAGE->set_pagelayout('standard');
 $title = $id ? get_string('atelier_modifier', 'local_simhub') : get_string('atelier_nouveau', 'local_simhub');
 $PAGE->set_title($title);
 $PAGE->set_heading($title);
