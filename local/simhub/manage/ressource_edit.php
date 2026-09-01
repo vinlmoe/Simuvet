@@ -6,6 +6,7 @@
 // identifiants différents.
 
 require(__DIR__ . '/../../../config.php');
+require_once($CFG->libdir . '/filelib.php');
 
 use local_simhub\persistent\atelier;
 use local_simhub\persistent\ressource;

@@ -3,6 +3,7 @@
 // "indisponible" (§6.1) : ouverture/clôture d'une entrée dans local_simhub_indispo.
 
 require(__DIR__ . '/../../../config.php');
+require_once($CFG->libdir . '/filelib.php');
 
 use local_simhub\persistent\atelier;
 use local_simhub\form\atelier_form;
