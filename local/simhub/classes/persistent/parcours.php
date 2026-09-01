@@ -2,6 +2,8 @@
 
 namespace local_simhub\persistent;
 
+use local_simhub\record\parc_atelier;
+
 defined('MOODLE_INTERNAL') || die();
 
 /**
