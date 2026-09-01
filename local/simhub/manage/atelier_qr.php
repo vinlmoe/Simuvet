@@ -31,9 +31,12 @@ $title = s($atelier->get('nomcourt'));
 $PAGE->set_title($title);
 $PAGE->set_heading($title);
 
-$PAGE->requires->js(new moodle_url('/local/simhub/js/vendor/qrcode.js'));
-
 echo $OUTPUT->header();
+
+// La bibliothèque est intégrée directement dans la page (plutôt que via
+// $PAGE->requires->js()) pour garantir qu'elle est définie avant le script d'utilisation
+// ci-dessous, sans dépendre de l'ordre d'injection des scripts du thème Moodle.
+echo html_writer::script(file_get_contents(__DIR__ . '/../js/vendor/qrcode.js'));
 
 $qr = qrtoken::get_ou_creer($id);
 $scanurl = new moodle_url('/local/simhub/qr.php', ['token' => $qr->token]);

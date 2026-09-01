@@ -363,7 +363,21 @@ donnée n'est envoyée à un service tiers. La bibliothèque
 Kazuhiko Arase) a été récupérée depuis le registre npm officiel et
 vendorisée telle quelle (déclarée dans `thirdpartylibs.xml`, convention
 standard des plugins Moodle) plutôt que réécrite de mémoire, pour
-garantir un code réellement scannable.
+garantir un code réellement scannable. Elle est intégrée directement
+dans la page (plutôt que via `$PAGE->requires->js()`) pour garantir
+qu'elle est chargée avant le script qui l'utilise, sans dépendre de
+l'ordre d'injection des scripts du thème.
+
+**Bug corrigé (signalé en usage réel) : "Erreur d'écriture vers la
+base de données" lors de la régénération.** `local_simhub_qrtoken`
+porte une contrainte d'unicité sur `atelierid` (une seule ligne par
+atelier), mais `qrtoken::regenerer()` désactivait l'ancienne ligne puis
+tentait d'en insérer une nouvelle pour le même atelier — ce qui viole
+cette contrainte. Corrigé pour mettre à jour la ligne existante en
+place. `get_ou_creer()` répare aussi automatiquement toute ligne restée
+à `actif=0` par une régénération antérieure ayant échoué à cause de ce
+bug (elle rendait le scan silencieusement impossible, sans que rien
+dans l'interface ne l'indique).
 
 ## Ce qui reste à faire
 
