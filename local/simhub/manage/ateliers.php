@@ -80,6 +80,13 @@ foreach ($ateliers as $atelier) {
         );
     }
 
+    if (has_capability('local/simhub:validateasvsimulation', $context)) {
+        $liens .= ' | ' . html_writer::link(
+            new moodle_url('/local/simhub/asv/valider_simulation.php', ['atelierid' => $atelier->get('id')]),
+            get_string('asv_valider_simulation', 'local_simhub')
+        );
+    }
+
     $table->data[] = [
         s($atelier->get('numero')),
         s($atelier->get('nomcourt')),

@@ -40,5 +40,22 @@ function xmldb_local_simhub_upgrade($oldversion) {
         upgrade_plugin_savepoint(true, 2026090102, 'local', 'simhub');
     }
 
+    if ($oldversion < 2026090103) {
+        // Nouvelle table de liaison N-N acte ASV / atelier (§9.2), pour restreindre la
+        // liste des actes proposés à la validation en simulation à ceux réellement
+        // pratiqués dans l'atelier concerné. Même logique que le bloc précédent : ne créer
+        // que si absente, pour rester sans danger si rejouée.
+        $table = new xmldb_table('local_simhub_asv_acte_atelier');
+        if (!$dbman->table_exists($table)) {
+            require_once($CFG->libdir . '/ddllib.php');
+            $xmldbfile = new xmldb_file($CFG->dirroot . '/local/simhub/db/install.xml');
+            $xmldbfile->loadXMLStructure();
+            $structure = $xmldbfile->getStructure();
+            $dbman->create_table($structure->getTable('local_simhub_asv_acte_atelier'));
+        }
+
+        upgrade_plugin_savepoint(true, 2026090103, 'local', 'simhub');
+    }
+
     return true;
 }

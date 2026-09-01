@@ -4,6 +4,8 @@
 require(__DIR__ . '/../../../config.php');
 
 use local_simhub\persistent\asv_acte;
+use local_simhub\persistent\atelier;
+use local_simhub\record\acte_atelier;
 
 require_login();
 
@@ -17,6 +19,21 @@ $title = $id ? get_string('edit') : get_string('asv_acte_nouveau', 'local_simhub
 \local_simhub\local\navigation::preparer($PAGE, new moodle_url('/local/simhub/manage/asv_acte_edit.php', ['id' => $id]), $title, [
     [get_string('asv_gerer_actes', 'local_simhub'), new moodle_url('/local/simhub/manage/asv_actes.php')],
 ]);
+
+$action = optional_param('action', '', PARAM_ALPHANUMEXT);
+if ($id && $action === 'lier_atelier') {
+    require_sesskey();
+    $atelierid = required_param('atelierid', PARAM_INT);
+    acte_atelier::lier($id, $atelierid);
+
+    redirect(new moodle_url('/local/simhub/manage/asv_acte_edit.php', ['id' => $id]));
+} else if ($id && $action === 'delier_atelier') {
+    require_sesskey();
+    $atelierid = required_param('atelierid', PARAM_INT);
+    acte_atelier::delier($id, $atelierid);
+
+    redirect(new moodle_url('/local/simhub/manage/asv_acte_edit.php', ['id' => $id]));
+}
 
 $submitted = optional_param('submit', 0, PARAM_BOOL);
 if ($submitted) {
@@ -105,5 +122,46 @@ echo html_writer::tag('div', html_writer::tag('button', get_string('savechanges'
     'type' => 'submit', 'class' => 'btn btn-primary',
 ]), ['class' => 'mt-3']);
 echo html_writer::end_tag('form');
+
+if ($id) {
+    // Ateliers de simulation où cet acte se pratique (§9.2) : une fois liés, ils
+    // restreignent la liste des actes proposés lors d'une validation en simulation lancée
+    // depuis cet atelier, au lieu de faire choisir dans tout le référentiel.
+    echo html_writer::tag('h4', get_string('asv_ateliers_lies', 'local_simhub'), ['class' => 'mt-4']);
+
+    $lies = acte_atelier::get_ateliers_pour_acte($id);
+    if (!empty($lies)) {
+        echo html_writer::start_tag('ul');
+        foreach ($lies as $atelierlie) {
+            $delurl = new moodle_url('/local/simhub/manage/asv_acte_edit.php', [
+                'id' => $id, 'action' => 'delier_atelier', 'atelierid' => $atelierlie->id, 'sesskey' => sesskey(),
+            ]);
+            echo html_writer::tag('li', s($atelierlie->numero) . ' — ' . s($atelierlie->nomcourt)
+                . ' — ' . html_writer::link($delurl, get_string('delete'), ['class' => 'text-danger']));
+        }
+        echo html_writer::end_tag('ul');
+    }
+
+    $lieids = array_map(fn($a) => $a->id, $lies);
+    $disponibles = array_filter(atelier::get_records([], 'nomcourt'), fn($a) => !in_array($a->get('id'), $lieids, true));
+
+    if (!empty($disponibles)) {
+        echo html_writer::start_tag('form', ['method' => 'post', 'class' => 'form-inline']);
+        echo html_writer::empty_tag('input', ['type' => 'hidden', 'name' => 'sesskey', 'value' => sesskey()]);
+        echo html_writer::empty_tag('input', ['type' => 'hidden', 'name' => 'id', 'value' => $id]);
+        echo html_writer::empty_tag('input', ['type' => 'hidden', 'name' => 'action', 'value' => 'lier_atelier']);
+        echo html_writer::start_tag('select', ['name' => 'atelierid', 'class' => 'form-control mr-2']);
+        foreach ($disponibles as $atelierdispo) {
+            echo html_writer::tag('option', s($atelierdispo->get('numero')) . ' — ' . s($atelierdispo->get('nomcourt')), [
+                'value' => $atelierdispo->get('id'),
+            ]);
+        }
+        echo html_writer::end_tag('select');
+        echo html_writer::tag('button', get_string('asv_lier_atelier', 'local_simhub'), [
+            'type' => 'submit', 'class' => 'btn btn-outline-primary',
+        ]);
+        echo html_writer::end_tag('form');
+    }
+}
 
 echo $OUTPUT->footer();

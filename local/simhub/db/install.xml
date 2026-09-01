@@ -401,5 +401,21 @@
       </KEYS>
     </TABLE>
 
+    <TABLE NAME="local_simhub_asv_acte_atelier" COMMENT="Liaison N-N acte ASV / atelier de simulation permettant de le pratiquer, pour faciliter la validation des certificats (§9.2)">
+      <FIELDS>
+        <FIELD NAME="id" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="true"/>
+        <FIELD NAME="acteid" TYPE="int" LENGTH="10" NOTNULL="true"/>
+        <FIELD NAME="atelierid" TYPE="int" LENGTH="10" NOTNULL="true"/>
+      </FIELDS>
+      <KEYS>
+        <KEY NAME="primary" TYPE="primary" FIELDS="id"/>
+        <KEY NAME="acteid_fk" TYPE="foreign" FIELDS="acteid" REFTABLE="local_simhub_asv_acte" REFFIELDS="id"/>
+        <KEY NAME="atelierid_fk" TYPE="foreign" FIELDS="atelierid" REFTABLE="local_simhub_atelier" REFFIELDS="id"/>
+      </KEYS>
+      <INDEXES>
+        <INDEX NAME="acte_atelier" UNIQUE="true" FIELDS="acteid, atelierid"/>
+      </INDEXES>
+    </TABLE>
+
   </TABLES>
 </XMLDB>
