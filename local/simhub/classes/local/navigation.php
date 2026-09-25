@@ -108,6 +108,11 @@ class navigation {
             $ajouter('asvattestations', 'asv', $str('asv_attestations_groupees'), '/local/simhub/manage/asv_attestations.php');
         }
 
+        if (has_capability('moodle/role:assign', $context)) {
+            $ajouter('roles', 'roles', $str('nav_roles'), '/admin/roles/assign.php?contextid=' . $context->id,
+                ['/admin/roles/assign.php']);
+        }
+
         return $sections;
     }
 

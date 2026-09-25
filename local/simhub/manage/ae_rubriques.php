@@ -87,7 +87,7 @@ foreach ($rubriques as $rubrique) {
     $delrubriqueurl = new moodle_url('/local/simhub/manage/ae_rubriques.php', [
         'atelierid' => $atelierid, 'action' => 'supprimer_rubrique', 'rubriqueid' => $rubrique->id, 'sesskey' => sesskey(),
     ]);
-    echo html_writer::link($delrubriqueurl, 'Retirer', ['class' => 'text-danger']);
+    echo html_writer::link($delrubriqueurl, get_string('retirer', 'local_simhub'), ['class' => 'text-danger']);
     echo html_writer::end_div();
 
     echo html_writer::start_div('card-body');
@@ -99,7 +99,7 @@ foreach ($rubriques as $rubrique) {
             $delcritereurl = new moodle_url('/local/simhub/manage/ae_rubriques.php', [
                 'atelierid' => $atelierid, 'action' => 'supprimer_critere', 'critereid' => $critere->id, 'sesskey' => sesskey(),
             ]);
-            echo html_writer::tag('li', s($critere->libelle) . ' — ' . html_writer::link($delcritereurl, 'Retirer', ['class' => 'text-danger']));
+            echo html_writer::tag('li', s($critere->libelle) . ' — ' . html_writer::link($delcritereurl, get_string('retirer', 'local_simhub'), ['class' => 'text-danger']));
         }
         echo html_writer::end_tag('ul');
     }
@@ -133,7 +133,7 @@ echo html_writer::empty_tag('input', [
     'placeholder' => get_string('ae_champ_titre', 'local_simhub'), 'required' => 'required',
 ]);
 echo html_writer::empty_tag('input', [
-    'type' => 'number', 'name' => 'ordre', 'class' => 'form-control mr-2', 'placeholder' => 'Ordre',
+    'type' => 'number', 'name' => 'ordre', 'class' => 'form-control mr-2', 'placeholder' => get_string('ordre', 'local_simhub'),
 ]);
 echo html_writer::start_tag('label', ['class' => 'mr-2']);
 echo html_writer::empty_tag('input', ['type' => 'checkbox', 'name' => 'estrubriquerisques', 'value' => 1]);

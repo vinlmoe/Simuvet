@@ -41,8 +41,9 @@ class asv_certification_helper {
             $simok = in_array($acte->get('id'), $actesvalidessim, true);
             $animalok = !empty($actesvalidesanimal[$acte->get('id')]);
             if (!$simok || !$animalok) {
-                $manquants[] = $acte->get('nom') . ($simok ? '' : ' (simulation manquante)')
-                    . ($animalok ? '' : ' (animal vivant manquant)');
+                $manquants[] = $acte->get('nom')
+                    . ($simok ? '' : ' (' . get_string('asv_manque_simulation', 'local_simhub') . ')')
+                    . ($animalok ? '' : ' (' . get_string('asv_manque_animal', 'local_simhub') . ')');
             }
         }
 

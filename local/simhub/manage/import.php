@@ -30,7 +30,7 @@ if ($submitted) {
     $envcode = optional_param('envcode', get_config('local_simhub', 'envcode') ?: '', PARAM_ALPHANUMEXT);
 
     if (empty($_FILES['csvfile']['tmp_name']) || !is_uploaded_file($_FILES['csvfile']['tmp_name'])) {
-        $result = ['crees' => 0, 'majs' => 0, 'erreurs' => ['Aucun fichier reçu.']];
+        $result = ['crees' => 0, 'majs' => 0, 'erreurs' => [get_string('import_aucun_fichier', 'local_simhub')]];
     } else {
         $content = file_get_contents($_FILES['csvfile']['tmp_name']);
         // Les exports Excel français sont fréquemment encodés en Windows-1252 : on force
@@ -82,8 +82,7 @@ if ($result !== null) {
 echo html_writer::tag('p', get_string('import_description', 'local_simhub'));
 echo html_writer::tag(
     'p',
-    'Pour les rattachements ou la composition de parcours, importez d\'abord les ateliers : '
-    . 'ces deux imports retrouvent chaque atelier par son numéro et son établissement.'
+    get_string('import_ordre', 'local_simhub')
 );
 
 echo html_writer::start_tag('form', ['method' => 'post', 'enctype' => 'multipart/form-data']);
@@ -91,11 +90,11 @@ echo html_writer::empty_tag('input', ['type' => 'hidden', 'name' => 'sesskey', '
 echo html_writer::empty_tag('input', ['type' => 'hidden', 'name' => 'submit', 'value' => 1]);
 
 echo html_writer::start_div('form-group');
-echo html_writer::tag('label', 'Type d\'import');
+echo html_writer::tag('label', get_string('import_type', 'local_simhub'));
 echo html_writer::select([
-    'ateliers' => 'Ateliers',
-    'rattachements' => 'Rattachements (UC / année / cohorte)',
-    'parcours' => 'Composition de parcours',
+    'ateliers' => get_string('nav_groupe_ateliers', 'local_simhub'),
+    'rattachements' => get_string('import_type_rattachements', 'local_simhub'),
+    'parcours' => get_string('import_type_parcours', 'local_simhub'),
 ], 'type', $type, false, ['class' => 'form-control d-inline-block w-auto']);
 echo html_writer::end_div();
 
@@ -107,10 +106,10 @@ echo html_writer::empty_tag('input', [
 echo html_writer::end_div();
 
 echo html_writer::start_div('form-group');
-echo html_writer::tag('label', 'Séparateur');
+echo html_writer::tag('label', get_string('import_separateur', 'local_simhub'));
 echo html_writer::start_tag('select', ['name' => 'delimiter', 'class' => 'form-control d-inline-block w-auto']);
-echo html_writer::tag('option', 'Point-virgule (;) — Excel français', ['value' => ';']);
-echo html_writer::tag('option', 'Virgule (,)', ['value' => ',']);
+echo html_writer::tag('option', get_string('import_sep_pointvirgule', 'local_simhub'), ['value' => ';']);
+echo html_writer::tag('option', get_string('import_sep_virgule', 'local_simhub'), ['value' => ',']);
 echo html_writer::end_tag('select');
 echo html_writer::end_div();
 

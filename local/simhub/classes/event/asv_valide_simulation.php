@@ -20,8 +20,8 @@ class asv_valide_simulation extends \core\event\base {
     }
 
     public function get_description() {
-        return "L'utilisateur avec l'id '{$this->userid}' a validé en simulation l'acte ASV "
-            . "pour l'étudiant avec l'id '{$this->relateduserid}' (enregistrement '{$this->objectid}').";
+        return "The user with id '{$this->userid}' validated in simulation the ASV procedure "
+            . "for the student with id '{$this->relateduserid}' (record '{$this->objectid}').";
     }
 
     public function get_url() {

@@ -172,6 +172,13 @@ class student_home_page implements renderable, templatable {
             'hasateliers' => !empty($tousliste),
             'nomessage' => get_string('aucun_atelier', 'local_simhub'),
             'formurl' => (new \moodle_url('/local/simhub/index.php'))->out(false),
+            'niveaux' => array_map(function ($niveau) {
+                return [
+                    'value' => $niveau,
+                    'label' => get_string('niveau_' . $niveau, 'local_simhub'),
+                    'selected' => $this->filter->niveaudifficulte === $niveau,
+                ];
+            }, ['facile', 'intermediaire', 'avance']),
             'filtre' => [
                 'motcle' => s($this->filter->motcle),
                 'discipline' => s($this->filter->discipline),

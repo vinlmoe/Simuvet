@@ -20,7 +20,7 @@ class session_started extends \core\event\base {
     }
 
     public function get_description() {
-        return "L'utilisateur avec l'id '{$this->userid}' a démarré la session d'atelier avec l'id '{$this->objectid}'.";
+        return "The user with id '{$this->userid}' started the workshop session with id '{$this->objectid}'.";
     }
 
     public function get_url() {

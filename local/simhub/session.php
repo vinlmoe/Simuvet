@@ -153,7 +153,7 @@ foreach ($rubriques as $rubrique) {
     echo html_writer::end_tag('fieldset');
 }
 
-echo html_writer::tag('h4', 'Auto-bilan');
+echo html_writer::tag('h4', get_string('ae_autobilan', 'local_simhub'));
 foreach (['pointmaitrise', 'pointaretravailler', 'pointattention'] as $field) {
     echo html_writer::start_div('form-group');
     echo html_writer::tag('label', get_string('champ_' . $field, 'local_simhub'));

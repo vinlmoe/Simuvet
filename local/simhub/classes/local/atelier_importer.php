@@ -78,7 +78,7 @@ class atelier_importer {
         $result = ['crees' => 0, 'majs' => 0, 'erreurs' => []];
 
         if (empty($lines)) {
-            $result['erreurs'][] = 'Fichier vide.';
+            $result['erreurs'][] = get_string('import_fichier_vide', 'local_simhub');
             return $result;
         }
 
@@ -92,7 +92,7 @@ class atelier_importer {
         }
 
         if (!in_array('numero', $colmap, true) || !in_array('nomcourt', $colmap, true)) {
-            $result['erreurs'][] = 'Colonnes obligatoires introuvables : il faut au moins un numéro et un nom d\'atelier.';
+            $result['erreurs'][] = get_string('import_colonnes_manquantes', 'local_simhub');
             return $result;
         }
 
@@ -104,7 +104,7 @@ class atelier_importer {
             }
 
             if (empty($data['numero']) || empty($data['nomcourt'])) {
-                $result['erreurs'][] = 'Ligne ' . ($lineno + 2) . ' ignorée : numéro ou nom manquant.';
+                $result['erreurs'][] = get_string('import_ligne_numero_nom', 'local_simhub', $lineno + 2);
                 continue;
             }
 
@@ -113,7 +113,7 @@ class atelier_importer {
                 $envcode = $defaultenvcode;
             }
             if ($envcode === '') {
-                $result['erreurs'][] = 'Ligne ' . ($lineno + 2) . ' ignorée : établissement (envcode) inconnu.';
+                $result['erreurs'][] = get_string('import_ligne_envcode', 'local_simhub', $lineno + 2);
                 continue;
             }
 
@@ -145,7 +145,8 @@ class atelier_importer {
                     $result['crees']++;
                 }
             } catch (\Exception $e) {
-                $result['erreurs'][] = 'Ligne ' . ($lineno + 2) . ' : ' . $e->getMessage();
+                $result['erreurs'][] = get_string('import_ligne_erreur', 'local_simhub',
+                    (object) ['ligne' => $lineno + 2, 'erreur' => $e->getMessage()]);
             }
         }
 

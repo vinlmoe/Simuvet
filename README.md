@@ -3,8 +3,8 @@
 Plugin Moodle local (`local_simhub`) issu du cahier des charges *SimHub
 V0* (ENVA, ENVT, Oniris, VetAgro Sup — août 2026).
 
-**Statut : V1 en construction, testée de bout en bout sur une instance Moodle 5.0
-(PHP 8.4, PostgreSQL) — voir « Vérification sur instance réelle » ci-dessous.**
+**Statut : V1 en construction, testée de bout en bout sur Moodle 4.5 LTS (PHP 8.3) et
+Moodle 5.0 (PHP 8.4), PostgreSQL — voir « Vérification sur instance réelle » ci-dessous.**
 Ce dépôt contient désormais une implémentation fonctionnelle du
 périmètre "V1 indispensable" du cahier des charges (§13) : schéma de
 données complet, capacités, fiche atelier avec CRUD gestionnaire,
@@ -357,10 +357,12 @@ de table SQL utilisés correspondent au schéma.
 
 ## Vérification sur instance réelle (septembre 2026)
 
-Le plugin a été installé sur un Moodle 5.0 vierge (`admin/cli/install.php`), puis
-éprouvé par un navigateur automatisé (Playwright) avec trois profils : administrateur,
-étudiant (compte ordinaire, inscrit à une UC et membre d'une cohorte) et validateur
-externe sans compte. Les 50 pages du plugin s'affichent sans erreur ni avertissement
+Le plugin a été installé sur un Moodle 4.5 LTS vierge (PHP 8.3) et sur un Moodle 5.0
+(PHP 8.4, installation puis mise à jour depuis la version précédente du plugin), puis
+éprouvé par un navigateur automatisé (Playwright) avec quatre profils : administrateur,
+étudiant (compte ordinaire, inscrit à une UC et membre d'une cohorte), encadrant (rôle
+système « Encadrant SimHub », dont on vérifie aussi qu'il est refusé sur les pages de
+gestion des ateliers, des actes ASV et de l'import) et validateur externe sans compte. Les 50 pages du plugin s'affichent sans erreur ni avertissement
 PHP, et les 29 parcours fonctionnels suivants aboutissent : création/modification
 d'atelier (dont passage en indisponible), ressource, grille d'auto-évaluation
 (rubrique + critère), rattachement, parcours et composition avec échéance, repère plan,
@@ -384,11 +386,33 @@ Bugs réels corrigés à cette occasion :
   ASV déjà utilisé dans l'établissement provoquait « Erreur d'écriture vers la base
   de données ». Les deux sont désormais signalés dans le formulaire.
 
-**À savoir pour les enseignants et responsables de salle** : pour la même raison que
-ci-dessus, un rôle d'enseignant attribué dans un cours ne donne aucun droit SimHub. Il
-faut leur attribuer un rôle **au niveau système** (*Administration du site →
-Utilisateurs → Permissions → Attribuer des rôles système*), par exemple un rôle
-« Encadrant SimHub » créé à partir de l'archétype `editingteacher`.
+## Rôles système SimHub (§11)
+
+Pour la même raison que ci-dessus, un rôle d'enseignant attribué dans un cours ne donne
+aucun droit SimHub. Le plugin crée donc lui-même, à l'installation comme à la mise à
+jour (`classes/local/roles.php`), quatre rôles attribuables **uniquement au niveau
+système** :
+
+| Rôle | Profil §11 | Droits |
+|---|---|---|
+| Encadrant SimHub | Enseignant / formateur | suivi des parcours, validation des séances, export du suivi, validation ASV en simulation |
+| Responsable d'UC SimHub | Responsable d'UC | droits d'encadrant + parcours et rattachements |
+| Gestionnaire de salle SimHub | Responsable de salle | fiches ateliers, ressources, statuts, QR codes, import/export, rattachements, séances |
+| Administrateur fonctionnel SimHub | Administrateur fonctionnel | tous les droits SimHub, dont le référentiel ASV et le paramétrage |
+
+Il reste à les attribuer aux personnes concernées : un raccourci **Rôles SimHub** dans la
+barre de navigation (visible des administrateurs) ouvre directement *Attribuer des rôles
+système*. Rejouer la création est sans danger : un rôle existant est complété, jamais
+recréé, et les ajustements faits à la main par l'établissement sont conservés.
+
+## Internationalisation
+
+Plus aucun texte affiché n'est écrit en dur dans le code : pages, formulaires, messages
+d'import, tableaux de bord, template de l'accueil et documents PDF (livret, attestations)
+passent tous par `lang/fr` et `lang/en` (345 chaînes, identiques dans les deux langues).
+Les descriptions d'événements (journaux Moodle) sont en anglais, selon la convention
+Moodle pour ces textes non traduits. Au passage, le filtre « niveau » de l'accueil
+étudiant conserve désormais la valeur choisie après une recherche.
 
 ## Navigation par domaines et onglets
 
@@ -559,8 +583,8 @@ sophistiquée, gestion documentaire avec versioning complet.
   nom de table de ce schéma.
 - Aucune dépendance à un plugin tiers n'est requise en V1 : cohortes,
   rôles, cours et carnet de notes Moodle natifs suffisent (§10).
-- Ce code a été vérifié sur Moodle 5.0 (voir plus haut) mais pas encore sur la
-  version Moodle de l'infrastructure EVE. Historiquement : tous
+- Ce code a été vérifié sur Moodle 4.5 LTS et 5.0 (voir plus haut) ; reste à
+  confirmer la version exacte de l'infrastructure EVE. Historiquement : tous
   les fichiers PHP passent `php -l` et `db/install.xml` est un XML
   bien formé, mais aucune vérification contre l'API Moodle réelle
   (signatures exactes, comportements de `core\persistent`,

@@ -20,7 +20,7 @@ class atelier_created extends \core\event\base {
     }
 
     public function get_description() {
-        return "L'utilisateur avec l'id '{$this->userid}' a créé l'atelier avec l'id '{$this->objectid}'.";
+        return "The user with id '{$this->userid}' created the workshop with id '{$this->objectid}'.";
     }
 
     public function get_url() {

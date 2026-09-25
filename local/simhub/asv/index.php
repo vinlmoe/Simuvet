@@ -25,7 +25,7 @@ $actes = asv_acte::get_referentiel($envcode);
 
 echo $OUTPUT->single_button(
     new moodle_url('/local/simhub/asv/livret_pdf.php', ['envcode' => $envcode] + ($canpilot ? [] : ['userid' => $USER->id])),
-    'Exporter mon livret (PDF)',
+    get_string('asv_exporter_livret', 'local_simhub'),
     'get'
 );
 
@@ -54,7 +54,7 @@ if (!$canpilot) {
     }
 
     $table = new html_table();
-    $table->head = ['Acte', 'Niveau', 'Simulation', 'Animal vivant', ''];
+    $table->head = [get_string('asv_acte', 'local_simhub'), get_string('asv_champ_niveau', 'local_simhub'), get_string('asv_col_simulation', 'local_simhub'), get_string('asv_col_animal', 'local_simhub'), ''];
     foreach ($actes as $acte) {
         $simok = in_array($acte->get('id'), $actesvalidessim, true);
         $animalok = !empty($actesvalidesanimal[$acte->get('id')]);
@@ -72,7 +72,7 @@ if (!$canpilot) {
     // Vue pilotage (§9.4) : par acte, nombre d'étudiants validés en simulation / sur animal vivant.
     global $DB;
     $table = new html_table();
-    $table->head = ['Acte', 'Niveau', 'Validés en simulation', 'Validés sur animal vivant'];
+    $table->head = [get_string('asv_acte', 'local_simhub'), get_string('asv_champ_niveau', 'local_simhub'), get_string('asv_col_valides_simulation', 'local_simhub'), get_string('asv_col_valides_animal', 'local_simhub')];
     foreach ($actes as $acte) {
         $countsim = $DB->count_records('local_simhub_asv_valsim', ['acteid' => $acte->get('id'), 'statut' => 'valide']);
         $countanimal = $DB->count_records('local_simhub_asv_valanimal', ['acteid' => $acte->get('id'), 'statut' => 'valide']);

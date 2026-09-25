@@ -32,7 +32,7 @@ $actes = asv_acte::get_referentiel($envcode, $niveau);
 if (empty($actes)) {
     redirect(
         new moodle_url('/local/simhub/asv/index.php'),
-        'Aucun acte ' . $niveau . ' dans le référentiel de cet établissement.',
+        get_string('asv_aucun_acte_niveau', 'local_simhub', $niveau),
         null,
         \core\output\notification::NOTIFY_WARNING
     );
@@ -44,13 +44,12 @@ if (!empty($manquants)) {
     $PAGE->set_context($context);
     $PAGE->set_url(new moodle_url('/local/simhub/asv/attestation_pdf.php', ['userid' => $userid, 'niveau' => $niveau]));
     $PAGE->set_pagelayout('standard');
-    $PAGE->set_title('Certification ' . $niveau);
-    $PAGE->set_heading('Certification ' . $niveau);
+    $PAGE->set_title(get_string('asv_certification_niveau', 'local_simhub', $niveau));
+    $PAGE->set_heading(get_string('asv_certification_niveau', 'local_simhub', $niveau));
 
     echo $OUTPUT->header();
     echo $OUTPUT->notification(
-        'La certification ' . $niveau . ' de ' . fullname($user) . ' ne peut pas encore être délivrée : '
-        . count($manquants) . ' acte(s) restent à valider.',
+        get_string('asv_certification_incomplete', 'local_simhub', (object) ['niveau' => $niveau, 'nom' => fullname($user), 'nb' => count($manquants)]),
         \core\output\notification::NOTIFY_WARNING
     );
     echo html_writer::start_tag('ul');

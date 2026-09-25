@@ -46,7 +46,7 @@ if ($action === 'ajouter') {
 echo $OUTPUT->header();
 echo \local_simhub\local\navigation::barre();
 
-echo html_writer::tag('h3', 'Ateliers du parcours');
+echo html_writer::tag('h3', get_string('parcours_ateliers_titre', 'local_simhub'));
 
 $composition = $parcours->get_ateliers();
 
@@ -60,14 +60,14 @@ foreach ($composition as $lien) {
     $table->data[] = [
         s($atelier->get('nomcourt')),
         $lien->ordre,
-        $lien->obligatoire ? 'Oui' : 'Non',
+        $lien->obligatoire ? get_string('yes') : get_string('no'),
         $lien->echeance ? userdate($lien->echeance, get_string('strftimedate', 'langconfig')) : '',
-        html_writer::link($removeurl, 'Retirer'),
+        html_writer::link($removeurl, get_string('retirer', 'local_simhub')),
     ];
 }
 echo html_writer::table($table);
 
-echo html_writer::tag('h3', 'Ajouter un atelier');
+echo html_writer::tag('h3', get_string('parcours_ajouter_atelier', 'local_simhub'));
 
 $envcode = get_config('local_simhub', 'envcode') ?: '';
 $params = $envcode !== '' ? ['envcode' => $envcode] : [];
@@ -89,11 +89,11 @@ foreach ($ateliers as $atelier) {
 echo html_writer::end_tag('select');
 
 echo html_writer::empty_tag('input', [
-    'type' => 'number', 'name' => 'ordre', 'placeholder' => 'Ordre', 'class' => 'form-control d-inline-block w-auto mr-2',
+    'type' => 'number', 'name' => 'ordre', 'placeholder' => get_string('ordre', 'local_simhub'), 'class' => 'form-control d-inline-block w-auto mr-2',
 ]);
 
 echo html_writer::empty_tag('input', [
-    'type' => 'date', 'name' => 'echeance', 'title' => 'Échéance (optionnel)',
+    'type' => 'date', 'name' => 'echeance', 'title' => get_string('echeance_optionnel', 'local_simhub'),
     'class' => 'form-control d-inline-block w-auto mr-2',
 ]);
 

@@ -68,14 +68,14 @@ if ($cohortid) {
 }
 
 $table = new html_table();
-$head = ['Étudiant'];
+$head = [get_string('etudiant', 'local_simhub')];
 $ateliersbyid = [];
 foreach ($atelierids as $aid) {
     $atelier = new atelier($aid);
     $ateliersbyid[$aid] = $atelier;
     $head[] = s($atelier->get('nomcourt'));
 }
-$head[] = 'Avancement';
+$head[] = get_string('avancement', 'local_simhub');
 $head[] = '';
 $table->head = $head;
 
@@ -90,13 +90,13 @@ foreach ($users as $user) {
         if (!$latest) {
             $row[] = '—';
         } else if ($latest->get('statut') === session::STATUT_CERTIFIE) {
-            $row[] = 'Validé';
+            $row[] = get_string('suivi_valide', 'local_simhub');
             $realises++;
         } else if (in_array($latest->get('statut'), [session::STATUT_REALISE], true)) {
-            $row[] = 'Réalisé';
+            $row[] = get_string('suivi_realise', 'local_simhub');
             $realises++;
         } else {
-            $row[] = 'Commencé';
+            $row[] = get_string('suivi_commence', 'local_simhub');
         }
     }
 
@@ -107,7 +107,7 @@ foreach ($users as $user) {
         $attestationurl = new moodle_url('/local/simhub/manage/parcours_attestation_pdf.php', [
             'parcoursid' => $parcoursid, 'userid' => $user->id,
         ]);
-        $row[] = html_writer::link($attestationurl, 'Attestation (PDF)');
+        $row[] = html_writer::link($attestationurl, get_string('attestation_pdf', 'local_simhub'));
     } else {
         $row[] = '';
     }

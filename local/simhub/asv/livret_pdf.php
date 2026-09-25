@@ -57,8 +57,10 @@ $pdf->Ln(4);
 
 $html = '<table border="1" cellpadding="4">';
 $html .= '<tr style="font-weight:bold;">'
-    . '<th width="30%">Acte</th><th width="10%">Niveau</th><th width="15%">Espèce</th>'
-    . '<th width="22%">Validation simulation</th><th width="23%">Validation animal vivant</th></tr>';
+    . '<th width="30%">' . get_string('asv_acte', 'local_simhub') . '</th><th width="10%">' . get_string('asv_champ_niveau', 'local_simhub') . '</th>'
+    . '<th width="15%">' . get_string('champ_espece', 'local_simhub') . '</th>'
+    . '<th width="22%">' . get_string('asv_col_validation_simulation', 'local_simhub') . '</th>'
+    . '<th width="23%">' . get_string('asv_col_validation_animal', 'local_simhub') . '</th></tr>';
 
 foreach ($actes as $acte) {
     $sim = $valsim[$acte->get('id')] ?? null;

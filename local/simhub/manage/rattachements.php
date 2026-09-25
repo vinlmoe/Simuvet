@@ -60,7 +60,7 @@ echo \local_simhub\local\navigation::barre();
 
 global $DB;
 
-echo html_writer::tag('h3', 'Rattachements existants');
+echo html_writer::tag('h3', get_string('rattachements_existants', 'local_simhub'));
 
 $table = new html_table();
 $cohortoptions = cohort_helper::get_options(false);
@@ -76,7 +76,7 @@ foreach (rattachement::get_pour_atelier($atelierid) as $r) {
         $r->cohortid ? s($cohortoptions[$r->cohortid] ?? '#' . $r->cohortid) : '—',
         $r->caractere,
         s($r->niveauattendu ?? ''),
-        html_writer::link($delurl, 'Retirer'),
+        html_writer::link($delurl, get_string('retirer', 'local_simhub')),
     ];
 }
 echo html_writer::table($table);
@@ -118,13 +118,13 @@ echo html_writer::end_div();
 echo html_writer::start_div('form-group');
 echo html_writer::tag('label', get_string('champ_statut', 'local_simhub'));
 echo html_writer::select([
-    rattachement::CARACTERE_RECOMMANDE => 'Recommandé',
-    rattachement::CARACTERE_OBLIGATOIRE => 'Obligatoire',
+    rattachement::CARACTERE_RECOMMANDE => get_string('parcours_type_recommande', 'local_simhub'),
+    rattachement::CARACTERE_OBLIGATOIRE => get_string('parcours_type_obligatoire', 'local_simhub'),
 ], 'caractere', rattachement::CARACTERE_RECOMMANDE, false, ['class' => 'form-control d-inline-block w-auto mr-2']);
 echo html_writer::end_div();
 
 echo html_writer::start_div('form-group');
-echo html_writer::tag('label', 'Niveau attendu (optionnel)');
+echo html_writer::tag('label', get_string('niveau_attendu_optionnel', 'local_simhub'));
 echo html_writer::empty_tag('input', ['type' => 'text', 'name' => 'niveauattendu', 'class' => 'form-control d-inline-block w-auto mr-2']);
 echo html_writer::end_div();
 

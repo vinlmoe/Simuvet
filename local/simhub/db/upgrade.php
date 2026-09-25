@@ -68,5 +68,10 @@ function xmldb_local_simhub_upgrade($oldversion) {
         upgrade_plugin_savepoint(true, 2026092500, 'local', 'simhub');
     }
 
+    if ($oldversion < 2026092600) {
+        \local_simhub\local\roles::installer();
+        upgrade_plugin_savepoint(true, 2026092600, 'local', 'simhub');
+    }
+
     return true;
 }

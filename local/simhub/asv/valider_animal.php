@@ -55,7 +55,7 @@ if ($submitted) {
     }
 }
 
-echo html_writer::tag('p', 'Acte : ' . s($acte->get('nom')));
+echo html_writer::tag('p', get_string('asv_acte_libelle', 'local_simhub', s($acte->get('nom'))));
 
 echo html_writer::start_tag('form', ['method' => 'post', 'id' => 'local-simhub-valanimal-form']);
 echo html_writer::empty_tag('input', ['type' => 'hidden', 'name' => 'token', 'value' => s($token)]);

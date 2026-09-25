@@ -24,32 +24,32 @@ class ressource_form extends \moodleform {
         $mform->addRule('titre', null, 'required', null, 'client');
 
         $mform->addElement('select', 'type', get_string('champ_statut', 'local_simhub'), [
-            'fiche_methode' => 'Fiche méthode',
-            'pdf_etudiant' => 'PDF étudiant',
-            'video' => 'Vidéo',
-            'consignes' => 'Consignes',
-            'criteres_reussite' => 'Critères de réussite',
-            'erreurs_frequentes' => 'Erreurs fréquentes',
-            'liens_utiles' => 'Liens utiles',
-            'complementaire' => 'Complémentaire',
-            ressource::TYPE_SOURCE_EDITABLE => 'Source éditable (jamais visible étudiant)',
+            'fiche_methode' => get_string('ressource_type_fiche_methode', 'local_simhub'),
+            'pdf_etudiant' => get_string('ressource_type_pdf_etudiant', 'local_simhub'),
+            'video' => get_string('ressource_type_video', 'local_simhub'),
+            'consignes' => get_string('ressource_type_consignes', 'local_simhub'),
+            'criteres_reussite' => get_string('ressource_type_criteres_reussite', 'local_simhub'),
+            'erreurs_frequentes' => get_string('ressource_type_erreurs_frequentes', 'local_simhub'),
+            'liens_utiles' => get_string('ressource_type_liens_utiles', 'local_simhub'),
+            'complementaire' => get_string('ressource_type_complementaire', 'local_simhub'),
+            ressource::TYPE_SOURCE_EDITABLE => get_string('ressource_type_source_editable', 'local_simhub'),
         ]);
 
-        $mform->addElement('select', 'visibilite', 'Visibilité', [
-            ressource::VISIBILITE_ETUDIANT => 'Étudiant',
-            ressource::VISIBILITE_INTERNE => 'Interne (gestionnaires uniquement)',
+        $mform->addElement('select', 'visibilite', get_string('champ_visibilite', 'local_simhub'), [
+            ressource::VISIBILITE_ETUDIANT => get_string('etudiant', 'local_simhub'),
+            ressource::VISIBILITE_INTERNE => get_string('visibilite_interne', 'local_simhub'),
         ]);
 
-        $mform->addElement('text', 'url', 'Lien externe (optionnel si fichier fourni)', ['size' => 60]);
+        $mform->addElement('text', 'url', get_string('champ_url_ressource', 'local_simhub'), ['size' => 60]);
         $mform->setType('url', PARAM_URL);
 
-        $mform->addElement('filemanager', 'fichier', 'Fichier (optionnel si lien fourni)', null, [
+        $mform->addElement('filemanager', 'fichier', get_string('champ_fichier_ressource', 'local_simhub'), null, [
             'subdirs' => 0,
             'maxfiles' => 1,
             'accepted_types' => '*',
         ]);
 
-        $mform->addElement('text', 'ordre', 'Ordre d\'affichage');
+        $mform->addElement('text', 'ordre', get_string('champ_ordre_affichage', 'local_simhub'));
         $mform->setType('ordre', PARAM_INT);
         $mform->setDefault('ordre', 0);
 
@@ -72,7 +72,7 @@ class ressource_form extends \moodleform {
         }
 
         if (empty($data['url']) && !$hasfile) {
-            $errors['url'] = 'Indiquez un lien ou un fichier.';
+            $errors['url'] = get_string('ressource_lien_ou_fichier', 'local_simhub');
         }
 
         return $errors;

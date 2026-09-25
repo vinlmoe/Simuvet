@@ -42,13 +42,13 @@ $maintenant = time();
 $table = new html_table();
 $table->head = [
     get_string('filtre_parcours', 'local_simhub'),
-    'Étudiants',
-    'Avancement moyen',
-    'Pas commencé',
-    'Commencé',
-    'Terminé',
-    'À reprendre',
-    'Échéance proche/dépassée',
+    get_string('dash_etudiants', 'local_simhub'),
+    get_string('dash_avancement_moyen', 'local_simhub'),
+    get_string('dash_pas_commence', 'local_simhub'),
+    get_string('dash_commence', 'local_simhub'),
+    get_string('dash_termine', 'local_simhub'),
+    get_string('dash_a_reprendre', 'local_simhub'),
+    get_string('dash_echeance', 'local_simhub'),
     '',
 ];
 
@@ -163,7 +163,7 @@ foreach ($parcourslist as $parcours) {
         $nbtermine,
         $nbareprendre ?: '—',
         $nbecheance ?: '—',
-        html_writer::link($suiviurl, 'Détail'),
+        html_writer::link($suiviurl, get_string('detail', 'local_simhub')),
     ];
 }
 

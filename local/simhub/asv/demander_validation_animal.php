@@ -26,12 +26,12 @@ echo \local_simhub\local\navigation::barre();
 $demande = asv_valanimal::creer_demande($USER->id, $acteid);
 $lien = new moodle_url('/local/simhub/asv/valider_animal.php', ['token' => $demande->token]);
 
-echo html_writer::tag('p', 'Acte : ' . s($acte->get('nom')));
+echo html_writer::tag('p', get_string('asv_acte_libelle', 'local_simhub', s($acte->get('nom'))));
 echo html_writer::tag('p', get_string('asv_lien_valanimal', 'local_simhub') . ' :');
 echo html_writer::tag('p', html_writer::link($lien, $lien->out(false)));
 echo html_writer::tag(
     'p',
-    'Transmettez ce lien au vétérinaire, maître de stage ou encadrant autorisé qui a supervisé le geste sur animal vivant.'
+    get_string('asv_transmettre_lien', 'local_simhub')
 );
 
 echo $OUTPUT->footer();

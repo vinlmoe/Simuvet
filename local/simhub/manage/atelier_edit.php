@@ -94,7 +94,7 @@ $form->display();
 if ($id && $atelier->get('planimageitemid')) {
     echo $OUTPUT->single_button(
         new moodle_url('/local/simhub/manage/atelier_plan.php', ['id' => $id]),
-        'Positionner le repère sur le plan'
+        get_string('plan_positionner', 'local_simhub')
     );
 }
 

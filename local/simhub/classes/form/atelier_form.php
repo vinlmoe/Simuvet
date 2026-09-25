@@ -41,9 +41,9 @@ class atelier_form extends \moodleform {
 
         $mform->addElement('select', 'niveaudifficulte', get_string('champ_niveaudifficulte', 'local_simhub'), [
             '' => '',
-            'facile' => 'Facile',
-            'intermediaire' => 'Intermédiaire',
-            'avance' => 'Avancé',
+            'facile' => get_string('niveau_facile', 'local_simhub'),
+            'intermediaire' => get_string('niveau_intermediaire', 'local_simhub'),
+            'avance' => get_string('niveau_avance', 'local_simhub'),
         ]);
 
         $mform->addElement('text', 'dureeindicative', get_string('champ_dureeindicative', 'local_simhub'));
@@ -84,7 +84,7 @@ class atelier_form extends \moodleform {
         $mform->addElement('hidden', 'planrepy');
         $mform->setType('planrepy', PARAM_FLOAT);
 
-        $mform->addElement('filemanager', 'planimage', 'Image du plan de salle', null, [
+        $mform->addElement('filemanager', 'planimage', get_string('champ_planimage', 'local_simhub'), null, [
             'subdirs' => 0,
             'maxfiles' => 1,
             'accepted_types' => ['.png', '.jpg', '.jpeg'],
