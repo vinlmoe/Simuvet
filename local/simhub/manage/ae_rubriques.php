@@ -65,6 +65,7 @@ $title = get_string('ae_gerer_rubriques', 'local_simhub');
     [s($atelier->get('nomcourt')), new moodle_url('/local/simhub/manage/atelier_edit.php', ['id' => $atelierid])],
     [get_string('ae_modele', 'local_simhub'), new moodle_url('/local/simhub/manage/ae_modele_edit.php', ['atelierid' => $atelierid])],
 ]);
+\local_simhub\local\navigation::onglets('atelier', $atelierid, 'ae');
 
 echo $OUTPUT->header();
 echo \local_simhub\local\navigation::barre();

@@ -20,6 +20,9 @@ $atelierid = optional_param('atelierid', 0, PARAM_INT);
 \local_simhub\local\navigation::preparer($PAGE, new moodle_url('/local/simhub/asv/valider_simulation.php', $atelierid ? ['atelierid' => $atelierid] : []), get_string('asv_valider_simulation', 'local_simhub'), [
     [get_string('asv_parcours', 'local_simhub'), new moodle_url('/local/simhub/asv/index.php')],
 ]);
+if ($atelierid) {
+    \local_simhub\local\navigation::onglets('atelier', $atelierid, 'asv');
+}
 
 $envcode = get_config('local_simhub', 'envcode') ?: '';
 
@@ -79,12 +82,12 @@ echo html_writer::empty_tag('input', ['type' => 'hidden', 'name' => 'sesskey', '
 echo html_writer::empty_tag('input', ['type' => 'hidden', 'name' => 'submit', 'value' => 1]);
 
 echo html_writer::start_div('form-group');
-echo html_writer::tag('label', 'Étudiant (id Moodle)');
-echo html_writer::empty_tag('input', ['type' => 'number', 'name' => 'userid', 'class' => 'form-control', 'required' => 'required']);
+echo html_writer::tag('label', get_string('etudiant', 'local_simhub'), ['for' => 'id_userid']);
+echo \local_simhub\local\selecteurs::etudiants('userid', 0, 'id_userid');
 echo html_writer::end_div();
 
 echo html_writer::start_div('form-group');
-echo html_writer::tag('label', 'Acte');
+echo html_writer::tag('label', get_string('asv_acte', 'local_simhub'));
 if ($atelierid && empty($actesatelier)) {
     echo html_writer::div(get_string('asv_aucun_acte_lie', 'local_simhub'), 'text-muted small mb-1');
 }
@@ -96,10 +99,8 @@ echo html_writer::end_tag('select');
 echo html_writer::end_div();
 
 echo html_writer::start_div('form-group');
-echo html_writer::tag('label', 'Atelier de simulation associé (id, optionnel)');
-echo html_writer::empty_tag('input', [
-    'type' => 'number', 'name' => 'atelierid', 'class' => 'form-control', 'value' => $atelierid ?: '',
-]);
+echo html_writer::tag('label', get_string('asv_atelier_associe', 'local_simhub'), ['for' => 'id_atelierid']);
+echo \local_simhub\local\selecteurs::ateliers('atelierid', $atelierid, 'id_atelierid');
 echo html_writer::end_div();
 
 echo html_writer::tag('button', get_string('asv_valider_simulation', 'local_simhub'), [

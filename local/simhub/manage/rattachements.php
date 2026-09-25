@@ -53,6 +53,7 @@ $title = get_string('rattachements', 'local_simhub');
     [get_string('manage_ateliers', 'local_simhub'), new moodle_url('/local/simhub/manage/ateliers.php')],
     [s($atelier->get('nomcourt')), new moodle_url('/local/simhub/manage/atelier_edit.php', ['id' => $atelierid])],
 ]);
+\local_simhub\local\navigation::onglets('atelier', $atelierid, 'rattachements');
 
 echo $OUTPUT->header();
 echo \local_simhub\local\navigation::barre();
@@ -80,7 +81,7 @@ foreach (rattachement::get_pour_atelier($atelierid) as $r) {
 }
 echo html_writer::table($table);
 
-echo html_writer::tag('h3', 'Ajouter un rattachement');
+echo html_writer::tag('h3', get_string('rattachement_ajouter', 'local_simhub'));
 
 echo html_writer::start_tag('form', ['method' => 'post']);
 echo html_writer::empty_tag('input', ['type' => 'hidden', 'name' => 'sesskey', 'value' => sesskey()]);
@@ -88,12 +89,12 @@ echo html_writer::empty_tag('input', ['type' => 'hidden', 'name' => 'atelierid',
 echo html_writer::empty_tag('input', ['type' => 'hidden', 'name' => 'action', 'value' => 'ajouter']);
 
 echo html_writer::start_div('form-group');
-echo html_writer::tag('label', 'Id de l\'UC Moodle (optionnel)');
-echo html_writer::empty_tag('input', ['type' => 'number', 'name' => 'courseid', 'class' => 'form-control d-inline-block w-auto mr-2']);
+echo html_writer::tag('label', get_string('champ_uc_optionnel', 'local_simhub'), ['for' => 'id_courseid']);
+echo \local_simhub\local\selecteurs::cours('courseid', 0, 'id_courseid');
 echo html_writer::end_div();
 
 echo html_writer::start_div('form-group');
-echo html_writer::tag('label', get_string('filtre_annee', 'local_simhub') . ' (optionnel)');
+echo html_writer::tag('label', get_string('filtre_annee', 'local_simhub') . ' ' . get_string('optionnel', 'local_simhub'));
 echo html_writer::select(
     annee_resolver::get_options(),
     'anneeetude',
@@ -104,7 +105,7 @@ echo html_writer::select(
 echo html_writer::end_div();
 
 echo html_writer::start_div('form-group');
-echo html_writer::tag('label', get_string('champ_cohorte', 'local_simhub') . ' (optionnel — pour recommander directement à ses membres)');
+echo html_writer::tag('label', get_string('champ_cohorte_recommandation', 'local_simhub'));
 echo html_writer::select(
     cohort_helper::get_options(),
     'cohortid',

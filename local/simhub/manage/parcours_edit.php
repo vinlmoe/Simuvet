@@ -17,6 +17,9 @@ $title = $id ? get_string('edit') : get_string('parcours_nouveau', 'local_simhub
 \local_simhub\local\navigation::preparer($PAGE, new moodle_url('/local/simhub/manage/parcours_edit.php', ['id' => $id]), $title, [
     [get_string('filtre_parcours', 'local_simhub'), new moodle_url('/local/simhub/manage/parcours.php')],
 ]);
+if ($id) {
+    \local_simhub\local\navigation::onglets('parcours', $id, 'fiche');
+}
 
 $parcours = $id ? new parcours($id) : new parcours();
 

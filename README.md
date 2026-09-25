@@ -3,7 +3,8 @@
 Plugin Moodle local (`local_simhub`) issu du cahier des charges *SimHub
 V0* (ENVA, ENVT, Oniris, VetAgro Sup — août 2026).
 
-**Statut : V1 en construction, non testé sur instance Moodle réelle.**
+**Statut : V1 en construction, testée de bout en bout sur une instance Moodle 5.0
+(PHP 8.4, PostgreSQL) — voir « Vérification sur instance réelle » ci-dessous.**
 Ce dépôt contient désormais une implémentation fonctionnelle du
 périmètre "V1 indispensable" du cahier des charges (§13) : schéma de
 données complet, capacités, fiche atelier avec CRUD gestionnaire,
@@ -354,6 +355,65 @@ de table SQL utilisés correspondent au schéma.
   (`edit`, `add`, `savechanges`, `changessaved`) là où c'est pertinent
   plutôt que de dupliquer du texte.
 
+## Vérification sur instance réelle (septembre 2026)
+
+Le plugin a été installé sur un Moodle 5.0 vierge (`admin/cli/install.php`), puis
+éprouvé par un navigateur automatisé (Playwright) avec trois profils : administrateur,
+étudiant (compte ordinaire, inscrit à une UC et membre d'une cohorte) et validateur
+externe sans compte. Les 50 pages du plugin s'affichent sans erreur ni avertissement
+PHP, et les 29 parcours fonctionnels suivants aboutissent : création/modification
+d'atelier (dont passage en indisponible), ressource, grille d'auto-évaluation
+(rubrique + critère), rattachement, parcours et composition avec échéance, repère plan,
+régénération QR, code de séance, import CSV, acte ASV, validation ASV en simulation,
+accueil et filtres étudiant, démarrage/fin de séance avec auto-évaluation, scan QR,
+code de séance absent, demande et signature de validation animal vivant, file de
+validation encadrant, attestations, suivi et tableaux de bord, exports CSV/PDF.
+
+Bugs réels corrigés à cette occasion :
+
+- **Aucun étudiant ne pouvait accéder à SimHub.** Les capacités étaient accordées au
+  rôle `student`, qui n'existe que dans les cours ; or SimHub vérifie tout au niveau
+  système. `view`, `startsession` et `submitautoeval` sont désormais accordées à
+  l'utilisateur authentifié (archétype `user`), y compris sur une instance déjà
+  installée (pas de mise à jour 2026092500).
+- **Validation ASV animal vivant impossible** : la balise `<canvas>` de signature
+  n'était pas fermée, si bien que le bouton d'envoi se retrouvait à l'intérieur du
+  canvas et n'était jamais affiché. Le bouton affichait en outre « Valider en
+  simulation » ; il indique maintenant « Valider cet acte ».
+- **Doublons refusés brutalement par la base** : un numéro d'atelier ou un code d'acte
+  ASV déjà utilisé dans l'établissement provoquait « Erreur d'écriture vers la base
+  de données ». Les deux sont désormais signalés dans le formulaire.
+
+**À savoir pour les enseignants et responsables de salle** : pour la même raison que
+ci-dessus, un rôle d'enseignant attribué dans un cours ne donne aucun droit SimHub. Il
+faut leur attribuer un rôle **au niveau système** (*Administration du site →
+Utilisateurs → Permissions → Attribuer des rôles système*), par exemple un rôle
+« Encadrant SimHub » créé à partir de l'archétype `editingteacher`.
+
+## Navigation par domaines et onglets
+
+- **Menus par domaine** : la barre interne ne présente plus une douzaine de boutons à
+  plat mais un menu déroulant par domaine (Ateliers, Parcours, Séances, ASV), chacun
+  surligné sur toutes ses sous-pages. Un domaine à une seule entrée reste un bouton.
+  Le menu Séances porte une **pastille** avec le nombre de séances non vérifiées en
+  attente de validation.
+- **Onglets de fiche** : toutes les sous-pages d'un atelier (fiche, ressources, grille
+  d'auto-évaluation, rattachements, plan, QR, validation ASV, vue étudiant, PDF) et d'un
+  parcours (fiche, composition, suivi, export) partagent les mêmes onglets — on passe
+  de l'une à l'autre sans revenir à la liste.
+- **Listes** : dans la liste des ateliers et des parcours, le nom mène à la fiche et
+  les liens « | » sont remplacés par un menu « Gérer », construit à partir des mêmes
+  onglets.
+- **Fiche atelier étudiant** : boutons « Commencer » / « Terminer et s'auto-évaluer »
+  directement sur la fiche (page d'arrivée après un scan QR), et lien « Gérer cet
+  atelier » pour les gestionnaires.
+- **Plus d'identifiants à taper** : UC, étudiant et atelier se choisissent dans des
+  listes avec recherche (`classes/local/selecteurs.php`) au lieu d'identifiants
+  numériques Moodle (rattachements, parcours, actes ASV, validation en simulation,
+  attestation A3).
+- Fil d'Ariane dédoublonné (`navbar->ignore_active()`), et chaînes françaises codées en
+  dur sur ces pages déplacées dans les fichiers de langue.
+
 ## Navigation interne (signalé en usage réel)
 
 Aucune page du plugin n'appelait `$PAGE->navbar->add()` : le fil d'Ariane
@@ -499,8 +559,8 @@ sophistiquée, gestion documentaire avec versioning complet.
   nom de table de ce schéma.
 - Aucune dépendance à un plugin tiers n'est requise en V1 : cohortes,
   rôles, cours et carnet de notes Moodle natifs suffisent (§10).
-- Ce code n'a pas été testé sur une instance Moodle réelle
-  (environnement de génération sans runtime Moodle disponible) : tous
+- Ce code a été vérifié sur Moodle 5.0 (voir plus haut) mais pas encore sur la
+  version Moodle de l'infrastructure EVE. Historiquement : tous
   les fichiers PHP passent `php -l` et `db/install.xml` est un XML
   bien formé, mais aucune vérification contre l'API Moodle réelle
   (signatures exactes, comportements de `core\persistent`,

@@ -40,6 +40,7 @@ $title = $id ? get_string('edit') : get_string('ressource_nouvelle', 'local_simh
     [s($atelier->get('nomcourt')), new moodle_url('/local/simhub/manage/atelier_edit.php', ['id' => $atelierid])],
     [get_string('bouton_ressources', 'local_simhub'), new moodle_url('/local/simhub/manage/ressources.php', ['atelierid' => $atelierid])],
 ]);
+\local_simhub\local\navigation::onglets('atelier', $atelierid, 'ressources');
 
 $draftitemid = file_get_submitted_draft_itemid('fichier');
 file_prepare_draft_area($draftitemid, $context->id, 'local_simhub', 'ressource', $id ?: null, $fileoptions);

@@ -21,6 +21,7 @@ $title = get_string('ae_modele', 'local_simhub');
     [get_string('manage_ateliers', 'local_simhub'), new moodle_url('/local/simhub/manage/ateliers.php')],
     [s($atelier->get('nomcourt')), new moodle_url('/local/simhub/manage/atelier_edit.php', ['id' => $atelierid])],
 ]);
+\local_simhub\local\navigation::onglets('atelier', $atelierid, 'ae');
 
 $modele = ae_modele::get_pour_atelier($atelierid);
 

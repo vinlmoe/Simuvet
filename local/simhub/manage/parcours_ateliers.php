@@ -19,6 +19,7 @@ $parcours = new parcours($parcoursid);
 \local_simhub\local\navigation::preparer($PAGE, new moodle_url('/local/simhub/manage/parcours_ateliers.php', ['parcoursid' => $parcoursid]), s($parcours->get('nom')), [
     [get_string('filtre_parcours', 'local_simhub'), new moodle_url('/local/simhub/manage/parcours.php')],
 ]);
+\local_simhub\local\navigation::onglets('parcours', $parcoursid, 'ateliers');
 
 $action = optional_param('action', '', PARAM_ALPHA);
 
@@ -101,7 +102,7 @@ echo html_writer::empty_tag('input', ['type' => 'checkbox', 'name' => 'obligatoi
 echo ' Obligatoire';
 echo html_writer::end_tag('label');
 
-echo html_writer::tag('button', 'Ajouter', ['type' => 'submit', 'class' => 'btn btn-primary']);
+echo html_writer::tag('button', get_string('add'), ['type' => 'submit', 'class' => 'btn btn-primary']);
 echo html_writer::end_tag('form');
 
 echo $OUTPUT->footer();

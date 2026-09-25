@@ -10,10 +10,13 @@ defined('MOODLE_INTERNAL') || die();
 $capabilities = [
 
     // --- Étudiant : consultation, réalisation, auto-évaluation. ---
+    // Accordées à l'utilisateur authentifié : le rôle « student » n'existe que dans les
+    // cours, jamais au niveau système où SimHub vérifie ses capacités.
     'local/simhub:view' => [
         'captype' => 'read',
         'contextlevel' => CONTEXT_SYSTEM,
         'archetypes' => [
+            'user' => CAP_ALLOW,
             'student' => CAP_ALLOW,
             'teacher' => CAP_ALLOW,
             'editingteacher' => CAP_ALLOW,
@@ -24,6 +27,7 @@ $capabilities = [
         'captype' => 'write',
         'contextlevel' => CONTEXT_SYSTEM,
         'archetypes' => [
+            'user' => CAP_ALLOW,
             'student' => CAP_ALLOW,
         ],
     ],
@@ -31,6 +35,7 @@ $capabilities = [
         'captype' => 'write',
         'contextlevel' => CONTEXT_SYSTEM,
         'archetypes' => [
+            'user' => CAP_ALLOW,
             'student' => CAP_ALLOW,
         ],
     ],

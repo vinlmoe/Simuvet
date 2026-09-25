@@ -100,4 +100,24 @@ class atelier_form extends \moodleform {
 
         $this->add_action_buttons();
     }
+    /**
+     * Le numéro d'atelier est unique par établissement (§5.3) : le signaler dans le
+     * formulaire plutôt que de laisser la base refuser l'enregistrement.
+     *
+     * @param array $data
+     * @param array $files
+     * @return array
+     */
+    public function validation($data, $files) {
+        global $DB;
+
+        $errors = parent::validation($data, $files);
+        $doublon = $DB->record_exists_select('local_simhub_atelier',
+            'envcode = :envcode AND numero = :numero AND id <> :id',
+            ['envcode' => $data['envcode'], 'numero' => $data['numero'], 'id' => (int) ($data['id'] ?? 0)]);
+        if ($doublon) {
+            $errors['numero'] = get_string('numero_existe', 'local_simhub');
+        }
+        return $errors;
+    }
 }

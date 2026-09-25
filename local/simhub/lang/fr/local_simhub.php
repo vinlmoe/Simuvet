@@ -254,3 +254,43 @@ $string['import_mis_a_jour'] = '{$a} atelier(s) mis à jour';
 
 // Export (§12.3).
 $string['export_csv'] = 'Exporter (CSV)';
+
+// Navigation par domaines, onglets et sélecteurs.
+$string['onglet_fiche'] = 'Fiche';
+$string['onglet_vue_etudiant'] = 'Vue étudiant';
+$string['onglet_pdf'] = 'Fiche PDF';
+$string['onglet_composition'] = 'Composition';
+$string['onglet_suivi'] = 'Suivi';
+$string['onglet_export_csv'] = 'Export CSV';
+$string['nav_gerer'] = 'Gérer';
+$string['nav_groupe_accueil'] = 'Mon espace';
+$string['nav_groupe_ateliers'] = 'Ateliers';
+$string['nav_groupe_parcours'] = 'Parcours';
+$string['nav_groupe_seances'] = 'Séances';
+$string['nav_groupe_asv'] = 'ASV';
+$string['type'] = 'Type';
+$string['nb_ateliers'] = 'Ateliers';
+$string['parcours_type_recommande'] = 'Recommandé';
+$string['parcours_type_obligatoire'] = 'Obligatoire';
+$string['parcours_type_lie_uc'] = 'Lié à une UC';
+$string['parcours_type_lie_annee'] = 'Lié à une année';
+$string['parcours_type_certifiant'] = 'Certifiant';
+$string['parcours_type_asv'] = 'ASV';
+$string['aucune_uc'] = '— Aucune UC —';
+$string['choisir_etudiant'] = '— Choisir un étudiant —';
+$string['atelier_aucun_choix'] = '— Aucun atelier —';
+$string['champ_uc_optionnel'] = 'UC Moodle (optionnel)';
+$string['rattachement_ajouter'] = 'Ajouter un rattachement';
+$string['optionnel'] = '(optionnel)';
+$string['champ_cohorte_recommandation'] = 'Cohorte (optionnel — pour recommander directement à ses membres)';
+$string['etudiant'] = 'Étudiant';
+$string['asv_acte'] = 'Acte';
+$string['asv_atelier_associe'] = 'Atelier de simulation associé (optionnel)';
+$string['asv_certification_a3'] = 'Certification globale de fin de A3';
+$string['asv_generer_attestation_a3'] = 'Générer l\'attestation A3';
+$string['asv_signature_effacer'] = 'Effacer la signature';
+$string['asv_valider_acte'] = 'Valider cet acte';
+$string['telecharger_fiche_pdf'] = 'Télécharger la fiche (PDF)';
+$string['gerer_atelier'] = 'Gérer cet atelier';
+$string['asv_code_existe'] = 'Le code d\'acte « {$a} » existe déjà pour cet établissement.';
+$string['numero_existe'] = 'Ce numéro d\'atelier est déjà utilisé dans cet établissement.';

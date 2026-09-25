@@ -82,14 +82,14 @@ echo html_writer::tag('label', get_string('asv_champ_certification', 'local_simh
 echo html_writer::end_div();
 
 echo html_writer::tag('label', get_string('asv_champ_signature', 'local_simhub'));
-echo html_writer::empty_tag('canvas', [
+echo html_writer::tag('canvas', '', [
     'id' => 'local-simhub-signature-pad', 'width' => 400, 'height' => 150,
     'style' => 'border:1px solid #ccc;touch-action:none;max-width:100%;',
 ]);
 echo html_writer::empty_tag('input', ['type' => 'hidden', 'name' => 'signature', 'id' => 'local-simhub-signature-data']);
-echo html_writer::tag('button', 'Effacer', ['type' => 'button', 'id' => 'local-simhub-signature-clear', 'class' => 'btn btn-secondary btn-sm ml-2']);
+echo html_writer::tag('button', get_string('asv_signature_effacer', 'local_simhub'), ['type' => 'button', 'id' => 'local-simhub-signature-clear', 'class' => 'btn btn-secondary btn-sm ml-2']);
 
-echo html_writer::tag('div', html_writer::tag('button', get_string('asv_valider_simulation', 'local_simhub'), [
+echo html_writer::tag('div', html_writer::tag('button', get_string('asv_valider_acte', 'local_simhub'), [
     'type' => 'submit', 'class' => 'btn btn-primary',
 ]), ['class' => 'mt-3']);
 

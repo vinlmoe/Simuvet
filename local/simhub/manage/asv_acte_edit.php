@@ -47,6 +47,13 @@ if ($submitted) {
     $envcode = optional_param('envcode', get_config('local_simhub', 'envcode') ?: '', PARAM_ALPHANUMEXT);
     $actif = optional_param('actif', 0, PARAM_BOOL);
 
+    $doublon = $DB->get_field_select('local_simhub_asv_acte', 'id', 'envcode = :envcode AND code = :code AND id <> :id',
+        ['envcode' => $envcode, 'code' => $code, 'id' => $id]);
+    if ($doublon) {
+        redirect($PAGE->url, get_string('asv_code_existe', 'local_simhub', s($code)), null,
+            \core\output\notification::NOTIFY_ERROR);
+    }
+
     $acte->set('code', $code);
     $acte->set('nom', $nom);
     $acte->set('espece', $espece ?: null);
@@ -82,7 +89,6 @@ $champs = [
     'nom' => [get_string('champ_nomcourt', 'local_simhub'), 'text', true],
     'espece' => [get_string('champ_espece', 'local_simhub'), 'text', false],
     'envcode' => [get_string('champ_envcode', 'local_simhub'), 'text', false],
-    'ucid' => [get_string('asv_champ_ucid', 'local_simhub'), 'number', false],
 ];
 
 foreach ($champs as $name => [$label, $type, $required]) {
@@ -98,6 +104,11 @@ foreach ($champs as $name => [$label, $type, $required]) {
     echo html_writer::empty_tag('input', $attrs);
     echo html_writer::end_div();
 }
+
+echo html_writer::start_div('form-group');
+echo html_writer::tag('label', get_string('asv_champ_ucid', 'local_simhub'), ['for' => 'id_ucid']);
+echo \local_simhub\local\selecteurs::cours('ucid', $id ? (int) $acte->get('ucid') : 0, 'id_ucid');
+echo html_writer::end_div();
 
 echo html_writer::start_div('form-group');
 echo html_writer::tag('label', get_string('asv_champ_niveau', 'local_simhub'), ['for' => 'id_niveau']);

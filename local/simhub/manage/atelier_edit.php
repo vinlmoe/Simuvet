@@ -20,6 +20,9 @@ $title = $id ? get_string('atelier_modifier', 'local_simhub') : get_string('atel
 \local_simhub\local\navigation::preparer($PAGE, new moodle_url('/local/simhub/manage/atelier_edit.php', ['id' => $id]), $title, [
     [get_string('manage_ateliers', 'local_simhub'), new moodle_url('/local/simhub/manage/ateliers.php')],
 ]);
+if ($id) {
+    \local_simhub\local\navigation::onglets('atelier', $id, 'fiche');
+}
 
 $atelier = $id ? new atelier($id) : new atelier();
 $oldstatut = $atelier->get('id') ? $atelier->get('statut') : null;

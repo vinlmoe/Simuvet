@@ -20,6 +20,7 @@ $parcours = new parcours($parcoursid);
 \local_simhub\local\navigation::preparer($PAGE, new moodle_url('/local/simhub/manage/parcours_suivi.php', ['parcoursid' => $parcoursid]), s($parcours->get('nom')), [
     [get_string('filtre_parcours', 'local_simhub'), new moodle_url('/local/simhub/manage/parcours.php')],
 ]);
+\local_simhub\local\navigation::onglets('parcours', $parcoursid, 'suivi');
 
 echo $OUTPUT->header();
 echo \local_simhub\local\navigation::barre();
