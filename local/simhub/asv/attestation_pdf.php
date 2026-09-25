@@ -19,7 +19,7 @@ $context = context_system::instance();
 require_capability('local/simhub:view', $context);
 
 $userid = optional_param('userid', $USER->id, PARAM_INT);
-if ($userid != $USER->id) {
+if ($userid != $USER->id && !has_capability('local/simhub:validateasvsimulation', $context)) {
     require_capability('local/simhub:manageasv', $context);
 }
 
@@ -27,7 +27,7 @@ $envcode = optional_param('envcode', get_config('local_simhub', 'envcode') ?: ''
 $niveau = optional_param('niveau', 'A3', PARAM_ALPHANUM);
 
 $user = \core_user::get_user($userid, '*', MUST_EXIST);
-$actes = asv_acte::get_referentiel($envcode, $niveau);
+$actes = asv_certification_helper::get_actes_requis($envcode, $niveau);
 
 if (empty($actes)) {
     redirect(

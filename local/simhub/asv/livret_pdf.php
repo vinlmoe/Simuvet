@@ -19,7 +19,7 @@ $context = context_system::instance();
 require_capability('local/simhub:view', $context);
 
 $userid = optional_param('userid', $USER->id, PARAM_INT);
-if ($userid != $USER->id) {
+if ($userid != $USER->id && !has_capability('local/simhub:validateasvsimulation', $context)) {
     require_capability('local/simhub:manageasv', $context);
 }
 
@@ -66,13 +66,23 @@ foreach ($actes as $acte) {
     $sim = $valsim[$acte->get('id')] ?? null;
     $animal = $valanimal[$acte->get('id')] ?? null;
 
-    $simtext = $sim
-        ? userdate($sim->datevalidation, get_string('strftimedatefullshort', 'langconfig'))
-        : '—';
-    $animaltext = $animal
-        ? userdate($animal->datevalidation, get_string('strftimedatefullshort', 'langconfig'))
-            . ' (' . s($animal->prenomvalidateur . ' ' . $animal->nomvalidateur) . ')'
-        : '—';
+    $simtext = '—';
+    if ($sim) {
+        $encadrant = \core_user::get_user($sim->validateuruserid);
+        $simtext = userdate($sim->datevalidation, get_string('strftimedatefullshort', 'langconfig'))
+            . ($encadrant ? '<br>' . s(fullname($encadrant)) : '');
+    }
+    $animaltext = '—';
+    if ($animal) {
+        $animaltext = userdate($animal->datevalidation, get_string('strftimedatefullshort', 'langconfig'))
+            . '<br>' . s($animal->prenomvalidateur . ' ' . $animal->nomvalidateur);
+        // Tracé de signature du validateur (§9.1 « date et signature »), passé à TCPDF en
+        // données brutes via le préfixe « @ » plutôt qu'en URL.
+        if (asv_valanimal::signature_valide((string) $animal->signature)) {
+            $png = substr($animal->signature, strlen('data:image/png;base64,'));
+            $animaltext .= '<br><img src="@' . $png . '" height="28">';
+        }
+    }
 
     $html .= '<tr>'
         . '<td>' . s($acte->get('nom')) . '</td>'

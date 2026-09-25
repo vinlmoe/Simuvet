@@ -32,7 +32,7 @@ function local_simhub_export_csv(string $filename, array $rows): void {
 
     $out = fopen('php://output', 'w');
     foreach ($rows as $row) {
-        fputcsv($out, $row, ';');
+        fputcsv($out, $row, ';', '"', '');
     }
     fclose($out);
     exit;

@@ -53,6 +53,7 @@ if ($submitted) {
         redirect($PAGE->url, get_string('asv_valide_avec_succes', 'local_simhub'), null,
             \core\output\notification::NOTIFY_SUCCESS);
     }
+    echo $OUTPUT->notification(get_string('asv_validation_incomplete', 'local_simhub'), \core\output\notification::NOTIFY_ERROR);
 }
 
 echo html_writer::tag('p', get_string('asv_acte_libelle', 'local_simhub', s($acte->get('nom'))));
@@ -102,6 +103,7 @@ echo html_writer::script("
     var canvas = document.getElementById('local-simhub-signature-pad');
     var ctx = canvas.getContext('2d');
     var drawing = false;
+    var signe = false;
 
     function pos(e) {
         var rect = canvas.getBoundingClientRect();
@@ -115,6 +117,7 @@ echo html_writer::script("
         var p = pos(e);
         ctx.lineTo(p.x, p.y);
         ctx.stroke();
+        signe = true;
     }
     function stop() { drawing = false; }
 
@@ -127,9 +130,15 @@ echo html_writer::script("
 
     document.getElementById('local-simhub-signature-clear').addEventListener('click', function() {
         ctx.clearRect(0, 0, canvas.width, canvas.height);
+        signe = false;
     });
 
-    document.getElementById('local-simhub-valanimal-form').addEventListener('submit', function() {
+    document.getElementById('local-simhub-valanimal-form').addEventListener('submit', function(e) {
+        if (!signe) {
+            e.preventDefault();
+            window.alert(" . json_encode(get_string('asv_signature_requise', 'local_simhub')) . ");
+            return;
+        }
         document.getElementById('local-simhub-signature-data').value = canvas.toDataURL('image/png');
     });
 })();

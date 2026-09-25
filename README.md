@@ -414,6 +414,46 @@ Les descriptions d'événements (journaux Moodle) sont en anglais, selon la conv
 Moodle pour ces textes non traduits. Au passage, le filtre « niveau » de l'accueil
 étudiant conserve désormais la valeur choisie après une recherche.
 
+## Module ASV : conformité au §9 (septembre 2026)
+
+Relecture du module ASV contre les exigences du §9 citées dans le code, puis correction
+des écarts, vérifiée par un scénario automatisé dédié (17 contrôles, tous passants sur
+Moodle 4.5 et 5.0) :
+
+1. **Ordre simulation → animal vivant imposé côté serveur** (§9.1) : une demande de
+   validation sur animal vivant est refusée tant que l'acte n'est pas validé en
+   simulation, même en appelant la page directement ; un refus en simulation ne la
+   débloque pas.
+2. **Une seule demande active par acte** : revenir sur la page réaffiche le même lien
+   (avec sa date d'expiration) au lieu d'en générer un nouveau à chaque visite.
+3. **Signature obligatoire** (§9.3) : le navigateur bloque l'envoi sans tracé, et le
+   serveur refuse aussi toute signature vide ou invalide, avec un message explicite.
+4. **Signature dans le livret PDF** (§9.1 « date et signature ») : le tracé du
+   validateur apparaît sous la date et son nom ; le nom de l'encadrant figure aussi pour
+   la validation en simulation.
+5. **Refus et annulation** : l'encadrant enregistre « validé » ou « non validé (à
+   reprendre) » avec une observation. Une validation saisie par erreur peut être
+   annulée depuis la fiche de l'étudiant, avec un motif obligatoire. Elle reste tracée
+   en base (statut `annule`, motif, auteur, date) mais ne compte plus pour le livret ni
+   pour la certification.
+6. **Pilotage par étudiant** (§9.4) : la page ASV encadrant liste les étudiants
+   (filtrables par cohorte/promotion) avec leurs validations en simulation et sur animal
+   vivant, leurs demandes en attente et les certifications acquises. Chaque nom ouvre une
+   fiche ASV (`asv/etudiant.php`) : état acte par acte, livret PDF, attestations et
+   annulations. La synthèse par acte compte désormais des étudiants distincts.
+7. **Demandes en attente visibles par l'étudiant**, avec leur date d'expiration et un
+   lien pour réafficher le lien de validation.
+
+**Certification globale de fin de A3** (§9.4) : l'attestation A3 exige désormais la
+validation, en simulation puis sur animal vivant, de **tous les actes A1, A2 et A3**, et
+le document l'indique explicitement. Les attestations A1 et A2 restent disponibles comme
+étapes intermédiaires. La génération groupée et le badge du niveau A3 suivent la même
+règle.
+
+Au passage : les identifiants renvoyés par PostgreSQL (chaînes) sont normalisés avant
+comparaison dans le calcul de certification, et les appels CSV précisent leur caractère
+d'échappement (avertissement de dépréciation sous PHP 8.4).
+
 ## Navigation par domaines et onglets
 
 - **Menus par domaine** : la barre interne ne présente plus une douzaine de boutons à

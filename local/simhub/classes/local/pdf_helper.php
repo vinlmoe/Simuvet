@@ -92,14 +92,19 @@ class pdf_helper {
         $pdf->SetFont('helvetica', 'B', 20);
         $pdf->Cell(0, 12, get_string('asv_attestation_titre', 'local_simhub'), 0, 1, 'C');
         $pdf->SetFont('helvetica', '', 13);
-        $pdf->Cell(0, 8, get_string('asv_attestation_soustitre', 'local_simhub', $niveau), 0, 1, 'C');
+        $global = $niveau === 'A3';
+        $pdf->Cell(0, 8, $global
+            ? get_string('asv_attestation_soustitre_global', 'local_simhub')
+            : get_string('asv_attestation_soustitre', 'local_simhub', $niveau), 0, 1, 'C');
         $pdf->Ln(10);
 
         $pdf->SetFont('helvetica', '', 12);
         $pdf->writeHTML(
             '<p>' . get_string('pdf_certifie_que', 'local_simhub', self::get_etablissement_nom()) . '</p>'
             . '<p style="text-align:center;font-size:15pt;"><b>' . s(fullname($user)) . '</b></p>'
-            . '<p>' . get_string('asv_attestation_texte', 'local_simhub', s($niveau)) . '</p>',
+            . '<p>' . ($global
+                ? get_string('asv_attestation_texte_global', 'local_simhub')
+                : get_string('asv_attestation_texte', 'local_simhub', s($niveau))) . '</p>',
             true,
             false,
             true,
@@ -108,10 +113,12 @@ class pdf_helper {
         );
 
         $html = '<table border="1" cellpadding="4"><tr style="font-weight:bold;">'
-            . '<th width="70%">' . get_string('asv_acte', 'local_simhub') . '</th>'
-            . '<th width="30%">' . get_string('champ_espece', 'local_simhub') . '</th></tr>';
+            . '<th width="60%">' . get_string('asv_acte', 'local_simhub') . '</th>'
+            . '<th width="15%">' . get_string('asv_champ_niveau', 'local_simhub') . '</th>'
+            . '<th width="25%">' . get_string('champ_espece', 'local_simhub') . '</th></tr>';
         foreach ($actes as $acte) {
-            $html .= '<tr><td>' . s($acte->get('nom')) . '</td><td>' . s($acte->get('espece')) . '</td></tr>';
+            $html .= '<tr><td>' . s($acte->get('nom')) . '</td><td>' . s($acte->get('niveau')) . '</td><td>'
+                . s($acte->get('espece')) . '</td></tr>';
         }
         $html .= '</table>';
         $pdf->writeHTML($html, true, false, true, false, '');

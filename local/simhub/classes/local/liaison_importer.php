@@ -168,7 +168,7 @@ class liaison_importer {
             return [[], [], get_string('import_fichier_vide', 'local_simhub')];
         }
 
-        $headerscols = str_getcsv(array_shift($lines), $delimiter);
+        $headerscols = str_getcsv(array_shift($lines), $delimiter, '"', '');
         $colmap = [];
         foreach ($headerscols as $index => $header) {
             $normalised = atelier_importer::normalise_header($header);
@@ -210,7 +210,7 @@ class liaison_importer {
      * @return array
      */
     private static function map_row(string $line, string $delimiter, array $colmap): array {
-        $row = str_getcsv($line, $delimiter);
+        $row = str_getcsv($line, $delimiter, '"', '');
         $data = [];
         foreach ($colmap as $index => $property) {
             $data[$property] = isset($row[$index]) ? trim($row[$index]) : '';

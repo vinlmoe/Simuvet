@@ -82,7 +82,7 @@ class atelier_importer {
             return $result;
         }
 
-        $headerscols = str_getcsv(array_shift($lines), $delimiter);
+        $headerscols = str_getcsv(array_shift($lines), $delimiter, '"', '');
         $colmap = [];
         foreach ($headerscols as $index => $header) {
             $normalised = self::normalise_header($header);
@@ -97,7 +97,7 @@ class atelier_importer {
         }
 
         foreach ($lines as $lineno => $line) {
-            $row = str_getcsv($line, $delimiter);
+            $row = str_getcsv($line, $delimiter, '"', '');
             $data = [];
             foreach ($colmap as $index => $property) {
                 $data[$property] = isset($row[$index]) ? trim($row[$index]) : '';
