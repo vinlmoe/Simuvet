@@ -65,26 +65,7 @@ foreach ($parcourslist as $parcours) {
         $echeancesparatelier[$lien->atelierid] = $lien->echeance ?: null;
     }
 
-    $cohortid = $parcours->get('cohortid');
-    if ($cohortid) {
-        $users = $DB->get_records_sql(
-            "SELECT u.id
-               FROM {cohort_members} cm
-               JOIN {user} u ON u.id = cm.userid
-              WHERE cm.cohortid = :cohortid",
-            ['cohortid' => $cohortid]
-        );
-    } else {
-        [$insql, $sparams] = $DB->get_in_or_equal($atelierids);
-        $users = $DB->get_records_sql(
-            "SELECT u.id
-               FROM {local_simhub_session} s
-               JOIN {user} u ON u.id = s.userid
-              WHERE s.atelierid $insql
-           GROUP BY u.id",
-            $sparams
-        );
-    }
+    $users = \local_simhub\local\parcours_helper::etudiants($parcours);
 
     $nbnoncommence = 0;
     $nbencours = 0;
@@ -121,7 +102,7 @@ foreach ($parcourslist as $parcours) {
             }
         }
 
-        $pct = round(100 * $realises / count($atelierids));
+        $pct = \local_simhub\local\parcours_helper::progression($parcours, $user->id)['pct'];
         $sommepct += $pct;
 
         if (!$acommence) {

@@ -31,13 +31,10 @@ if ($action === 'demarrer') {
     require_capability('local/simhub:startsession', $context);
     require_sesskey();
 
-    $session = session::demarrer($USER->id, $atelierid, ['methodescan' => 'manuel']);
-    \local_simhub\event\session_started::create([
-        'objectid' => $session->get('id'),
-        'context' => $context,
-    ])->trigger();
+    session::demarrer_ou_reprendre($USER->id, $atelierid, ['methodescan' => 'manuel']);
 
-    redirect(new moodle_url('/local/simhub/index.php'));
+    redirect(new moodle_url('/local/simhub/atelier.php', ['id' => $atelierid]),
+        get_string('session_demarree', 'local_simhub'), null, \core\output\notification::NOTIFY_SUCCESS);
 }
 
 if ($action !== 'terminer') {

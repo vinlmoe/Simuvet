@@ -40,6 +40,7 @@ local/simhub/
 ├── lib.php                     Callbacks Moodle (navigation, fichiers, visibilité ressources)
 ├── settings.php                 Page de réglages admin
 ├── index.php                    Accueil étudiant (§5) : filtres + cartes atelier
+├── parcours.php                 Parcours côté étudiant : ordre, échéances, avancement (§8)
 ├── atelier.php                  Fiche atelier étudiant (§5.4 localisation, §5.5 ressources)
 ├── session.php                  Démarrage/fin de session + auto-évaluation guidée (§7, §5.6)
 ├── qr.php                       Point d'entrée QR code (§7)
@@ -413,6 +414,26 @@ passent tous par `lang/fr` et `lang/en` (345 chaînes, identiques dans les deux 
 Les descriptions d'événements (journaux Moodle) sont en anglais, selon la convention
 Moodle pour ces textes non traduits. Au passage, le filtre « niveau » de l'accueil
 étudiant conserve désormais la valeur choisie après une recherche.
+
+## Conformité des autres sections (§5 à §8, §12, RGPD)
+
+Même démarche que pour l'ASV : relecture de chaque section contre les exigences citées
+dans le code, correction des écarts, puis scénario automatisé dédié (18 contrôles, tous
+passants sur Moodle 4.5 et 5.0).
+
+| Écart corrigé | Section |
+|---|---|
+| « Mes parcours en cours » était toujours vide : aucune séance ne recevait de parcours. L'accueil propose désormais les parcours de la cohorte de l'étudiant, de ses UC et ceux qu'il a commencés, dès 0 %, avec la prochaine échéance (en rouge si dépassée). | §5.1, §8.1 |
+| Nouvelle page parcours côté étudiant (`parcours.php`) : ateliers dans l'ordre, requis ou non, échéances, statut personnel, barre d'avancement et attestation une fois terminé. | §8 |
+| La case « obligatoire » est prise en compte : s'il y a au moins un atelier obligatoire, seuls ceux-ci conditionnent l'achèvement et l'attestation ; sinon tous. Une seule règle (`classes/local/parcours_helper.php`) pour l'accueil, le suivi, le tableau de bord, l'export et l'attestation. | §8.1 |
+| Le suivi d'un parcours lié à une UC inclut les inscrits de l'UC (en plus de la cohorte et des étudiants ayant commencé). | §8.1, §12.2 |
+| Les ateliers indisponibles restent visibles de l'étudiant, avec le motif et la date de retour prévue, sans bouton « Commencer ». | §5.3, §6.1 |
+| Passer un atelier en indisponible exige un motif (affiché aux étudiants) et permet une date de remise en service ; l'historique complet (début, motif, échéance, référent, état) s'affiche sur la fiche. | §6.1 |
+| Aucune séance ne peut démarrer sur un atelier non actif (bouton, QR ou code de séance) ; une séance déjà en cours reste terminable. | §6.1, §7 |
+| Un nouveau scan QR (ou clic sur « Commencer ») reprend la séance en cours au lieu d'en créer une seconde. | §7.1 |
+| Une « source éditable » est toujours interne, même si « visible étudiant » est choisi, et n'est jamais listée ni servie à un étudiant. | §6.2 |
+| Filtres discipline et espèce de l'accueil : listes des valeurs existantes, comparaison insensible à la casse et aux accents. | §5.2 |
+| L'observation de l'encadrant ASV est déclarée au fournisseur RGPD. | RGPD |
 
 ## Module ASV : conformité au §9 (septembre 2026)
 

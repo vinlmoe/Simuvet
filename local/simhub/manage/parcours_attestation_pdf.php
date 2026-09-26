@@ -31,21 +31,15 @@ $user = \core_user::get_user($userid, '*', MUST_EXIST);
 $composition = $parcours->get_ateliers();
 $atelierids = array_column($composition, 'atelierid');
 
-$realises = 0;
 $noms = [];
 foreach ($atelierids as $aid) {
-    $atelier = new atelier($aid);
-    $noms[$aid] = $atelier->get('nomcourt');
-
-    $sessions = session::get_pour_etudiant($userid, $aid);
-    $latest = $sessions ? reset($sessions) : null;
-    if ($latest && in_array($latest->get('statut'), [session::STATUT_REALISE, session::STATUT_CERTIFIE], true)) {
-        $realises++;
-    }
+    $noms[$aid] = (new atelier($aid))->get('nomcourt');
 }
+// L'attestation liste les ateliers effectivement réalisés parmi ceux du parcours.
+$atelierids = array_values(array_filter($atelierids,
+    fn($aid) => in_array(\local_simhub\local\parcours_helper::statut_atelier($userid, (int) $aid), ['realise', 'valide'], true)));
 
-$total = count($atelierids);
-$pct = $total > 0 ? round(100 * $realises / $total) : 0;
+['realises' => $realises, 'total' => $total, 'pct' => $pct] = \local_simhub\local\parcours_helper::progression($parcours, $userid);
 
 if ($total === 0 || $pct < 100) {
     $PAGE->set_context($context);

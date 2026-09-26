@@ -83,4 +83,29 @@ class indispo {
 
         return $DB->get_records(self::TABLE, ['atelierid' => $atelierid], 'datemaj DESC');
     }
+
+    /**
+     * Met à jour le motif, le référent et l'échéance de l'indisponibilité en cours.
+     *
+     * @param int $atelierid
+     * @param string $commentaire
+     * @param int|null $referentuserid
+     * @param int|null $echeanceprevue
+     * @return void
+     */
+    public static function mettre_a_jour(int $atelierid, string $commentaire, ?int $referentuserid,
+            ?int $echeanceprevue): void {
+        global $DB;
+
+        $encours = self::get_en_cours($atelierid);
+        if (!$encours) {
+            self::ouvrir($atelierid, $commentaire, $referentuserid, $echeanceprevue);
+            return;
+        }
+        $encours->commentaire = $commentaire;
+        $encours->referentuserid = $referentuserid;
+        $encours->echeanceprevue = $echeanceprevue;
+        $encours->datemaj = time();
+        $DB->update_record(self::TABLE, $encours);
+    }
 }

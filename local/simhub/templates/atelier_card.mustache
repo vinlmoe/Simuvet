@@ -22,7 +22,8 @@
             {{#dureeindicative}}&middot; {{dureeindicative}} min{{/dureeindicative}}
         </p>
         {{#estindisponible}}
-            <p class="text-warning">{{commentaireindispo}}</p>
+            <p class="text-warning mb-1">{{commentaireindispo}}</p>
+            {{#retourprevu}}<p class="small text-muted">{{retourprevu}}</p>{{/retourprevu}}
         {{/estindisponible}}
         <div class="btn-group" role="group">
             <a class="btn btn-outline-secondary btn-sm" href="{{urllocalisation}}">{{strings.boutonlocalisation}}</a>

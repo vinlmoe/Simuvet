@@ -46,9 +46,20 @@ class ressource extends \core\persistent {
      * @return ressource[]
      */
     public static function get_pour_etudiant(int $atelierid): array {
-        return self::get_records(
-            ['atelierid' => $atelierid, 'visibilite' => self::VISIBILITE_ETUDIANT],
-            'ordre'
-        );
+        return array_values(array_filter(
+            self::get_records(['atelierid' => $atelierid, 'visibilite' => self::VISIBILITE_ETUDIANT], 'ordre'),
+            fn($r) => $r->get('type') !== self::TYPE_SOURCE_EDITABLE
+        ));
+    }
+
+    /**
+     * Une source éditable reste interne quelle que soit la visibilité choisie (§6.2).
+     *
+     * @return void
+     */
+    protected function before_validate() {
+        if ($this->get('type') === self::TYPE_SOURCE_EDITABLE) {
+            $this->set('visibilite', self::VISIBILITE_INTERNE);
+        }
     }
 }

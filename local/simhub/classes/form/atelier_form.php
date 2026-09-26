@@ -56,6 +56,15 @@ class atelier_form extends \moodleform {
             atelier::STATUT_ARCHIVE => get_string('statut_archive', 'local_simhub'),
         ]);
 
+        // Motif et remise en service prévue d'une indisponibilité (§6.1), montrés à
+        // l'étudiant sur la carte et la fiche de l'atelier.
+        $mform->addElement('textarea', 'indispo_motif', get_string('indispo_motif', 'local_simhub'), ['rows' => 2]);
+        $mform->setType('indispo_motif', PARAM_TEXT);
+        $mform->hideIf('indispo_motif', 'statut', 'neq', atelier::STATUT_INDISPONIBLE);
+        $mform->addElement('date_selector', 'indispo_echeance', get_string('indispo_echeance', 'local_simhub'),
+            ['optional' => true]);
+        $mform->hideIf('indispo_echeance', 'statut', 'neq', atelier::STATUT_INDISPONIBLE);
+
         $mform->addElement('text', 'envcode', get_string('champ_envcode', 'local_simhub'));
         $mform->setType('envcode', PARAM_ALPHANUMEXT);
         $mform->addRule('envcode', null, 'required', null, 'client');
@@ -112,6 +121,9 @@ class atelier_form extends \moodleform {
         global $DB;
 
         $errors = parent::validation($data, $files);
+        if (($data['statut'] ?? '') === atelier::STATUT_INDISPONIBLE && trim($data['indispo_motif'] ?? '') === '') {
+            $errors['indispo_motif'] = get_string('indispo_motif_requis', 'local_simhub');
+        }
         $doublon = $DB->record_exists_select('local_simhub_atelier',
             'envcode = :envcode AND numero = :numero AND id <> :id',
             ['envcode' => $data['envcode'], 'numero' => $data['numero'], 'id' => (int) ($data['id'] ?? 0)]);

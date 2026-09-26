@@ -423,3 +423,21 @@ $string['asv_aucun_etudiant'] = 'Aucun étudiant à afficher pour ce filtre.';
 $string['asv_synthese_par_acte'] = 'Synthèse par acte (nombre d\'étudiants)';
 $string['asv_attestation_soustitre_global'] = 'Certification globale de fin de A3 — actes vétérinaires délégables ASV des niveaux A1, A2 et A3';
 $string['asv_attestation_texte_global'] = 'a validé, en simulation puis sur animal vivant, l\'ensemble des actes vétérinaires délégables des niveaux A1, A2 et A3 listés ci-dessous :';
+
+// Parcours étudiant, indisponibilités, démarrage de séance.
+$string['parcours_prochaine_echeance'] = 'prochaine échéance :';
+$string['parcours_avancement'] = '{$a->realises} atelier(s) requis réalisé(s) sur {$a->total} ({$a->pct} %)';
+$string['parcours_col_requis'] = 'Requis pour l\'achèvement';
+$string['parcours_col_echeance'] = 'Échéance';
+$string['parcours_en_retard'] = 'en retard';
+$string['atelier_non_demarrable'] = 'Cet atelier n\'est pas disponible actuellement : aucune séance ne peut y être démarrée.';
+$string['indispo_motif'] = 'Motif de l\'indisponibilité (visible par les étudiants)';
+$string['indispo_motif_requis'] = 'Indiquez le motif de l\'indisponibilité : il est affiché aux étudiants.';
+$string['indispo_echeance'] = 'Remise en service prévue';
+$string['indispo_historique'] = 'Historique des indisponibilités';
+$string['indispo_debut'] = 'Début';
+$string['indispo_referent'] = 'Référent';
+$string['indispo_cloturee'] = 'Clôturée';
+$string['indispo_en_cours'] = 'En cours';
+$string['indispo_retour_prevu'] = 'Retour prévu le {$a}.';
+$string['privacy:metadata:local_simhub_asv_valsim:commentaire'] = 'Observation de l\'encadrant ou motif d\'annulation de la validation';

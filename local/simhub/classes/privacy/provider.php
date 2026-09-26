@@ -59,6 +59,7 @@ class provider implements
             'acteid' => 'privacy:metadata:local_simhub_asv_valsim:acteid',
             'validateuruserid' => 'privacy:metadata:local_simhub_asv_valsim:validateuruserid',
             'statut' => 'privacy:metadata:local_simhub_asv_valsim:statut',
+            'commentaire' => 'privacy:metadata:local_simhub_asv_valsim:commentaire',
         ], 'privacy:metadata:local_simhub_asv_valsim');
 
         $collection->add_database_table('local_simhub_asv_valanimal', [

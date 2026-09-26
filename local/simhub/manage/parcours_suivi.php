@@ -44,28 +44,8 @@ if (empty($atelierids)) {
 
 // Étudiants concernés : membres de la cohorte rattachée au parcours si connue, sinon tout
 // étudiant ayant au moins une session sur l'un des ateliers du parcours (§8.1).
-$cohortid = $parcours->get('cohortid');
-if ($cohortid) {
-    $users = $DB->get_records_sql(
-        "SELECT u.id, u.firstname, u.lastname
-           FROM {cohort_members} cm
-           JOIN {user} u ON u.id = cm.userid
-          WHERE cm.cohortid = :cohortid
-       ORDER BY u.lastname, u.firstname",
-        ['cohortid' => $cohortid]
-    );
-} else {
-    [$insql, $params] = $DB->get_in_or_equal($atelierids);
-    $users = $DB->get_records_sql(
-        "SELECT u.id, u.firstname, u.lastname
-           FROM {local_simhub_session} s
-           JOIN {user} u ON u.id = s.userid
-          WHERE s.atelierid $insql
-       GROUP BY u.id, u.firstname, u.lastname
-       ORDER BY u.lastname, u.firstname",
-        $params
-    );
-}
+$users = \local_simhub\local\parcours_helper::etudiants($parcours);
+$requis = \local_simhub\local\parcours_helper::ateliers_requis($parcours);
 
 $table = new html_table();
 $head = [get_string('etudiant', 'local_simhub')];
@@ -73,7 +53,8 @@ $ateliersbyid = [];
 foreach ($atelierids as $aid) {
     $atelier = new atelier($aid);
     $ateliersbyid[$aid] = $atelier;
-    $head[] = s($atelier->get('nomcourt'));
+    $head[] = s($atelier->get('nomcourt')) . (in_array((int) $aid, $requis, true) && count($requis) < count($atelierids)
+        ? ' *' : '');
 }
 $head[] = get_string('avancement', 'local_simhub');
 $head[] = '';
@@ -100,7 +81,7 @@ foreach ($users as $user) {
         }
     }
 
-    $pct = round(100 * $realises / count($atelierids));
+    $pct = \local_simhub\local\parcours_helper::progression($parcours, $user->id)['pct'];
     $row[] = $pct . ' %';
 
     if ($pct >= 100) {

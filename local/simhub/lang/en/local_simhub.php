@@ -409,3 +409,21 @@ $string['asv_aucun_etudiant'] = 'No student to show for this filter.';
 $string['asv_synthese_par_acte'] = 'Summary per procedure (number of students)';
 $string['asv_attestation_soustitre_global'] = 'End of A3 global certification — delegable veterinary procedures (ASV) of levels A1, A2 and A3';
 $string['asv_attestation_texte_global'] = 'has validated, in simulation then on a live animal, all the delegable veterinary procedures of levels A1, A2 and A3 listed below:';
+
+// Parcours étudiant, indisponibilités, démarrage de séance.
+$string['parcours_prochaine_echeance'] = 'next deadline:';
+$string['parcours_avancement'] = '{$a->realises} required workshop(s) done out of {$a->total} ({$a->pct}%)';
+$string['parcours_col_requis'] = 'Required for completion';
+$string['parcours_col_echeance'] = 'Deadline';
+$string['parcours_en_retard'] = 'overdue';
+$string['atelier_non_demarrable'] = 'This workshop is currently unavailable: no session can be started.';
+$string['indispo_motif'] = 'Reason for unavailability (visible to students)';
+$string['indispo_motif_requis'] = 'Give the reason for the unavailability: it is shown to students.';
+$string['indispo_echeance'] = 'Expected back in service';
+$string['indispo_historique'] = 'Unavailability history';
+$string['indispo_debut'] = 'Start';
+$string['indispo_referent'] = 'Contact person';
+$string['indispo_cloturee'] = 'Closed';
+$string['indispo_en_cours'] = 'Ongoing';
+$string['indispo_retour_prevu'] = 'Expected back on {$a}.';
+$string['privacy:metadata:local_simhub_asv_valsim:commentaire'] = 'Supervisor remark or reason for cancelling the validation';

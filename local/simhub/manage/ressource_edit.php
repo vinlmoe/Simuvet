@@ -55,7 +55,9 @@ if ($form->is_cancelled()) {
 } else if ($formdata = $form->get_data()) {
     $record->titre = $formdata->titre;
     $record->type = $formdata->type;
-    $record->visibilite = $formdata->visibilite;
+    // Une source éditable reste interne quelle que soit la visibilité choisie (§6.2).
+    $record->visibilite = $formdata->type === ressource::TYPE_SOURCE_EDITABLE
+        ? ressource::VISIBILITE_INTERNE : $formdata->visibilite;
     $record->url = $formdata->url;
     $record->ordre = (int) $formdata->ordre;
     $record->timemodified = time();
