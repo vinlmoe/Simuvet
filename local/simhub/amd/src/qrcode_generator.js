@@ -1,3 +1,6 @@
+/* eslint-disable */
+// Bibliothèque tierce qrcode-generator 2.0.4 (Kazuhiko Arase, MIT), voir thirdpartylibs.xml.
+// Seul l'en-tête UMD d'origine est remplacé par un export ES pour la chaîne AMD de Moodle.
 //---------------------------------------------------------------------
 //
 // QR Code Generator for JavaScript
@@ -2286,12 +2289,4 @@ var qrcode = function() {
 
 }();
 
-(function (factory) {
-  if (typeof define === 'function' && define.amd) {
-      define([], factory);
-  } else if (typeof exports === 'object') {
-      module.exports = factory();
-  }
-}(function () {
-    return qrcode;
-}));
+export default qrcode;

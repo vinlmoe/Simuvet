@@ -44,7 +44,7 @@ $title = get_string('nav_plan', 'local_simhub');
 ]);
 \local_simhub\local\navigation::onglets('atelier', $id, 'plan');
 
-$submitted = optional_param('submit', 0, PARAM_BOOL);
+$submitted = optional_param('enregistrer', 0, PARAM_BOOL);
 if ($submitted) {
     require_sesskey();
 
@@ -111,57 +111,23 @@ echo html_writer::tag('p', get_string('plan_consigne', 'local_simhub'));
 echo html_writer::start_tag('form', ['method' => 'post', 'id' => 'local-simhub-plan-form']);
 echo html_writer::empty_tag('input', ['type' => 'hidden', 'name' => 'sesskey', 'value' => sesskey()]);
 echo html_writer::empty_tag('input', ['type' => 'hidden', 'name' => 'id', 'value' => $id]);
-echo html_writer::empty_tag('input', ['type' => 'hidden', 'name' => 'submit', 'value' => 1]);
-echo html_writer::empty_tag('input', ['type' => 'hidden', 'name' => 'planrepx', 'id' => 'local-simhub-planrepx']);
-echo html_writer::empty_tag('input', ['type' => 'hidden', 'name' => 'planrepy', 'id' => 'local-simhub-planrepy']);
+// Pas de champ nommé « submit » : il masquerait form.submit() utilisé par le module plan.
+echo html_writer::empty_tag('input', ['type' => 'hidden', 'name' => 'enregistrer', 'value' => 1]);
+echo html_writer::empty_tag('input', ['type' => 'hidden', 'name' => 'planrepx']);
+echo html_writer::empty_tag('input', ['type' => 'hidden', 'name' => 'planrepy']);
 echo html_writer::end_tag('form');
 
-echo html_writer::start_div(
-    'local-simhub-plan',
-    ['id' => 'local-simhub-plan-container', 'style' => 'position:relative;display:inline-block;cursor:crosshair;'],
-);
-echo html_writer::empty_tag(
-    'img',
-    ['src' => $planurl->out(false), 'id' => 'local-simhub-plan-img', 'style' => 'max-width:100%;display:block;'],
-);
+echo html_writer::start_div('local-simhub-plan local-simhub-plan-editable', ['id' => 'local-simhub-plan-container']);
+echo html_writer::empty_tag('img', ['src' => $planurl->out(false), 'id' => 'local-simhub-plan-img', 'alt' => '']);
 if ($atelier->get('planrepx') !== null && $atelier->get('planrepy') !== null) {
-    echo html_writer::span('', '', [
+    // Position propre à l'atelier : seule donnée laissée en style en ligne.
+    echo html_writer::span('', 'local-simhub-plan-marker', [
         'id' => 'local-simhub-plan-marker',
-        'style' => sprintf(
-            'position:absolute;left:%s%%;top:%s%%;width:16px;height:16px;border-radius:50%%;'
-            . 'background:red;border:2px solid white;transform:translate(-50%%,-50%%);',
-            $atelier->get('planrepx'),
-            $atelier->get('planrepy')
-        ),
+        'style' => sprintf('left:%s%%;top:%s%%;', (float) $atelier->get('planrepx'), (float) $atelier->get('planrepy')),
     ]);
 }
 echo html_writer::end_div();
-
-echo html_writer::script("
-(function() {
-    var container = document.getElementById('local-simhub-plan-container');
-    var img = document.getElementById('local-simhub-plan-img');
-    var form = document.getElementById('local-simhub-plan-form');
-
-    container.addEventListener('click', function(e) {
-        var rect = img.getBoundingClientRect();
-        var x = ((e.clientX - rect.left) / rect.width) * 100;
-        var y = ((e.clientY - rect.top) / rect.height) * 100;
-
-        var existing = document.getElementById('local-simhub-plan-marker');
-        if (existing) { existing.remove(); }
-        var marker = document.createElement('span');
-        marker.id = 'local-simhub-plan-marker';
-        marker.style.cssText = 'position:absolute;left:' + x + '%;top:' + y + '%;width:16px;height:16px;'
-            + 'border-radius:50%;background:red;border:2px solid white;transform:translate(-50%,-50%);';
-        container.appendChild(marker);
-
-        document.getElementById('local-simhub-planrepx').value = x.toFixed(2);
-        document.getElementById('local-simhub-planrepy').value = y.toFixed(2);
-        form.submit();
-    });
-})();
-");
+$PAGE->requires->js_call_amd('local_simhub/plan', 'init');
 
 echo $OUTPUT->continue_button(new moodle_url('/local/simhub/manage/atelier_edit.php', ['id' => $id]));
 

@@ -415,8 +415,6 @@ class navigation {
         $out = \html_writer::start_tag('nav', [
             'class' => 'local-simhub-nav mb-3',
             'aria-label' => get_string('pluginname', 'local_simhub'),
-            'style' => 'display:flex;flex-wrap:wrap;gap:8px;align-items:center;'
-                . 'padding:8px 0;border-bottom:1px solid rgba(0,0,0,.1);',
         ]);
 
         // Le bouton retour n'a de sens que si l'on n'est pas déjà sur sa cible.

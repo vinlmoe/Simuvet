@@ -144,16 +144,11 @@ if ($atelier->get('planimageitemid')) {
             '/',
             $planfile->get_filename()
         );
-        echo html_writer::start_div('local-simhub-plan', ['style' => 'position:relative;display:inline-block;']);
-        echo html_writer::empty_tag('img', ['src' => $planurl->out(false), 'style' => 'max-width:100%;']);
+        echo html_writer::start_div('local-simhub-plan');
+        echo html_writer::empty_tag('img', ['src' => $planurl->out(false), 'alt' => get_string('nav_plan', 'local_simhub')]);
         if ($atelier->get('planrepx') !== null && $atelier->get('planrepy') !== null) {
-            echo html_writer::span('', 'local-simhub-repere', [
-                'style' => sprintf(
-                    'position:absolute;left:%s%%;top:%s%%;width:14px;height:14px;border-radius:50%%;'
-                    . 'background:red;transform:translate(-50%%,-50%%);',
-                    $atelier->get('planrepx'),
-                    $atelier->get('planrepy')
-                ),
+            echo html_writer::span('', 'local-simhub-plan-marker', [
+                'style' => sprintf('left:%s%%;top:%s%%;', (float) $atelier->get('planrepx'), (float) $atelier->get('planrepy')),
             ]);
         }
         echo html_writer::end_div();

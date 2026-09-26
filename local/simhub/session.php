@@ -81,33 +81,45 @@ if ($session->get('userid') != $USER->id) {
 global $DB;
 $modele = $DB->get_record('local_simhub_ae_modele', ['atelierid' => $atelierid, 'actif' => 1]);
 
-$submitted = optional_param('submit_autoeval', 0, PARAM_BOOL);
-
-if ($submitted) {
-    require_sesskey();
-    require_capability('local/simhub:submitautoeval', $context);
-
-    if ($modele) {
-        $rubriques = ae_rubrique::get_pour_modele($modele->id);
-        foreach ($rubriques as $rubrique) {
-            $criteres = ae_critere::get_pour_rubrique($rubrique->id);
-            foreach ($criteres as $critere) {
-                // PARAM_ALPHA aurait tronqué le « _ » de a_consolider/a_reprendre (valeurs
-                // du radio ci-dessous), stockant des niveaux corrompus ne correspondant à
-                // aucune des constantes ae_reponse::NIVEAU_*.
-                $niveau = optional_param('critere_' . $critere->id, '', PARAM_ALPHANUMEXT);
-                if ($niveau !== '') {
-                    ae_reponse::repondre($sessionid, $critere->id, $niveau);
-                }
-            }
+$niveaux = [];
+foreach ([ae_reponse::NIVEAU_REUSSI, ae_reponse::NIVEAU_A_CONSOLIDER, ae_reponse::NIVEAU_A_REPRENDRE] as $niveau) {
+    $niveaux[$niveau] = get_string('niveau_' . $niveau, 'local_simhub');
+}
+$form = null;
+$criteresids = [];
+if ($modele) {
+    // Présentation verticale, critère par critère, lisible sur téléphone (§7.2).
+    $champs = [];
+    foreach (ae_rubrique::get_pour_modele($modele->id) as $rubrique) {
+        $champs[] = ['header', 'rubrique' . $rubrique->id, format_string($rubrique->titre)];
+        foreach (ae_critere::get_pour_rubrique($rubrique->id) as $critere) {
+            $criteresids[] = (int) $critere->id;
+            $champs[] = ['radio', 'critere_' . $critere->id, format_string($critere->libelle), ['choix' => $niveaux]];
         }
     }
+    $champs[] = ['header', 'autobilan', get_string('ae_autobilan', 'local_simhub')];
+    foreach (['pointmaitrise', 'pointaretravailler', 'pointattention'] as $champ) {
+        $champs[] = ['textarea', $champ, get_string('champ_' . $champ, 'local_simhub'), [
+            'attributs' => ['rows' => 2, 'cols' => 40],
+        ]];
+    }
+    $form = new \local_simhub\form\formulaire(
+        new moodle_url('/local/simhub/session.php', ['atelierid' => $atelierid, 'action' => 'terminer', 'sessionid' => $sessionid]),
+        ['champs' => $champs, 'bouton' => get_string('bouton_terminer', 'local_simhub')]
+    );
+}
 
-    $pointmaitrise = optional_param('pointmaitrise', '', PARAM_TEXT);
-    $pointaretravailler = optional_param('pointaretravailler', '', PARAM_TEXT);
-    $pointattention = optional_param('pointattention', '', PARAM_TEXT);
-    if ($pointmaitrise !== '' || $pointaretravailler !== '' || $pointattention !== '') {
-        ae_bilan::enregistrer($sessionid, $pointmaitrise, $pointaretravailler, $pointattention);
+if ($form && ($data = $form->get_data())) {
+    require_capability('local/simhub:submitautoeval', $context);
+    foreach ($criteresids as $critereid) {
+        $niveau = $data->{'critere_' . $critereid} ?? '';
+        if (isset($niveaux[$niveau])) {
+            ae_reponse::repondre($sessionid, $critereid, $niveau);
+        }
+    }
+    $bilan = array_map(fn($c) => trim($data->$c ?? ''), ['pointmaitrise', 'pointaretravailler', 'pointattention']);
+    if (implode('', $bilan) !== '') {
+        ae_bilan::enregistrer($sessionid, ...$bilan);
     }
 
     $session->terminer();
@@ -144,49 +156,7 @@ if (!$modele) {
     exit;
 }
 
-echo html_writer::start_tag('form', ['method' => 'post']);
-echo html_writer::empty_tag('input', ['type' => 'hidden', 'name' => 'sesskey', 'value' => sesskey()]);
-echo html_writer::empty_tag('input', ['type' => 'hidden', 'name' => 'atelierid', 'value' => $atelierid]);
-echo html_writer::empty_tag('input', ['type' => 'hidden', 'name' => 'action', 'value' => 'terminer']);
-echo html_writer::empty_tag('input', ['type' => 'hidden', 'name' => 'sessionid', 'value' => $sessionid]);
-echo html_writer::empty_tag('input', ['type' => 'hidden', 'name' => 'submit_autoeval', 'value' => 1]);
-
-echo html_writer::tag('h3', s($modele->titre));
-
-$rubriques = ae_rubrique::get_pour_modele($modele->id);
-foreach ($rubriques as $rubrique) {
-    echo html_writer::start_tag('fieldset', ['class' => 'local-simhub-rubrique']);
-    echo html_writer::tag('legend', s($rubrique->titre));
-
-    $criteres = ae_critere::get_pour_rubrique($rubrique->id);
-    foreach ($criteres as $critere) {
-        echo html_writer::start_div('form-group');
-        echo html_writer::tag('label', s($critere->libelle));
-        echo html_writer::start_tag('div', ['class' => 'btn-group-toggle']);
-        foreach (['reussi', 'a_consolider', 'a_reprendre'] as $niveau) {
-            $id = 'critere_' . $critere->id . '_' . $niveau;
-            echo html_writer::empty_tag('input', [
-                'type' => 'radio', 'name' => 'critere_' . $critere->id, 'value' => $niveau, 'id' => $id,
-            ]);
-            echo html_writer::tag('label', get_string('niveau_' . $niveau, 'local_simhub'), ['for' => $id]);
-        }
-        echo html_writer::end_tag('div');
-        echo html_writer::end_div();
-    }
-    echo html_writer::end_tag('fieldset');
-}
-
-echo html_writer::tag('h4', get_string('ae_autobilan', 'local_simhub'));
-foreach (['pointmaitrise', 'pointaretravailler', 'pointattention'] as $field) {
-    echo html_writer::start_div('form-group');
-    echo html_writer::tag('label', get_string('champ_' . $field, 'local_simhub'));
-    echo html_writer::tag('textarea', '', ['name' => $field, 'class' => 'form-control', 'rows' => 2]);
-    echo html_writer::end_div();
-}
-
-echo html_writer::tag('button', get_string('bouton_terminer', 'local_simhub'), [
-    'type' => 'submit', 'class' => 'btn btn-primary',
-]);
-echo html_writer::end_tag('form');
+echo html_writer::tag('h3', format_string($modele->titre));
+$form->display();
 
 echo $OUTPUT->footer();

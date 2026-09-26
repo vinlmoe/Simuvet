@@ -114,10 +114,8 @@ foreach ($ateliers as $atelier) {
  */
 function local_simhub_dashboard_tuile(string $label, int $valeur, string $couleur = 'bg-light'): string {
     return html_writer::div(
-        html_writer::tag('div', $valeur, ['style' => 'font-size:1.8rem;font-weight:bold;'])
-        . html_writer::tag('div', $label, ['style' => 'font-size:0.85rem;']),
-        $couleur,
-        ['style' => 'display:inline-block;min-width:150px;padding:12px;margin:0 8px 8px 0;border-radius:6px;text-align:center;']
+        html_writer::div($valeur, 'local-simhub-tuile-valeur') . html_writer::div($label, 'local-simhub-tuile-libelle'),
+        'local-simhub-tuile ' . $couleur
     );
 }
 

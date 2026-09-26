@@ -17,7 +17,7 @@
 /**
  * QR code d'un atelier (§7) : affiche le lien de scan, son jeton, et une image QR
  * imprimable générée entièrement côté navigateur (bibliothèque JS vendorisée
- * js/vendor/qrcode.js, aucun appel réseau externe ni service tiers), avec possibilité de
+ * amd/src/qrcode_generator.js, aucun appel réseau externe ni service tiers), avec possibilité de
  * régénérer le jeton.
  *
  * @package    local_simhub
@@ -55,11 +55,6 @@ $title = get_string('nav_qrcode', 'local_simhub');
 echo $OUTPUT->header();
 echo \local_simhub\local\navigation::barre();
 
-// La bibliothèque est intégrée directement dans la page (plutôt que via
-// $PAGE->requires->js()) pour garantir qu'elle est définie avant le script d'utilisation
-// ci-dessous, sans dépendre de l'ordre d'injection des scripts du thème Moodle.
-echo html_writer::script(file_get_contents(__DIR__ . '/../js/vendor/qrcode.js'));
-
 $qr = qrtoken::get_ou_creer($id);
 $scanurl = new moodle_url('/local/simhub/qr.php', ['token' => $qr->token]);
 
@@ -69,7 +64,7 @@ echo html_writer::tag('p', html_writer::link($scanurl, $scanurl->out(false)));
 echo html_writer::start_div('local-simhub-qr-bloc', ['id' => 'local-simhub-qr-bloc']);
 echo html_writer::div('', '', ['id' => 'local-simhub-qr-image']);
 echo html_writer::tag('p', s($atelier->get('numero')) . ' — ' . s($atelier->get('nomcourt')), [
-    'id' => 'local-simhub-qr-legende', 'style' => 'text-align:center;font-weight:bold;',
+    'id' => 'local-simhub-qr-legende', 'class' => 'local-simhub-qr-legende',
 ]);
 echo html_writer::end_div();
 
@@ -85,45 +80,10 @@ echo $OUTPUT->single_button(
     get_string('qr_regenerer', 'local_simhub')
 );
 
-// Génération et rendu de l'image QR intégralement côté navigateur : aucune donnée n'est
-// envoyée à un service externe, aucune dépendance réseau au moment de l'impression.
-echo html_writer::script("
-(function() {
-    var url = " . json_encode($scanurl->out(false)) . ";
-    var qr = qrcode(0, 'M');
-    qr.addData(url);
-    qr.make();
-
-    var container = document.getElementById('local-simhub-qr-image');
-    var svg = qr.createSvgTag(8, 16);
-    container.innerHTML = svg;
-
-    document.getElementById('local-simhub-qr-imprimer').addEventListener('click', function() {
-        window.print();
-    });
-
-    var lien = document.getElementById('local-simhub-qr-telecharger');
-    lien.addEventListener('click', function(e) {
-        e.preventDefault();
-        var blob = new Blob([svg], {type: 'image/svg+xml'});
-        var blobUrl = URL.createObjectURL(blob);
-        var a = document.createElement('a');
-        a.href = blobUrl;
-        a.download = 'qr-" . $atelier->get('numero') . ".svg';
-        document.body.appendChild(a);
-        a.click();
-        document.body.removeChild(a);
-        URL.revokeObjectURL(blobUrl);
-    });
-})();
-");
-
-echo html_writer::tag('style', '
-    @media print {
-        body * { visibility: hidden; }
-        #local-simhub-qr-bloc, #local-simhub-qr-bloc * { visibility: visible; }
-        #local-simhub-qr-bloc { position: absolute; top: 0; left: 0; }
-    }
-');
+// QR code généré dans le navigateur : aucune donnée n'est envoyée à un service externe.
+$PAGE->requires->js_call_amd('local_simhub/qrcode', 'init', [
+    $scanurl->out(false),
+    'qr-' . clean_filename($atelier->get('numero')) . '.svg',
+]);
 
 echo $OUTPUT->footer();

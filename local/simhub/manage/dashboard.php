@@ -191,15 +191,8 @@ foreach ($parcourslist as $parcours) {
 
     $suiviurl = new moodle_url('/local/simhub/manage/parcours_suivi.php', ['parcoursid' => $parcours->get('id')]);
 
-    $barre = html_writer::div('', '', [
-        'style' => sprintf(
-            'height:6px;background:#28a745;width:%d%%;border-radius:3px;',
-            $moyenne
-        ),
-    ]);
-    $barrecontainer = html_writer::div($barre, '', [
-        'style' => 'background:#e9ecef;border-radius:3px;margin-bottom:2px;',
-    ]);
+    $barre = html_writer::div('', 'local-simhub-barre-remplie', ['style' => 'width:' . (int) $moyenne . '%;']);
+    $barrecontainer = html_writer::div($barre, 'local-simhub-barre');
 
     $table->data[] = [
         s($parcours->get('nom')),

@@ -71,6 +71,10 @@ class formulaire extends \moodleform {
                     $groupe[] = $mform->createElement('radio', $nom, '', $texte, $valeur);
                 }
                 $mform->addGroup($groupe, $nom . '_groupe', $libelle, \html_writer::empty_tag('br'), false);
+            } else if ($type === 'header') {
+                $mform->addElement('header', $nom, $libelle);
+                $mform->setExpanded($nom, true);
+                continue;
             } else if ($type === 'static') {
                 $mform->addElement('static', $nom, $libelle, $opts['texte'] ?? '');
             } else if ($type === 'advcheckbox') {
