@@ -1,0 +1,305 @@
+\documentclass[11pt,a4paper]{article}
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage[french]{babel}
+\usepackage{lmodern}
+\usepackage[margin=2.2cm]{geometry}
+\usepackage{booktabs,longtable,array,tabularx}
+\usepackage[table]{xcolor}
+\usepackage{enumitem}
+\usepackage{hyperref}
+\usepackage{fancyhdr}
+
+\definecolor{ok}{HTML}{2E7D32}
+\definecolor{part}{HTML}{E08E00}
+\definecolor{ko}{HTML}{C62828}
+\newcommand{\OK}{\textcolor{ok}{\textbf{Conforme}}}
+\newcommand{\PART}{\textcolor{part}{\textbf{Partiel}}}
+\newcommand{\KO}{\textcolor{ko}{\textbf{Absent}}}
+\newcommand{\code}[1]{\texttt{\small #1}}
+
+\pagestyle{fancy}\fancyhf{}
+\lhead{SimHub -- Rapport à valider}\rhead{Septembre 2026}\cfoot{\thepage}
+\setlist{nosep,leftmargin=1.5em}
+
+\title{\textbf{SimHub}\\[0.3em]\large Gestion des droits par contexte Moodle et activité de cours\\ Audit de conformité au cahier des charges V0}
+\author{Document de travail soumis à validation}
+\date{26 septembre 2026}
+
+\sloppy
+\begin{document}
+\maketitle
+
+\section*{Synthèse}
+\begin{itemize}
+  \item \textbf{Constat.} Le plugin \code{local\_simhub} vérifie toutes ses capacités au
+  \emph{contexte système} (51 appels à \code{context\_system::instance()}). Un enseignant
+  inscrit dans son cours n'a donc aucun droit SimHub : un administrateur Moodle doit lui
+  attribuer à la main un rôle système (\code{classes/local/roles.php}). Cela contredit le
+  §11 (enseignant et responsable d'UC agissent sur \emph{leurs} enseignements) et le §10
+  (« Cours / UC », « Permissions : gérer finement »).
+  \item \textbf{Proposition (option 2 retenue).} Deux niveaux de contexte existants de
+  Moodle, sans créer de niveau de contexte propre :
+  \begin{enumerate}
+    \item une \textbf{catégorie de cours par établissement} porte le référentiel
+    transversal (ateliers, salle, ASV) : les rôles gestionnaire de salle et administrateur
+    fonctionnel y sont attribués localement, par délégation, sans compte administrateur ;
+    \item une \textbf{activité Moodle \code{mod\_simhub}} que le responsable d'UC ajoute
+    lui-même dans son cours : les droits enseignant découlent automatiquement de
+    l'inscription au cours, comme pour un devoir ou un test.
+  \end{enumerate}
+  \item \textbf{Conformité.} Le socle V1 est largement couvert. Écarts principaux : droits
+  enseignant (ci-dessus), carnet de notes et groupes Moodle non utilisés, filtres UC /
+  parcours / statut personnel non exposés à l'étudiant, champ « catégorie » absent,
+  export XLSX absent, contrôle de durée anti-faux scan absent.
+\end{itemize}
+
+\section{Problème : des capacités vérifiées au niveau système}
+
+Dans Moodle, une permission se propage \emph{vers le bas} (système $\rightarrow$
+catégorie $\rightarrow$ cours $\rightarrow$ activité), jamais vers le haut. La ligne
+\code{'editingteacher' => CAP\_ALLOW} de \code{db/access.php} ne fixe que la valeur par
+défaut du rôle ; elle ne sert que si ce rôle est attribué au contexte vérifié ou au-dessus.
+Or SimHub vérifie au contexte système, où un enseignant n'a jamais de rôle.
+
+Le correctif actuel (quatre rôles « Encadrant / Responsable d'UC / Gestionnaire de salle /
+Administrateur fonctionnel SimHub », attribuables uniquement au niveau système) a trois
+défauts :
+\begin{itemize}
+  \item chaque attribution passe par \emph{Administration du site $\rightarrow$ Attribuer des
+  rôles système}, donc par un administrateur Moodle (\code{moodle/role:assign} au système) ;
+  \item les droits sont \emph{globaux} : un responsable d'UC peut modifier les parcours de
+  toutes les UC et suivre tous les étudiants, pas seulement les siens ;
+  \item la liste des enseignants est tenue deux fois (inscriptions au cours et rôles
+  système), ce que le §3.1 cherche justement à éviter.
+\end{itemize}
+
+\section{Architecture proposée}
+
+\subsection{Répartition des responsabilités}
+
+\begin{center}
+\begin{tabularx}{\textwidth}{>{\raggedright}p{3.2cm}>{\raggedright}p{4.2cm}X}
+\toprule
+\textbf{Composant} & \textbf{Contexte des droits} & \textbf{Périmètre} \\
+\midrule
+\code{local\_simhub} (existant) & Catégorie de cours de l'établissement (réglage
+\code{categoryid} par \code{envcode}) & Fiches ateliers, statuts, ressources, QR, plan,
+import/export, grilles d'auto-évaluation, référentiel et pilotage ASV, accueil étudiant,
+séances. \\
+\addlinespace
+\code{mod\_simhub} (nouveau) & Activité dans le cours de l'UC (hérite du cours) &
+Rattachement d'ateliers à l'UC, parcours de l'UC, échéances, suivi des inscrits, validation
+des séances de ses étudiants, note et achèvement dans le cours. \\
+\addlinespace
+Page publique ASV & Aucun (jeton signé + expiration) & Validation sur animal vivant par un
+validateur externe (§9.3), inchangée. \\
+\bottomrule
+\end{tabularx}
+\end{center}
+
+Le lien entre les deux existe déjà en base : \code{local\_simhub\_rattachement.courseid},
+\code{local\_simhub\_parcours.courseid} et \code{local\_simhub\_session.courseid}. L'activité
+ne crée pas de nouveau référentiel : elle \emph{filtre} les données existantes sur son
+cours. Un atelier reste unique et partagé entre toutes les UC (§6 « objet central »).
+
+\subsection{Profils du §11 et attribution des droits}
+
+\begin{center}
+\begin{tabularx}{\textwidth}{>{\raggedright}p{3.3cm}>{\raggedright}p{4.5cm}X}
+\toprule
+\textbf{Profil} & \textbf{Rôle Moodle et contexte} & \textbf{Qui l'attribue} \\
+\midrule
+Étudiant & Utilisateur authentifié (accueil) + étudiant du cours (activité) &
+Automatique (connexion, inscription au cours). \\
+Enseignant / formateur & \code{teacher} dans le cours de l'UC & Inscription habituelle au
+cours, aucun geste SimHub. \\
+Responsable d'UC & \code{editingteacher} dans le cours de l'UC & Idem ; il ajoute
+lui-même l'activité (\code{moodle/course:manageactivities}). \\
+Gestionnaire de salle & Rôle SimHub attribué \emph{dans la catégorie} & L'administrateur
+fonctionnel. \\
+Administrateur fonctionnel & Rôle SimHub attribué dans la catégorie, avec
+\code{moodle/role:assign} limité à celle-ci & Un administrateur Moodle, une seule fois par
+établissement. \\
+Validateur externe ASV & Aucun compte & Lien ou QR code à jeton. \\
+\bottomrule
+\end{tabularx}
+\end{center}
+
+\noindent\textbf{Réponse à la question initiale :} seule la désignation de
+l'administrateur fonctionnel de chaque école passe encore par un compte administrateur
+Moodle. Tout le reste est délégué : les enseignants par les inscriptions aux cours, les
+gestionnaires de salle par l'administrateur fonctionnel dans sa catégorie.
+
+\subsection{Capacités}
+
+\begin{center}
+\begin{tabularx}{\textwidth}{>{\raggedright}p{6.4cm}>{\raggedright}p{2.6cm}X}
+\toprule
+\textbf{Capacité} & \textbf{Contexte} & \textbf{Archétypes par défaut} \\
+\midrule
+\code{local/simhub:view}, \code{startsession}, \code{submitautoeval} & Catégorie & user \\
+\code{local/simhub:manageateliers}, \code{manageressources}, \code{managestatuts},
+\code{manageqrcodes}, \code{importexport} & Catégorie & manager \\
+\code{local/simhub:manageasv}, \code{configure} & Catégorie & manager \\
+\code{local/simhub:validateasvsimulation} & Catégorie \emph{et} cours & editingteacher,
+teacher \\
+\addlinespace
+\code{mod/simhub:addinstance} & Cours & editingteacher, manager \\
+\code{mod/simhub:view} & Activité & student, teacher, editingteacher \\
+\code{mod/simhub:viewprogression}, \code{validatesession}, \code{exportsuivi} & Activité &
+teacher, editingteacher \\
+\code{mod/simhub:manageparcours}, \code{managerattachement} & Activité & editingteacher \\
+\bottomrule
+\end{tabularx}
+\end{center}
+
+Les capacités \code{local/simhub:viewprogression}, \code{validatesession},
+\code{exportsuivi}, \code{manageparcours} et \code{managerattachement} restent au niveau
+catégorie pour les gestionnaires et l'administrateur fonctionnel (vue transversale).
+
+\subsection{Ce que l'activité apporte en plus}
+\begin{itemize}
+  \item \textbf{Carnet de notes} (§10, §3.1) : \code{grade\_update()} publie l'avancement du
+  parcours de l'UC (en \%, ou validé/non validé) dans le carnet du cours.
+  \item \textbf{Achèvement d'activité} : réutilisable par l'achèvement de cours et les badges
+  de cours Moodle, sans code de badge spécifique.
+  \item \textbf{Groupes} (§10) : le mode de groupe standard de l'activité permet à un
+  encadrant de ne suivre que son groupe de TP.
+  \item \textbf{Sauvegarde / restauration} et réinitialisation annuelle du cours :
+  l'activité suit le cours d'une promotion à l'autre.
+\end{itemize}
+
+\subsection{Migration}
+\begin{enumerate}
+  \item Réglage \code{categoryid} par établissement ; un utilitaire
+  \code{local\_simhub\textbackslash local\textbackslash contexte::racine()} remplace les 51
+  appels à \code{context\_system::instance()}.
+  \item Les rôles SimHub deviennent attribuables au niveau catégorie
+  (\code{set\_role\_contextlevels}). \textbf{Compatibilité :} une attribution système
+  existante reste valable, puisque le système est parent de la catégorie.
+  \item Les rôles « Encadrant SimHub » et « Responsable d'UC SimHub » deviennent inutiles
+  pour l'usage courant ; ils sont conservés pour une vue transversale.
+  \item Une étape de \code{db/upgrade.php} ajoute \code{local\_simhub\_parcours.cmid}
+  (nullable) pour lier un parcours à l'instance d'activité qui l'a créé.
+  \item Nouveau plugin \code{mod/simhub} : \code{mod\_form.php}, \code{lib.php}
+  (\code{simhub\_add\_instance}, \code{supports}, notes), \code{view.php}, sauvegarde.
+\end{enumerate}
+
+\subsection{Points à valider}
+\begin{enumerate}
+  \item \textbf{Une catégorie par établissement} (une par \code{envcode}), ou une catégorie
+  commune aux quatre ENV ?
+  \item Un enseignant peut-il valider une séance réalisée \emph{hors} de son UC par un
+  étudiant de son cours ? (proposition : oui, si l'atelier est rattaché à son UC)
+  \item Le responsable d'UC peut-il éditer la \textbf{grille d'auto-évaluation} d'un atelier
+  rattaché à son UC ? Le §6.2 dit « enseignants ou gestionnaires autorisés » ; aujourd'hui
+  seul le gestionnaire de salle le peut. Risque : une grille partagée modifiée par une UC
+  pour toutes les autres.
+  \item Note publiée au carnet : pourcentage d'avancement, ou simple validé / non validé ?
+  \item Validation ASV en simulation : réservée aux encadrants de cours, ou aussi à des
+  formateurs désignés au niveau catégorie ?
+\end{enumerate}
+
+\section{Audit de conformité au cahier des charges}
+
+Vérification faite dans le code (schéma \code{db/install.xml}, pages, classes), et non à
+partir du seul README. Légende : \OK, \PART, \KO.
+
+\renewcommand{\arraystretch}{1.15}
+\begin{longtable}{>{\raggedright}p{1.3cm}>{\raggedright}p{4.2cm}p{1.95cm}>{\raggedright\arraybackslash}p{7.05cm}}
+\toprule
+\textbf{§} & \textbf{Exigence} & \textbf{État} & \textbf{Constat} \\
+\midrule\endhead
+\bottomrule\endfoot
+4 & Moodle comme socle (rôles, cohortes, groupes, UC) & \PART & Cohortes et cours utilisés ;
+rôles détournés au niveau système ; groupes jamais utilisés. \\
+4 & Paramétrable ENVF & \OK & \code{envcode} sur ateliers, parcours, actes ASV ; logo et nom
+d'établissement. \\
+4 & Mobile d'abord & \PART & Cartes et grille verticale prévues ; pas de test sur écran de
+téléphone documenté. \\
+5.1 & Accueil personnalisé (7 sections) & \OK & Les sept sections sont présentes
+(\code{student\_home\_page.php}). \\
+5.2 & Filtres UC, parcours & \PART & Gérés côté serveur (\code{atelier\_filter.php}, lignes
+120--126) mais \emph{absents du formulaire} de l'accueil. \\
+5.2 & Filtre statut personnel & \KO & Aucun filtre « pas commencé / réalisé / validé / à
+reprendre » ; l'état n'est qu'affiché sur la carte. \\
+5.2 & Filtre statut atelier & \PART & Paramètre \code{statut} accepté, non exposé ; le défaut
+(actifs + indisponibles) est conforme. \\
+5.2 & Discipline, espèce, niveau, durée, année, mot-clé & \OK & Présents dans le formulaire. \\
+5.3 & Carte : « Catégorie » & \KO & Aucun champ catégorie dans
+\code{local\_simhub\_atelier}. \\
+5.3 & Carte : UC associées et niveau attendu & \PART & \code{rattachement.niveauattendu}
+existe ; affichage sur la carte à vérifier. \\
+5.3 & Numéro invariant, boutons localisation / ressources / commencer & \OK & \\
+5.4 & Localisation, plan avec repère cliquable & \OK & \code{atelier\_plan.php}. \\
+5.5, 6.2 & Ressources étudiantes / sources éditables & \OK & Source éditable jamais servie
+à l'étudiant. \\
+5.6, 7.2 & Auto-évaluation 3 niveaux, rubrique risques, auto-bilan & \OK & \\
+6.2 & Grille paramétrable par les enseignants & \PART & Réservée à
+\code{manageateliers} (gestionnaire de salle). Voir point à valider 3. \\
+6 & Fiche : identification, localisation, statut, référent, commentaire & \OK & Nom
+court/long, discipline, espèce, niveau, durée, salle/zone/poste, référent. \\
+6 & Rattachement : UC, année, cohorte, recommandé/obligatoire & \OK & Table
+\code{rattachement} complète. \\
+6.1 & Statuts et indisponibilité (motif, référent, date, échéance) & \OK & Historique
+\code{indispo}. \\
+7 & QR code relié à la fiche, démarrage de séance & \OK & Génération locale, sans service
+tiers. \\
+7.1 & Suivi : étudiant, atelier, date, UC/parcours, statut & \OK & Table \code{session}. \\
+7.1 & Temps passé pour détecter un contournement & \PART & \code{timestart}/\code{timeend}
+enregistrés, mais aucune durée minimale ni signalement des séances anormalement courtes. \\
+7.3 & Code de séance, validation encadrant non bloquante & \OK & \\
+7.3 & Reconnaissance réseau local & \KO & Non implémentée (V1+, dépend de l'infrastructure
+Wi-Fi). \\
+8 & Types de parcours, ordre, obligatoire, échéances & \OK & \\
+8.1 & Suivi enseignant : non commencés, en retard, à reprendre, par cohorte / UC & \PART &
+Présent (\code{dashboard.php}) mais non restreint aux étudiants de l'enseignant ; pas de
+vue par groupe. \\
+9 & Module ASV complet (simulation, animal vivant, livret, A1--A3) & \OK & Ordre imposé,
+signature obligatoire, annulation tracée, certification globale A3. \\
+10 & Rôles : différencier les profils & \PART & Profils distincts, mais au niveau système
+(section 1). \\
+10 & Cours / UC : rattacher aux enseignements & \PART & Rattachement par \code{courseid},
+mais aucune présence de SimHub dans le cours lui-même. \\
+10 & Cohortes et groupes & \PART & Cohortes oui, groupes non. \\
+10 & Carnet de notes & \KO & Aucun appel à l'API des notes. \\
+10 & Badges / attestations & \OK & Badges de site existants, attestations PDF. \\
+11 & Enseignant : \emph{ses} enseignements & \KO & Droits globaux, attribués par un
+administrateur. \\
+12.1 & Import souple (ateliers, rattachements, parcours) & \PART & CSV avec alias de
+colonnes ; pas d'import XLSX ; import des salles/zones et des ressources non couvert en tant
+que tel. \\
+12.2 & Tableaux de bord étudiant, enseignant, salle, ASV & \OK & \\
+12.3 & Exports CSV, XLSX, PDF & \PART & CSV et PDF ; \textbf{XLSX absent} alors que
+l'API \code{dataformat} de Moodle le fournit. \\
+12.3 & Exports par étudiant, UC, parcours, cohorte & \PART & Par parcours et liste des
+ateliers ; pas d'export direct par UC ni par cohorte. \\
+14 & Hors périmètre respecté & \OK & Pas de ticketing, OSCE ni signature qualifiée. \\
+\end{longtable}
+
+\noindent\textbf{Remarque mineure :} \code{version.php} indique encore « non testé sur
+instance réelle », alors que le README documente des essais sur Moodle~4.5 et~5.0.
+
+\section{Plan de travail proposé}
+
+\begin{center}
+\begin{tabularx}{\textwidth}{>{\raggedright}p{0.6cm}>{\raggedright}p{7.2cm}>{\raggedright}p{2cm}X}
+\toprule
+\textbf{N°} & \textbf{Lot} & \textbf{Phase} & \textbf{Dépend de} \\
+\midrule
+1 & Contexte catégorie : réglage, utilitaire de contexte, rôles attribuables en catégorie &
+V1 & Validation point 1 \\
+2 & Activité \code{mod\_simhub} : ajout au cours, parcours et rattachements de l'UC, suivi des
+inscrits & V1 & Lot 1 \\
+3 & Carnet de notes et achèvement de l'activité & V1 & Lot 2, point 4 \\
+4 & Filtres UC, parcours et statut personnel sur l'accueil ; champ catégorie & V1 & -- \\
+5 & Signalement des séances trop courtes (durée minimale paramétrable) & V1+ & -- \\
+6 & Export XLSX via \code{dataformat} ; exports par UC et par cohorte & V1 & -- \\
+7 & Groupes dans le suivi enseignant & V1 & Lot 2 \\
+8 & Reconnaissance réseau local & V1+ & Infrastructure des ENV \\
+\bottomrule
+\end{tabularx}
+\end{center}
+
+\end{document}
