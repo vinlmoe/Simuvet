@@ -54,20 +54,20 @@ if ($action === 'annulersim' || $action === 'annuleranimal') {
     }
     $validation = $DB->get_record($table, ['id' => $id, 'userid' => $userid, 'statut' => 'valide'], '*', MUST_EXIST);
 
-    if (optional_param('confirmer', 0, PARAM_BOOL)) {
-        require_sesskey();
-        $motif = trim(optional_param('motif', '', PARAM_TEXT));
-        if ($motif === '') {
-            redirect(
-                new moodle_url($url, ['action' => $action, 'id' => $id]),
-                get_string('asv_motif_obligatoire', 'local_simhub'),
-                null,
-                \core\output\notification::NOTIFY_ERROR
-            );
-        }
+    $form = new \local_simhub\form\formulaire(new moodle_url($url, ['action' => $action, 'id' => $id]), [
+        'champs' => [
+            ['textarea', 'motif', get_string('asv_motif', 'local_simhub'), ['requis' => true,
+                'attributs' => ['rows' => 2, 'cols' => 50]]],
+        ],
+        'bouton' => get_string('asv_confirmer', 'local_simhub'),
+        'annuler' => true,
+    ]);
+    if ($form->is_cancelled()) {
+        redirect($url);
+    } else if (($data = $form->get_data()) && trim($data->motif) !== '') {
         $motif = get_string('asv_annule_par', 'local_simhub', (object) [
             'nom' => fullname($USER), 'date' => userdate(time(), get_string('strftimedatefullshort', 'langconfig')),
-            'motif' => $motif,
+            'motif' => trim($data->motif),
         ]);
         if ($action === 'annulersim') {
             asv_valsim::annuler($id, $motif);
@@ -84,20 +84,7 @@ if ($action === 'annulersim' || $action === 'annuleranimal') {
         'acte' => s($acte->get('nom')), 'etudiant' => s(fullname($user)),
     ]), \core\output\notification::NOTIFY_WARNING);
 
-    echo html_writer::start_tag('form', ['method' => 'post', 'action' => $url->out(false)]);
-    foreach (['sesskey' => sesskey(), 'action' => $action, 'id' => $id, 'confirmer' => 1] as $name => $value) {
-        echo html_writer::empty_tag('input', ['type' => 'hidden', 'name' => $name, 'value' => $value]);
-    }
-    echo html_writer::tag('label', get_string('asv_motif', 'local_simhub'), ['for' => 'id_motif']);
-    echo html_writer::tag('textarea', '', ['name' => 'motif', 'id' => 'id_motif', 'class' => 'form-control mb-2',
-        'required' => 'required', 'rows' => 2]);
-    echo html_writer::tag(
-        'button',
-        get_string('asv_confirmer', 'local_simhub'),
-        ['type' => 'submit', 'class' => 'btn btn-danger mr-2 me-2'],
-    );
-    echo html_writer::link($url, get_string('cancel'), ['class' => 'btn btn-secondary']);
-    echo html_writer::end_tag('form');
+    $form->display();
     echo $OUTPUT->footer();
     exit;
 }

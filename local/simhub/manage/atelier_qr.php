@@ -80,14 +80,10 @@ echo html_writer::link('#', get_string('qr_telecharger', 'local_simhub'), [
     'id' => 'local-simhub-qr-telecharger', 'class' => 'btn btn-outline-secondary',
 ]);
 
-echo html_writer::start_tag('form', ['method' => 'post', 'class' => 'mt-3']);
-echo html_writer::empty_tag('input', ['type' => 'hidden', 'name' => 'sesskey', 'value' => sesskey()]);
-echo html_writer::empty_tag('input', ['type' => 'hidden', 'name' => 'id', 'value' => $id]);
-echo html_writer::empty_tag('input', ['type' => 'hidden', 'name' => 'action', 'value' => 'regenerer']);
-echo html_writer::tag('button', get_string('qr_regenerer', 'local_simhub'), [
-    'type' => 'submit', 'class' => 'btn btn-outline-danger',
-]);
-echo html_writer::end_tag('form');
+echo $OUTPUT->single_button(
+    new moodle_url('/local/simhub/manage/atelier_qr.php', ['id' => $id, 'action' => 'regenerer']),
+    get_string('qr_regenerer', 'local_simhub')
+);
 
 // Génération et rendu de l'image QR intégralement côté navigateur : aucune donnée n'est
 // envoyée à un service externe, aucune dépendance réseau au moment de l'impression.

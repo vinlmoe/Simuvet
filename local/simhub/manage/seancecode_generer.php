@@ -38,15 +38,22 @@ require_capability('local/simhub:validatesession', $context);
 $pageurl = new moodle_url('/local/simhub/manage/seancecode_generer.php');
 \local_simhub\local\navigation::preparer($PAGE, $pageurl, get_string('seancecode_generer', 'local_simhub'));
 
-$submitted = optional_param('submit', 0, PARAM_BOOL);
+$salles = $DB->get_fieldset_sql(
+    "SELECT DISTINCT salle FROM {local_simhub_atelier} WHERE salle IS NOT NULL AND salle <> '' ORDER BY salle"
+);
+$form = new \local_simhub\form\formulaire($pageurl, [
+    'champs' => [
+        $salles
+            ? ['select', 'salle', get_string('seancecode_champ_salle', 'local_simhub'), [
+                'choix' => array_combine($salles, $salles),
+            ]]
+            : ['text', 'salle', get_string('seancecode_champ_salle', 'local_simhub'), ['requis' => true]],
+    ],
+    'bouton' => get_string('seancecode_generer', 'local_simhub'),
+]);
 $genere = null;
-
-if ($submitted) {
-    require_sesskey();
-    $salle = required_param('salle', PARAM_TEXT);
-    if ($salle !== '') {
-        $genere = seancecode::generer($salle, $USER->id);
-    }
+if (($data = $form->get_data()) && trim($data->salle) !== '') {
+    $genere = seancecode::generer(trim($data->salle), $USER->id);
 }
 
 echo $OUTPUT->header();
@@ -64,31 +71,6 @@ if ($genere) {
     ));
 }
 
-global $DB;
-$salles = $DB->get_records_sql(
-    "SELECT DISTINCT salle FROM {local_simhub_atelier} WHERE salle IS NOT NULL AND salle <> '' ORDER BY salle"
-);
-
-echo html_writer::start_tag('form', ['method' => 'post']);
-echo html_writer::empty_tag('input', ['type' => 'hidden', 'name' => 'sesskey', 'value' => sesskey()]);
-echo html_writer::empty_tag('input', ['type' => 'hidden', 'name' => 'submit', 'value' => 1]);
-
-echo html_writer::start_div('form-group');
-echo html_writer::tag('label', get_string('seancecode_champ_salle', 'local_simhub'));
-if (!empty($salles)) {
-    echo html_writer::start_tag('select', ['name' => 'salle', 'class' => 'form-control d-inline-block w-auto']);
-    foreach ($salles as $s) {
-        echo html_writer::tag('option', s($s->salle), ['value' => s($s->salle)]);
-    }
-    echo html_writer::end_tag('select');
-} else {
-    echo html_writer::empty_tag('input', ['type' => 'text', 'name' => 'salle', 'class' => 'form-control d-inline-block w-auto']);
-}
-echo html_writer::end_div();
-
-echo html_writer::tag('button', get_string('seancecode_generer', 'local_simhub'), [
-    'type' => 'submit', 'class' => 'btn btn-primary',
-]);
-echo html_writer::end_tag('form');
+$form->display();
 
 echo $OUTPUT->footer();

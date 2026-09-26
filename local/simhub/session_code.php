@@ -58,14 +58,23 @@ if (\local_simhub\local\reseau::dans_la_salle()) {
     );
 }
 
-$submitted = optional_param('submit', 0, PARAM_BOOL);
-$sanscode = optional_param('sanscode', '', PARAM_RAW) !== '';
+$form = new \local_simhub\form\formulaire($pageurl, [
+    'champs' => [
+        ['text', 'code', get_string('seancecode_champ', 'local_simhub'), [
+            'type' => PARAM_ALPHANUMEXT, 'attributs' => ['autocomplete' => 'off', 'size' => 10, 'autofocus' => 'autofocus'],
+        ]],
+    ],
+    'caches' => ['atelierid' => $atelierid],
+    'boutons' => [
+        'validercode' => get_string('seancecode_valider', 'local_simhub'),
+        'sanscode' => get_string('seancecode_pasdecode', 'local_simhub'),
+    ],
+]);
 $erreur = false;
 
-if ($submitted) {
-    require_sesskey();
-
-    if ($sanscode) {
+if ($data = $form->get_data()) {
+    // Jamais bloquant (§7.3) : sans code, la séance démarre, marquée non vérifiée.
+    if (!empty($data->sanscode)) {
         session::demarrer_ou_reprendre($USER->id, $atelierid, [
             'methodescan' => 'qr',
             'controlepresence' => 'non_verifie',
@@ -77,9 +86,7 @@ if ($submitted) {
             \core\output\notification::NOTIFY_INFO
         );
     }
-
-    $code = required_param('code', PARAM_ALPHANUMEXT);
-    if (seancecode::est_valide($atelier->get('salle'), $code)) {
+    if ($data->code !== '' && seancecode::est_valide($atelier->get('salle'), core_text::strtoupper($data->code))) {
         session::demarrer_ou_reprendre($USER->id, $atelierid, [
             'methodescan' => 'qr',
             'controlepresence' => 'code_seance',
@@ -91,7 +98,6 @@ if ($submitted) {
             \core\output\notification::NOTIFY_SUCCESS
         );
     }
-
     $erreur = true;
 }
 
@@ -104,27 +110,6 @@ if ($erreur) {
     echo $OUTPUT->notification(get_string('seancecode_invalide', 'local_simhub'), \core\output\notification::NOTIFY_ERROR);
 }
 
-echo html_writer::start_tag('form', ['method' => 'post']);
-echo html_writer::empty_tag('input', ['type' => 'hidden', 'name' => 'sesskey', 'value' => sesskey()]);
-echo html_writer::empty_tag('input', ['type' => 'hidden', 'name' => 'atelierid', 'value' => $atelierid]);
-echo html_writer::empty_tag('input', ['type' => 'hidden', 'name' => 'submit', 'value' => 1]);
-
-echo html_writer::start_div('form-group');
-echo html_writer::tag('label', get_string('seancecode_champ', 'local_simhub'));
-echo html_writer::empty_tag('input', [
-    'type' => 'text', 'name' => 'code', 'class' => 'form-control', 'autocomplete' => 'off',
-    'style' => 'text-transform:uppercase;max-width:200px;', 'autofocus' => 'autofocus',
-]);
-echo html_writer::end_div();
-
-echo html_writer::empty_tag('input', [
-    'type' => 'submit', 'name' => 'validercode', 'value' => get_string('seancecode_valider', 'local_simhub'),
-    'class' => 'btn btn-primary mr-2',
-]);
-echo html_writer::empty_tag('input', [
-    'type' => 'submit', 'name' => 'sanscode', 'value' => get_string('seancecode_pasdecode', 'local_simhub'),
-    'class' => 'btn btn-outline-secondary',
-]);
-echo html_writer::end_tag('form');
+$form->display();
 
 echo $OUTPUT->footer();

@@ -41,57 +41,82 @@ $title = $id ? get_string('edit') : get_string('asv_acte_nouveau', 'local_simhub
     [get_string('asv_gerer_actes', 'local_simhub'), new moodle_url('/local/simhub/manage/asv_actes.php')],
 ]);
 
-$action = optional_param('action', '', PARAM_ALPHANUMEXT);
-if ($id && $action === 'lier_atelier') {
-    require_sesskey();
-    $atelierid = required_param('atelierid', PARAM_INT);
-    acte_atelier::lier($id, $atelierid);
+$pageurl = new moodle_url('/local/simhub/manage/asv_acte_edit.php', ['id' => $id]);
+$niveaux = [
+    'A1' => get_string('asv_niveau_a1', 'local_simhub'),
+    'A2' => get_string('asv_niveau_a2', 'local_simhub'),
+    'A3' => get_string('asv_niveau_a3', 'local_simhub'),
+];
+$form = new \local_simhub\form\formulaire($pageurl, [
+    'id' => 'acte',
+    'champs' => [
+        ['text', 'code', get_string('asv_champ_code', 'local_simhub'), ['type' => PARAM_ALPHANUMEXT, 'requis' => true,
+            'defaut' => $id ? $acte->get('code') : '']],
+        ['text', 'nom', get_string('champ_nomcourt', 'local_simhub'), ['requis' => true, 'defaut' => $id ? $acte->get('nom') : '',
+            'attributs' => ['size' => 50]]],
+        ['text', 'espece', get_string('champ_espece', 'local_simhub'), ['defaut' => $id ? (string) $acte->get('espece') : '']],
+        ['autocomplete', 'ucid', get_string('asv_champ_ucid', 'local_simhub'), [
+            'choix' => \local_simhub\local\selecteurs::options_cours(), 'type' => PARAM_INT,
+            'defaut' => $id ? (int) $acte->get('ucid') : 0,
+        ]],
+        ['select', 'niveau', get_string('asv_champ_niveau', 'local_simhub'), ['choix' => $niveaux, 'type' => PARAM_ALPHANUM,
+            'defaut' => $id ? $acte->get('niveau') : 'A1']],
+        ['advcheckbox', 'actif', get_string('ae_champ_actif', 'local_simhub'), ['type' => PARAM_BOOL,
+            'defaut' => (!$id || $acte->get('actif')) ? 1 : 0]],
+    ],
+]);
 
-    redirect(new moodle_url('/local/simhub/manage/asv_acte_edit.php', ['id' => $id]));
-} else if ($id && $action === 'delier_atelier') {
-    require_sesskey();
-    $atelierid = required_param('atelierid', PARAM_INT);
-    acte_atelier::delier($id, $atelierid);
+$lies = $id ? acte_atelier::get_ateliers_pour_acte($id) : [];
+$lieids = array_map(fn($a) => (int) $a->id, $lies);
+$disponibles = [];
+foreach (atelier::get_records([], 'numero') as $a) {
+    if (!in_array((int) $a->get('id'), $lieids, true)) {
+        $disponibles[$a->get('id')] = $a->get('numero') . ' — ' . $a->get('nomcourt');
+    }
+}
+$formlien = $id && $disponibles ? new \local_simhub\form\formulaire($pageurl, [
+    'id' => 'lien',
+    'champs' => [['autocomplete', 'atelierid', get_string('atelier', 'local_simhub'), [
+        'choix' => $disponibles, 'type' => PARAM_INT, 'requis' => true,
+    ]]],
+    'bouton' => get_string('asv_lier_atelier', 'local_simhub'),
+]) : null;
 
-    redirect(new moodle_url('/local/simhub/manage/asv_acte_edit.php', ['id' => $id]));
+if ($formlien && ($data = $formlien->get_data()) && isset($disponibles[$data->atelierid])) {
+    acte_atelier::lier($id, (int) $data->atelierid);
+    redirect($pageurl);
+}
+if ($id && optional_param('action', '', PARAM_ALPHANUMEXT) === 'delier_atelier') {
+    require_sesskey();
+    acte_atelier::delier($id, required_param('atelierid', PARAM_INT));
+    redirect($pageurl);
 }
 
-$submitted = optional_param('submit', 0, PARAM_BOOL);
-if ($submitted) {
-    require_sesskey();
-
-    $code = required_param('code', PARAM_ALPHANUMEXT);
-    $nom = required_param('nom', PARAM_TEXT);
-    $espece = optional_param('espece', '', PARAM_TEXT);
-    $niveau = required_param('niveau', PARAM_ALPHANUM);
-    $ucid = optional_param('ucid', 0, PARAM_INT);
+if ($data = $form->get_data()) {
     // Traçabilité seulement : le code de l'école est conservé, ou pris dans les réglages.
     $envcode = $id ? (string) $acte->get('envcode') : (get_config('local_simhub', 'envcode') ?: '');
-    $actif = optional_param('actif', 0, PARAM_BOOL);
-
     $doublon = $DB->get_field_select(
         'local_simhub_asv_acte',
         'id',
         'envcode = :envcode AND code = :code AND id <> :id',
-        ['envcode' => $envcode, 'code' => $code, 'id' => $id]
+        ['envcode' => $envcode, 'code' => $data->code, 'id' => $id]
     );
     if ($doublon) {
         redirect(
-            $PAGE->url,
-            get_string('asv_code_existe', 'local_simhub', s($code)),
+            $pageurl,
+            get_string('asv_code_existe', 'local_simhub', s($data->code)),
             null,
             \core\output\notification::NOTIFY_ERROR
         );
     }
 
-    $acte->set('code', $code);
-    $acte->set('nom', $nom);
-    $acte->set('espece', $espece ?: null);
-    $acte->set('niveau', $niveau);
-    $acte->set('ucid', $ucid ?: null);
+    $acte->set('code', $data->code);
+    $acte->set('nom', $data->nom);
+    $acte->set('espece', $data->espece ?: null);
+    $acte->set('niveau', isset($niveaux[$data->niveau]) ? $data->niveau : 'A1');
+    $acte->set('ucid', ($data->ucid ?? 0) ?: null);
     $acte->set('envcode', $envcode);
-    $acte->set('actif', $actif ? 1 : 0);
-
+    $acte->set('actif', $data->actif ? 1 : 0);
     if ($acte->get('id')) {
         $acte->update();
     } else {
@@ -109,63 +134,7 @@ if ($submitted) {
 echo $OUTPUT->header();
 echo \local_simhub\local\navigation::barre();
 
-echo html_writer::start_tag('form', ['method' => 'post']);
-echo html_writer::empty_tag('input', ['type' => 'hidden', 'name' => 'sesskey', 'value' => sesskey()]);
-echo html_writer::empty_tag('input', ['type' => 'hidden', 'name' => 'id', 'value' => $id]);
-echo html_writer::empty_tag('input', ['type' => 'hidden', 'name' => 'submit', 'value' => 1]);
-
-$champs = [
-    'code' => [get_string('asv_champ_code', 'local_simhub'), 'text', true],
-    'nom' => [get_string('champ_nomcourt', 'local_simhub'), 'text', true],
-    'espece' => [get_string('champ_espece', 'local_simhub'), 'text', false],
-];
-
-foreach ($champs as $name => [$label, $type, $required]) {
-    echo html_writer::start_div('form-group');
-    echo html_writer::tag('label', $label, ['for' => 'id_' . $name]);
-    $attrs = [
-        'type' => $type, 'name' => $name, 'id' => 'id_' . $name, 'class' => 'form-control d-inline-block w-auto ml-2',
-        'value' => $id ? s($acte->get($name)) : '',
-    ];
-    if ($required) {
-        $attrs['required'] = 'required';
-    }
-    echo html_writer::empty_tag('input', $attrs);
-    echo html_writer::end_div();
-}
-
-echo html_writer::start_div('form-group');
-echo html_writer::tag('label', get_string('asv_champ_ucid', 'local_simhub'), ['for' => 'id_ucid']);
-echo \local_simhub\local\selecteurs::cours('ucid', $id ? (int) $acte->get('ucid') : 0, 'id_ucid');
-echo html_writer::end_div();
-
-echo html_writer::start_div('form-group');
-echo html_writer::tag('label', get_string('asv_champ_niveau', 'local_simhub'), ['for' => 'id_niveau']);
-echo html_writer::select(
-    [
-        'A1' => get_string('asv_niveau_a1', 'local_simhub'),
-        'A2' => get_string('asv_niveau_a2', 'local_simhub'),
-        'A3' => get_string('asv_niveau_a3', 'local_simhub'),
-    ],
-    'niveau',
-    $id ? $acte->get('niveau') : 'A1',
-    false,
-    ['id' => 'id_niveau', 'class' => 'form-control d-inline-block w-auto ml-2']
-);
-echo html_writer::end_div();
-
-echo html_writer::start_tag('label', ['class' => 'mr-2']);
-echo html_writer::empty_tag('input', array_merge(
-    ['type' => 'checkbox', 'name' => 'actif', 'value' => 1],
-    (!$id || $acte->get('actif')) ? ['checked' => 'checked'] : []
-));
-echo ' ' . get_string('ae_champ_actif', 'local_simhub');
-echo html_writer::end_tag('label');
-
-echo html_writer::tag('div', html_writer::tag('button', get_string('savechanges'), [
-    'type' => 'submit', 'class' => 'btn btn-primary',
-]), ['class' => 'mt-3']);
-echo html_writer::end_tag('form');
+$form->display();
 
 if ($id) {
     // Ateliers de simulation où cet acte se pratique (§9.2) : une fois liés, ils
@@ -173,7 +142,6 @@ if ($id) {
     // depuis cet atelier, au lieu de faire choisir dans tout le référentiel.
     echo html_writer::tag('h4', get_string('asv_ateliers_lies', 'local_simhub'), ['class' => 'mt-4']);
 
-    $lies = acte_atelier::get_ateliers_pour_acte($id);
     if (!empty($lies)) {
         echo html_writer::start_tag('ul');
         foreach ($lies as $atelierlie) {
@@ -186,25 +154,8 @@ if ($id) {
         echo html_writer::end_tag('ul');
     }
 
-    $lieids = array_map(fn($a) => $a->id, $lies);
-    $disponibles = array_filter(atelier::get_records([], 'nomcourt'), fn($a) => !in_array($a->get('id'), $lieids, true));
-
-    if (!empty($disponibles)) {
-        echo html_writer::start_tag('form', ['method' => 'post', 'class' => 'form-inline']);
-        echo html_writer::empty_tag('input', ['type' => 'hidden', 'name' => 'sesskey', 'value' => sesskey()]);
-        echo html_writer::empty_tag('input', ['type' => 'hidden', 'name' => 'id', 'value' => $id]);
-        echo html_writer::empty_tag('input', ['type' => 'hidden', 'name' => 'action', 'value' => 'lier_atelier']);
-        echo html_writer::start_tag('select', ['name' => 'atelierid', 'class' => 'form-control mr-2']);
-        foreach ($disponibles as $atelierdispo) {
-            echo html_writer::tag('option', s($atelierdispo->get('numero')) . ' — ' . s($atelierdispo->get('nomcourt')), [
-                'value' => $atelierdispo->get('id'),
-            ]);
-        }
-        echo html_writer::end_tag('select');
-        echo html_writer::tag('button', get_string('asv_lier_atelier', 'local_simhub'), [
-            'type' => 'submit', 'class' => 'btn btn-outline-primary',
-        ]);
-        echo html_writer::end_tag('form');
+    if ($formlien) {
+        $formlien->display();
     }
 }
 

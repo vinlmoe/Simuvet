@@ -71,28 +71,57 @@ foreach (!empty($actesatelier) ? $actesatelier : $actesreferentiel as $acte) {
         : ['id' => $acte->id, 'nom' => $acte->nom, 'niveau' => $acte->niveau];
 }
 
-$submitted = optional_param('submit', 0, PARAM_BOOL);
+$choixactes = [];
+foreach ($actes as $acte) {
+    $choixactes[$acte['id']] = $acte['nom'] . ' (' . $acte['niveau'] . ')';
+}
+$choixetudiants = \local_simhub\local\selecteurs::options_etudiants($transversal ? null : fn(int $uid) => isset($autorises[$uid]));
+$form = new \local_simhub\form\formulaire($PAGE->url, [
+    'champs' => array_merge(
+        [['autocomplete', 'userid', get_string('etudiant', 'local_simhub'), [
+            'choix' => $choixetudiants, 'type' => PARAM_INT, 'requis' => true, 'defaut' => $preselection ?: '',
+        ]]],
+        $atelierid && empty($actesatelier)
+            ? [['static', 'aucunacte', '', ['texte' => get_string('asv_aucun_acte_lie', 'local_simhub')]]] : [],
+        [
+            ['select', 'acteid', get_string('asv_acte', 'local_simhub'), ['choix' => $choixactes, 'type' => PARAM_INT,
+                'requis' => true]],
+            ['autocomplete', 'atelierid', get_string('asv_atelier_associe', 'local_simhub'), [
+                'choix' => \local_simhub\local\selecteurs::options_ateliers(), 'type' => PARAM_INT, 'defaut' => $atelierid,
+            ]],
+            ['select', 'resultat', get_string('asv_resultat', 'local_simhub'), [
+                'choix' => [
+                    asv_valsim::STATUT_VALIDE => get_string('asv_resultat_valide', 'local_simhub'),
+                    asv_valsim::STATUT_NON_VALIDE => get_string('asv_resultat_non_valide', 'local_simhub'),
+                ],
+                'type' => PARAM_ALPHANUMEXT,
+            ]],
+            ['textarea', 'commentaire', get_string('asv_commentaire', 'local_simhub'), [
+                'attributs' => ['rows' => 2, 'cols' => 50],
+            ]],
+        ]
+    ),
+    'bouton' => get_string('asv_enregistrer_decision', 'local_simhub'),
+]);
 
-if ($submitted) {
-    require_sesskey();
-
-    $userid = required_param('userid', PARAM_INT);
-    $acteid = required_param('acteid', PARAM_INT);
-    $atelierid = optional_param('atelierid', 0, PARAM_INT);
-
+if ($data = $form->get_data()) {
+    $userid = (int) $data->userid;
+    $acteid = (int) $data->acteid;
+    if (!isset($choixactes[$acteid])) {
+        throw new moodle_exception('invalidrecord', 'error', '', 'local_simhub_asv_acte');
+    }
     core_user::require_active_user(core_user::get_user($userid, '*', MUST_EXIST));
     if (!\local_simhub\local\droits::peut_valider_asv($userid)) {
         throw new required_capability_exception($context, 'local/simhub:validateasvsimulation', 'nopermissions', '');
     }
 
     $extra = [];
-    if ($atelierid) {
-        $extra['atelierid'] = $atelierid;
+    if (!empty($data->atelierid)) {
+        $extra['atelierid'] = (int) $data->atelierid;
     }
-
-    $resultat = optional_param('resultat', asv_valsim::STATUT_VALIDE, PARAM_ALPHAEXT);
-    $extra['statut'] = $resultat === asv_valsim::STATUT_NON_VALIDE ? asv_valsim::STATUT_NON_VALIDE : asv_valsim::STATUT_VALIDE;
-    $commentaire = trim(optional_param('commentaire', '', PARAM_TEXT));
+    $extra['statut'] = $data->resultat === asv_valsim::STATUT_NON_VALIDE
+        ? asv_valsim::STATUT_NON_VALIDE : asv_valsim::STATUT_VALIDE;
+    $commentaire = trim($data->commentaire ?? '');
     if ($commentaire !== '') {
         $extra['commentaire'] = $commentaire;
     }
@@ -117,53 +146,6 @@ if ($submitted) {
 echo $OUTPUT->header();
 echo \local_simhub\local\navigation::barre();
 
-echo html_writer::start_tag('form', ['method' => 'post']);
-echo html_writer::empty_tag('input', ['type' => 'hidden', 'name' => 'sesskey', 'value' => sesskey()]);
-echo html_writer::empty_tag('input', ['type' => 'hidden', 'name' => 'submit', 'value' => 1]);
-
-echo html_writer::start_div('form-group');
-echo html_writer::tag('label', get_string('etudiant', 'local_simhub'), ['for' => 'id_userid']);
-echo \local_simhub\local\selecteurs::etudiants(
-    'userid',
-    $preselection,
-    'id_userid',
-    $transversal ? null : fn(int $uid) => isset($autorises[$uid])
-);
-echo html_writer::end_div();
-
-echo html_writer::start_div('form-group');
-echo html_writer::tag('label', get_string('asv_acte', 'local_simhub'));
-if ($atelierid && empty($actesatelier)) {
-    echo html_writer::div(get_string('asv_aucun_acte_lie', 'local_simhub'), 'text-muted small mb-1');
-}
-echo html_writer::start_tag('select', ['name' => 'acteid', 'class' => 'form-control']);
-foreach ($actes as $acte) {
-    echo html_writer::tag('option', s($acte['nom']) . ' (' . s($acte['niveau']) . ')', ['value' => $acte['id']]);
-}
-echo html_writer::end_tag('select');
-echo html_writer::end_div();
-
-echo html_writer::start_div('form-group');
-echo html_writer::tag('label', get_string('asv_atelier_associe', 'local_simhub'), ['for' => 'id_atelierid']);
-echo \local_simhub\local\selecteurs::ateliers('atelierid', $atelierid, 'id_atelierid');
-echo html_writer::end_div();
-
-echo html_writer::start_div('form-group');
-echo html_writer::tag('label', get_string('asv_resultat', 'local_simhub'), ['for' => 'id_resultat']);
-echo html_writer::select([
-    asv_valsim::STATUT_VALIDE => get_string('asv_resultat_valide', 'local_simhub'),
-    asv_valsim::STATUT_NON_VALIDE => get_string('asv_resultat_non_valide', 'local_simhub'),
-], 'resultat', asv_valsim::STATUT_VALIDE, false, ['id' => 'id_resultat', 'class' => 'form-control']);
-echo html_writer::end_div();
-
-echo html_writer::start_div('form-group');
-echo html_writer::tag('label', get_string('asv_commentaire', 'local_simhub'), ['for' => 'id_commentaire']);
-echo html_writer::tag('textarea', '', ['name' => 'commentaire', 'id' => 'id_commentaire', 'class' => 'form-control', 'rows' => 2]);
-echo html_writer::end_div();
-
-echo html_writer::tag('button', get_string('asv_enregistrer_decision', 'local_simhub'), [
-    'type' => 'submit', 'class' => 'btn btn-primary',
-]);
-echo html_writer::end_tag('form');
+$form->display();
 
 echo $OUTPUT->footer();

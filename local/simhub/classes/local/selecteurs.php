@@ -38,6 +38,15 @@ class selecteurs {
      * @return string HTML
      */
     public static function cours(string $name, int $selection, string $id): string {
+        return self::select(self::options_cours(), $name, $selection, $id);
+    }
+
+    /**
+     * Cours du site (UC), pour une liste de choix.
+     *
+     * @return array id => nom, précédé de « aucune UC » (0).
+     */
+    public static function options_cours(): array {
         global $DB;
 
         $options = [0 => get_string('aucune_uc', 'local_simhub')];
@@ -45,7 +54,7 @@ class selecteurs {
         foreach ($cours as $courseid => $fullname) {
             $options[$courseid] = format_string($fullname);
         }
-        return self::select($options, $name, $selection, $id);
+        return $options;
     }
 
     /**
@@ -58,6 +67,16 @@ class selecteurs {
      * @return string HTML
      */
     public static function etudiants(string $name, int $selection, string $id, ?callable $filtre = null): string {
+        return self::select(self::options_etudiants($filtre), $name, $selection, $id, true);
+    }
+
+    /**
+     * Utilisateurs actifs, pour une liste de choix.
+     *
+     * @param callable|null $filtre fn(int $userid): bool
+     * @return array id => « Nom (identifiant) », précédé d'un choix vide.
+     */
+    public static function options_etudiants(?callable $filtre = null): array {
         global $DB, $CFG;
 
         $options = ['' => get_string('choisir_etudiant', 'local_simhub')];
@@ -74,7 +93,7 @@ class selecteurs {
             }
             $options[$user->id] = fullname($user) . ' (' . $user->username . ')';
         }
-        return self::select($options, $name, $selection, $id, true);
+        return $options;
     }
 
     /**
@@ -86,11 +105,20 @@ class selecteurs {
      * @return string HTML
      */
     public static function ateliers(string $name, int $selection, string $id): string {
+        return self::select(self::options_ateliers(), $name, $selection, $id);
+    }
+
+    /**
+     * Ateliers, pour une liste de choix.
+     *
+     * @return array id => « numéro — nom », précédé de « aucun » (0).
+     */
+    public static function options_ateliers(): array {
         $options = [0 => get_string('atelier_aucun_choix', 'local_simhub')];
         foreach (\local_simhub\persistent\atelier::get_records([], 'numero') as $atelier) {
             $options[$atelier->get('id')] = $atelier->get('numero') . ' — ' . $atelier->get('nomcourt');
         }
-        return self::select($options, $name, $selection, $id);
+        return $options;
     }
 
     /**

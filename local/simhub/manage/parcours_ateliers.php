@@ -52,17 +52,42 @@ if (!\local_simhub\local\droits::peut_gerer_parcours($parcours)) {
 
 $action = optional_param('action', '', PARAM_ALPHA);
 
-if ($action === 'ajouter') {
-    require_sesskey();
-    $atelierid = required_param('atelierid', PARAM_INT);
-    $ordre = optional_param('ordre', 0, PARAM_INT);
-    $obligatoire = optional_param('obligatoire', 0, PARAM_BOOL);
-    $echeancedate = optional_param('echeance', '', PARAM_TEXT);
-    $echeance = $echeancedate !== '' ? strtotime($echeancedate) : 0;
+$composition = $parcours->get_ateliers();
+$dejadans = array_map('intval', array_column($composition, 'atelierid'));
+$choix = [];
+foreach (atelier::get_records([], 'numero') as $atelier) {
+    if (!in_array((int) $atelier->get('id'), $dejadans, true)) {
+        $choix[$atelier->get('id')] = $atelier->get('numero') . ' — ' . $atelier->get('nomcourt');
+    }
+}
+$pageurl = new moodle_url('/local/simhub/manage/parcours_ateliers.php', ['parcoursid' => $parcoursid]);
+$form = new \local_simhub\form\formulaire($pageurl, [
+    'champs' => [
+        ['autocomplete', 'atelierid', get_string('atelier', 'local_simhub'), [
+            'choix' => $choix, 'type' => PARAM_INT, 'requis' => true,
+        ]],
+        ['text', 'ordre', get_string('ordre', 'local_simhub'), ['type' => PARAM_INT, 'defaut' => count($composition) + 1,
+            'attributs' => ['size' => 4]]],
+        ['date_selector', 'echeance', get_string('echeance_optionnel', 'local_simhub'), [
+            'type' => PARAM_INT, 'attributs' => ['optional' => true],
+        ]],
+        ['advcheckbox', 'obligatoire', get_string('champ_obligatoire', 'local_simhub'), ['type' => PARAM_BOOL]],
+    ],
+    'caches' => ['parcoursid' => $parcoursid],
+    'bouton' => get_string('add'),
+]);
 
-    \local_simhub\local\parcours_helper::ajouter_atelier($parcours, $atelierid, $ordre, (bool) $obligatoire, $echeance ?: null);
-
-    redirect(new moodle_url('/local/simhub/manage/parcours_ateliers.php', ['parcoursid' => $parcoursid]));
+if ($data = $form->get_data()) {
+    if (isset($choix[$data->atelierid])) {
+        \local_simhub\local\parcours_helper::ajouter_atelier(
+            $parcours,
+            (int) $data->atelierid,
+            (int) $data->ordre,
+            (bool) $data->obligatoire,
+            $data->echeance ?: null
+        );
+    }
+    redirect($pageurl);
 } else if ($action === 'retirer') {
     require_sesskey();
     $atelierid = required_param('atelierid', PARAM_INT);
@@ -77,7 +102,6 @@ echo \local_simhub\local\navigation::barre();
 
 echo html_writer::tag('h3', get_string('parcours_ateliers_titre', 'local_simhub'));
 
-$composition = $parcours->get_ateliers();
 
 $table = new html_table();
 $table->head = [
@@ -104,41 +128,6 @@ echo html_writer::table($table);
 
 echo html_writer::tag('h3', get_string('parcours_ajouter_atelier', 'local_simhub'));
 
-$ateliers = atelier::get_records([], 'nomcourt');
-$dejadans = array_map('intval', array_column($composition, 'atelierid'));
-
-echo html_writer::start_tag('form', ['method' => 'post']);
-echo html_writer::empty_tag('input', ['type' => 'hidden', 'name' => 'sesskey', 'value' => sesskey()]);
-echo html_writer::empty_tag('input', ['type' => 'hidden', 'name' => 'parcoursid', 'value' => $parcoursid]);
-echo html_writer::empty_tag('input', ['type' => 'hidden', 'name' => 'action', 'value' => 'ajouter']);
-
-echo html_writer::start_tag('select', ['name' => 'atelierid', 'class' => 'form-control d-inline-block w-auto mr-2']);
-foreach ($ateliers as $atelier) {
-    if (in_array((int) $atelier->get('id'), $dejadans, true)) {
-        continue;
-    }
-    echo html_writer::tag('option', s($atelier->get('nomcourt')), ['value' => $atelier->get('id')]);
-}
-echo html_writer::end_tag('select');
-
-echo html_writer::empty_tag('input', [
-    'type' => 'number', 'name' => 'ordre', 'placeholder' => get_string(
-        'ordre',
-        'local_simhub',
-    ), 'class' => 'form-control d-inline-block w-auto mr-2',
-]);
-
-echo html_writer::empty_tag('input', [
-    'type' => 'date', 'name' => 'echeance', 'title' => get_string('echeance_optionnel', 'local_simhub'),
-    'class' => 'form-control d-inline-block w-auto mr-2',
-]);
-
-echo html_writer::start_tag('label', ['class' => 'mr-2']);
-echo html_writer::empty_tag('input', ['type' => 'checkbox', 'name' => 'obligatoire', 'value' => 1]);
-echo ' ' . get_string('champ_obligatoire', 'local_simhub');
-echo html_writer::end_tag('label');
-
-echo html_writer::tag('button', get_string('add'), ['type' => 'submit', 'class' => 'btn btn-primary']);
-echo html_writer::end_tag('form');
+$form->display();
 
 echo $OUTPUT->footer();

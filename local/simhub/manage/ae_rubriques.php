@@ -69,34 +69,65 @@ $verifierrubrique = function (int $rubriqueid) use ($rubriquesdumodele): void {
 };
 if ($action !== '') {
     require_sesskey();
-    // Trace l'auteur et la date de la modification sur la grille (persistent).
+    // Trace l'auteur et la date de la suppression sur la grille partagée.
     $modele->update();
 }
 
-if ($action === 'ajouter_rubrique') {
-    require_sesskey();
-    $titre = required_param('titre', PARAM_TEXT);
-    $estrisques = optional_param('estrubriquerisques', 0, PARAM_BOOL);
-    $ordre = optional_param('ordre', 0, PARAM_INT);
+$pageurl = new moodle_url('/local/simhub/manage/ae_rubriques.php', ['atelierid' => $atelierid]);
+$title = get_string('ae_gerer_rubriques', 'local_simhub');
+\local_simhub\local\navigation::preparer($PAGE, $pageurl, $title, array_merge($etapesatelier, [
+    [
+        get_string('ae_modele', 'local_simhub'),
+        new moodle_url('/local/simhub/manage/ae_modele_edit.php', ['atelierid' => $atelierid]),
+    ],
+]));
+if ($gestionnaire) {
+    \local_simhub\local\navigation::onglets('atelier', $atelierid, 'ae');
+}
 
-    ae_rubrique::ajouter($modele->get('id'), $titre, $ordre, (bool) $estrisques);
+$rubriques = ae_rubrique::get_pour_modele($modele->get('id'));
 
-    redirect(new moodle_url('/local/simhub/manage/ae_rubriques.php', ['atelierid' => $atelierid]));
-} else if ($action === 'supprimer_rubrique') {
+$formrubrique = new \local_simhub\form\formulaire($pageurl, [
+    'id' => 'rubrique',
+    'champs' => [
+        ['text', 'titre', get_string('ae_champ_titre', 'local_simhub'), ['requis' => true, 'attributs' => ['size' => 40]]],
+        ['text', 'ordre', get_string('ordre', 'local_simhub'), ['type' => PARAM_INT, 'defaut' => 0, 'attributs' => ['size' => 4]]],
+        ['advcheckbox', 'estrubriquerisques', get_string('ae_champ_risques', 'local_simhub'), ['type' => PARAM_BOOL]],
+    ],
+    'bouton' => get_string('ae_ajouter_rubrique', 'local_simhub'),
+]);
+$formscriteres = [];
+foreach ($rubriques as $rubrique) {
+    $formscriteres[$rubrique->id] = new \local_simhub\form\formulaire($pageurl, [
+        'id' => 'critere' . $rubrique->id,
+        'champs' => [
+            ['text', 'libelle' . $rubrique->id, get_string('ae_champ_critere', 'local_simhub'), [
+                'requis' => true, 'attributs' => ['size' => 40],
+            ]],
+        ],
+        'bouton' => get_string('ae_ajouter_critere', 'local_simhub'),
+    ]);
+}
+
+if ($data = $formrubrique->get_data()) {
+    // Trace l'auteur et la date de la modification sur la grille partagée.
+    $modele->update();
+    ae_rubrique::ajouter($modele->get('id'), $data->titre, (int) $data->ordre, (bool) $data->estrubriquerisques);
+    redirect($pageurl);
+}
+foreach ($formscriteres as $rubriqueid => $formcritere) {
+    if ($data = $formcritere->get_data()) {
+        $modele->update();
+        ae_critere::ajouter($rubriqueid, $data->{'libelle' . $rubriqueid}, 0);
+        redirect($pageurl);
+    }
+}
+
+if ($action === 'supprimer_rubrique') {
     require_sesskey();
     $rubriqueid = required_param('rubriqueid', PARAM_INT);
     $verifierrubrique($rubriqueid);
     ae_rubrique::supprimer($rubriqueid);
-
-    redirect(new moodle_url('/local/simhub/manage/ae_rubriques.php', ['atelierid' => $atelierid]));
-} else if ($action === 'ajouter_critere') {
-    require_sesskey();
-    $rubriqueid = required_param('rubriqueid', PARAM_INT);
-    $verifierrubrique($rubriqueid);
-    $libelle = required_param('libelle', PARAM_TEXT);
-    $ordre = optional_param('ordre', 0, PARAM_INT);
-
-    ae_critere::ajouter($rubriqueid, $libelle, $ordre);
 
     redirect(new moodle_url('/local/simhub/manage/ae_rubriques.php', ['atelierid' => $atelierid]));
 } else if ($action === 'supprimer_critere') {
@@ -108,18 +139,6 @@ if ($action === 'ajouter_rubrique') {
     redirect(new moodle_url('/local/simhub/manage/ae_rubriques.php', ['atelierid' => $atelierid]));
 }
 
-$title = get_string('ae_gerer_rubriques', 'local_simhub');
-$pageurl = new moodle_url('/local/simhub/manage/ae_rubriques.php', ['atelierid' => $atelierid]);
-\local_simhub\local\navigation::preparer($PAGE, $pageurl, $title, array_merge($etapesatelier, [
-    [
-        get_string('ae_modele', 'local_simhub'),
-        new moodle_url('/local/simhub/manage/ae_modele_edit.php', ['atelierid' => $atelierid]),
-    ],
-]));
-if ($gestionnaire) {
-    \local_simhub\local\navigation::onglets('atelier', $atelierid, 'ae');
-}
-
 echo $OUTPUT->header();
 echo \local_simhub\local\navigation::barre();
 
@@ -128,8 +147,6 @@ echo $OUTPUT->single_button(
     new moodle_url('/local/simhub/manage/ae_modele_edit.php', ['atelierid' => $atelierid]),
     get_string('edit')
 );
-
-$rubriques = ae_rubrique::get_pour_modele($modele->get('id'));
 
 foreach ($rubriques as $rubrique) {
     echo html_writer::start_div('card mb-3');
@@ -166,19 +183,7 @@ foreach ($rubriques as $rubrique) {
         echo html_writer::end_tag('ul');
     }
 
-    echo html_writer::start_tag('form', ['method' => 'post', 'class' => 'form-inline']);
-    echo html_writer::empty_tag('input', ['type' => 'hidden', 'name' => 'sesskey', 'value' => sesskey()]);
-    echo html_writer::empty_tag('input', ['type' => 'hidden', 'name' => 'atelierid', 'value' => $atelierid]);
-    echo html_writer::empty_tag('input', ['type' => 'hidden', 'name' => 'action', 'value' => 'ajouter_critere']);
-    echo html_writer::empty_tag('input', ['type' => 'hidden', 'name' => 'rubriqueid', 'value' => $rubrique->id]);
-    echo html_writer::empty_tag('input', [
-        'type' => 'text', 'name' => 'libelle', 'class' => 'form-control mr-2',
-        'placeholder' => get_string('ae_champ_critere', 'local_simhub'), 'required' => 'required',
-    ]);
-    echo html_writer::tag('button', get_string('ae_ajouter_critere', 'local_simhub'), [
-        'type' => 'submit', 'class' => 'btn btn-outline-primary btn-sm',
-    ]);
-    echo html_writer::end_tag('form');
+    $formscriteres[$rubrique->id]->display();
 
     echo html_writer::end_div();
     echo html_writer::end_div();
@@ -186,24 +191,6 @@ foreach ($rubriques as $rubrique) {
 
 echo html_writer::tag('h4', get_string('ae_ajouter_rubrique', 'local_simhub'));
 
-echo html_writer::start_tag('form', ['method' => 'post', 'class' => 'form-inline']);
-echo html_writer::empty_tag('input', ['type' => 'hidden', 'name' => 'sesskey', 'value' => sesskey()]);
-echo html_writer::empty_tag('input', ['type' => 'hidden', 'name' => 'atelierid', 'value' => $atelierid]);
-echo html_writer::empty_tag('input', ['type' => 'hidden', 'name' => 'action', 'value' => 'ajouter_rubrique']);
-echo html_writer::empty_tag('input', [
-    'type' => 'text', 'name' => 'titre', 'class' => 'form-control mr-2',
-    'placeholder' => get_string('ae_champ_titre', 'local_simhub'), 'required' => 'required',
-]);
-echo html_writer::empty_tag('input', [
-    'type' => 'number', 'name' => 'ordre', 'class' => 'form-control mr-2', 'placeholder' => get_string('ordre', 'local_simhub'),
-]);
-echo html_writer::start_tag('label', ['class' => 'mr-2']);
-echo html_writer::empty_tag('input', ['type' => 'checkbox', 'name' => 'estrubriquerisques', 'value' => 1]);
-echo ' ' . get_string('ae_champ_risques', 'local_simhub');
-echo html_writer::end_tag('label');
-echo html_writer::tag('button', get_string('ae_ajouter_rubrique', 'local_simhub'), [
-    'type' => 'submit', 'class' => 'btn btn-primary',
-]);
-echo html_writer::end_tag('form');
+$formrubrique->display();
 
 echo $OUTPUT->footer();
