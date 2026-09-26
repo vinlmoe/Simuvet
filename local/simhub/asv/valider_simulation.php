@@ -16,10 +16,14 @@ $context = context_system::instance();
 require_capability('local/simhub:validateasvsimulation', $context);
 
 $atelierid = optional_param('atelierid', 0, PARAM_INT);
+$preselection = optional_param('userid', 0, PARAM_INT);
 
 \local_simhub\local\navigation::preparer($PAGE, new moodle_url('/local/simhub/asv/valider_simulation.php', $atelierid ? ['atelierid' => $atelierid] : []), get_string('asv_valider_simulation', 'local_simhub'), [
     [get_string('asv_parcours', 'local_simhub'), new moodle_url('/local/simhub/asv/index.php')],
 ]);
+if ($atelierid) {
+    \local_simhub\local\navigation::onglets('atelier', $atelierid, 'asv');
+}
 
 $envcode = get_config('local_simhub', 'envcode') ?: '';
 
@@ -56,16 +60,25 @@ if ($submitted) {
         $extra['atelierid'] = $atelierid;
     }
 
+    $resultat = optional_param('resultat', asv_valsim::STATUT_VALIDE, PARAM_ALPHAEXT);
+    $extra['statut'] = $resultat === asv_valsim::STATUT_NON_VALIDE ? asv_valsim::STATUT_NON_VALIDE : asv_valsim::STATUT_VALIDE;
+    $commentaire = trim(optional_param('commentaire', '', PARAM_TEXT));
+    if ($commentaire !== '') {
+        $extra['commentaire'] = $commentaire;
+    }
+
     $id = asv_valsim::valider($userid, $acteid, $USER->id, $extra);
-    \local_simhub\event\asv_valide_simulation::create([
-        'objectid' => $id,
-        'context' => $context,
-        'relateduserid' => $userid,
-    ])->trigger();
+    if ($extra['statut'] === asv_valsim::STATUT_VALIDE) {
+        \local_simhub\event\asv_valide_simulation::create([
+            'objectid' => $id,
+            'context' => $context,
+            'relateduserid' => $userid,
+        ])->trigger();
+    }
 
     redirect(
-        new moodle_url('/local/simhub/asv/index.php'),
-        get_string('asv_validation_enregistree', 'local_simhub'),
+        new moodle_url('/local/simhub/asv/etudiant.php', ['userid' => $userid]),
+        get_string('asv_decision_enregistree', 'local_simhub'),
         null,
         \core\output\notification::NOTIFY_SUCCESS
     );
@@ -79,12 +92,12 @@ echo html_writer::empty_tag('input', ['type' => 'hidden', 'name' => 'sesskey', '
 echo html_writer::empty_tag('input', ['type' => 'hidden', 'name' => 'submit', 'value' => 1]);
 
 echo html_writer::start_div('form-group');
-echo html_writer::tag('label', 'Étudiant (id Moodle)');
-echo html_writer::empty_tag('input', ['type' => 'number', 'name' => 'userid', 'class' => 'form-control', 'required' => 'required']);
+echo html_writer::tag('label', get_string('etudiant', 'local_simhub'), ['for' => 'id_userid']);
+echo \local_simhub\local\selecteurs::etudiants('userid', $preselection, 'id_userid');
 echo html_writer::end_div();
 
 echo html_writer::start_div('form-group');
-echo html_writer::tag('label', 'Acte');
+echo html_writer::tag('label', get_string('asv_acte', 'local_simhub'));
 if ($atelierid && empty($actesatelier)) {
     echo html_writer::div(get_string('asv_aucun_acte_lie', 'local_simhub'), 'text-muted small mb-1');
 }
@@ -96,13 +109,24 @@ echo html_writer::end_tag('select');
 echo html_writer::end_div();
 
 echo html_writer::start_div('form-group');
-echo html_writer::tag('label', 'Atelier de simulation associé (id, optionnel)');
-echo html_writer::empty_tag('input', [
-    'type' => 'number', 'name' => 'atelierid', 'class' => 'form-control', 'value' => $atelierid ?: '',
-]);
+echo html_writer::tag('label', get_string('asv_atelier_associe', 'local_simhub'), ['for' => 'id_atelierid']);
+echo \local_simhub\local\selecteurs::ateliers('atelierid', $atelierid, 'id_atelierid');
 echo html_writer::end_div();
 
-echo html_writer::tag('button', get_string('asv_valider_simulation', 'local_simhub'), [
+echo html_writer::start_div('form-group');
+echo html_writer::tag('label', get_string('asv_resultat', 'local_simhub'), ['for' => 'id_resultat']);
+echo html_writer::select([
+    asv_valsim::STATUT_VALIDE => get_string('asv_resultat_valide', 'local_simhub'),
+    asv_valsim::STATUT_NON_VALIDE => get_string('asv_resultat_non_valide', 'local_simhub'),
+], 'resultat', asv_valsim::STATUT_VALIDE, false, ['id' => 'id_resultat', 'class' => 'form-control']);
+echo html_writer::end_div();
+
+echo html_writer::start_div('form-group');
+echo html_writer::tag('label', get_string('asv_commentaire', 'local_simhub'), ['for' => 'id_commentaire']);
+echo html_writer::tag('textarea', '', ['name' => 'commentaire', 'id' => 'id_commentaire', 'class' => 'form-control', 'rows' => 2]);
+echo html_writer::end_div();
+
+echo html_writer::tag('button', get_string('asv_enregistrer_decision', 'local_simhub'), [
     'type' => 'submit', 'class' => 'btn btn-primary',
 ]);
 echo html_writer::end_tag('form');

@@ -20,6 +20,9 @@ $title = $id ? get_string('atelier_modifier', 'local_simhub') : get_string('atel
 \local_simhub\local\navigation::preparer($PAGE, new moodle_url('/local/simhub/manage/atelier_edit.php', ['id' => $id]), $title, [
     [get_string('manage_ateliers', 'local_simhub'), new moodle_url('/local/simhub/manage/ateliers.php')],
 ]);
+if ($id) {
+    \local_simhub\local\navigation::onglets('atelier', $id, 'fiche');
+}
 
 $atelier = $id ? new atelier($id) : new atelier();
 $oldstatut = $atelier->get('id') ? $atelier->get('statut') : null;
@@ -31,6 +34,11 @@ file_prepare_draft_area($plandraftid, $context->id, 'local_simhub', 'plan', $id 
 $form = new atelier_form();
 $formdata = $atelier->to_record();
 $formdata->planimage = $plandraftid;
+$indispoencours = $id ? indispo::get_en_cours($id) : false;
+if ($indispoencours) {
+    $formdata->indispo_motif = $indispoencours->commentaire;
+    $formdata->indispo_echeance = $indispoencours->echeanceprevue ?: 0;
+}
 $form->set_data($formdata);
 
 if ($form->is_cancelled()) {
@@ -66,12 +74,13 @@ if ($form->is_cancelled()) {
     $atelier->set('planimageitemid', !empty($planfiles) ? $atelier->get('id') : 0);
     $atelier->update();
 
-    // Ouverture/clôture automatique de l'indisponibilité selon le changement de statut (§6.1) :
-    // le formulaire ne demande pas explicitement le commentaire pour rester simple ; un
-    // gestionnaire souhaitant en documenter un utilisera la page dédiée (à développer),
-    // cette page se contentant de garantir la cohérence de l'historique.
+    // Ouverture, mise à jour ou clôture de l'indisponibilité selon le statut (§6.1).
+    $motif = trim($data->indispo_motif ?? '');
+    $echeance = !empty($data->indispo_echeance) ? (int) $data->indispo_echeance : null;
     if ($data->statut === atelier::STATUT_INDISPONIBLE && $oldstatut !== atelier::STATUT_INDISPONIBLE) {
-        indispo::ouvrir($atelier->get('id'), '', $USER->id);
+        indispo::ouvrir($atelier->get('id'), $motif, $USER->id, $echeance);
+    } else if ($data->statut === atelier::STATUT_INDISPONIBLE) {
+        indispo::mettre_a_jour($atelier->get('id'), $motif, $USER->id, $echeance);
     } else if ($oldstatut === atelier::STATUT_INDISPONIBLE && $data->statut !== atelier::STATUT_INDISPONIBLE) {
         indispo::cloturer($atelier->get('id'));
     }
@@ -91,8 +100,29 @@ $form->display();
 if ($id && $atelier->get('planimageitemid')) {
     echo $OUTPUT->single_button(
         new moodle_url('/local/simhub/manage/atelier_plan.php', ['id' => $id]),
-        'Positionner le repère sur le plan'
+        get_string('plan_positionner', 'local_simhub')
     );
+}
+
+$historique = $id ? indispo::get_historique($id) : [];
+if ($historique) {
+    $format = get_string('strftimedatefullshort', 'langconfig');
+    echo html_writer::tag('h3', get_string('indispo_historique', 'local_simhub'), ['class' => 'mt-4']);
+    $table = new html_table();
+    $table->head = [get_string('indispo_debut', 'local_simhub'), get_string('indispo_motif', 'local_simhub'),
+        get_string('indispo_echeance', 'local_simhub'), get_string('indispo_referent', 'local_simhub'),
+        get_string('champ_statut', 'local_simhub')];
+    foreach ($historique as $h) {
+        $referent = $h->referentuserid ? \core_user::get_user($h->referentuserid) : null;
+        $table->data[] = [
+            userdate($h->timecreated, $format),
+            s($h->commentaire),
+            $h->echeanceprevue ? userdate($h->echeanceprevue, $format) : '—',
+            $referent ? s(fullname($referent)) : '—',
+            $h->cloturee ? get_string('indispo_cloturee', 'local_simhub') : get_string('indispo_en_cours', 'local_simhub'),
+        ];
+    }
+    echo html_writer::table($table);
 }
 
 echo $OUTPUT->footer();

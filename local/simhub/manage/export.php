@@ -32,7 +32,7 @@ function local_simhub_export_csv(string $filename, array $rows): void {
 
     $out = fopen('php://output', 'w');
     foreach ($rows as $row) {
-        fputcsv($out, $row, ';');
+        fputcsv($out, $row, ';', '"', '');
     }
     fclose($out);
     exit;
@@ -68,30 +68,7 @@ if ($type === 'ateliers') {
     $composition = $parcours->get_ateliers();
     $atelierids = array_column($composition, 'atelierid');
 
-    $cohortid = $parcours->get('cohortid');
-    if ($cohortid) {
-        $users = $DB->get_records_sql(
-            "SELECT u.id, u.firstname, u.lastname
-               FROM {cohort_members} cm
-               JOIN {user} u ON u.id = cm.userid
-              WHERE cm.cohortid = :cohortid
-           ORDER BY u.lastname, u.firstname",
-            ['cohortid' => $cohortid]
-        );
-    } else if (!empty($atelierids)) {
-        [$insql, $sparams] = $DB->get_in_or_equal($atelierids);
-        $users = $DB->get_records_sql(
-            "SELECT u.id, u.firstname, u.lastname
-               FROM {local_simhub_session} s
-               JOIN {user} u ON u.id = s.userid
-              WHERE s.atelierid $insql
-           GROUP BY u.id, u.firstname, u.lastname
-           ORDER BY u.lastname, u.firstname",
-            $sparams
-        );
-    } else {
-        $users = [];
-    }
+    $users = \local_simhub\local\parcours_helper::etudiants($parcours);
 
     $head = ['etudiant'];
     $ateliernoms = [];
@@ -121,7 +98,7 @@ if ($type === 'ateliers') {
                 $row[] = 'commence';
             }
         }
-        $row[] = empty($atelierids) ? 0 : round(100 * $realises / count($atelierids));
+        $row[] = \local_simhub\local\parcours_helper::progression($parcours, $user->id)['pct'];
         $rows[] = $row;
     }
 

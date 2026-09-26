@@ -15,6 +15,7 @@ class asv_valanimal {
 
     const STATUT_EN_ATTENTE = 'en_attente';
     const STATUT_VALIDE = 'valide';
+    const STATUT_ANNULE = 'annule';
 
     /**
      * Crée une demande de validation animal vivant et son lien à jeton, pour un étudiant/acte.
@@ -22,6 +23,57 @@ class asv_valanimal {
      * @param int $userid Étudiant.
      * @param int $acteid
      * @return \stdClass Enregistrement créé (contient le token).
+     */
+    public static function get_ou_creer_demande(int $userid, int $acteid): \stdClass {
+        return self::get_demande_en_attente($userid, $acteid) ?: self::creer_demande($userid, $acteid);
+    }
+
+    /**
+     * Demande encore utilisable (en attente, lien non expiré) pour un acte, s'il y en a une.
+     *
+     * @param int $userid
+     * @param int $acteid
+     * @return \stdClass|false
+     */
+    public static function get_demande_en_attente(int $userid, int $acteid) {
+        global $DB;
+
+        $records = $DB->get_records_select(self::TABLE,
+            'userid = :userid AND acteid = :acteid AND statut = :statut AND tokenexpire > :now',
+            ['userid' => $userid, 'acteid' => $acteid, 'statut' => self::STATUT_EN_ATTENTE, 'now' => time()],
+            'tokenexpire DESC', '*', 0, 1);
+        return reset($records);
+    }
+
+    /**
+     * Une signature n'est acceptée que si un tracé a réellement été dessiné : image PNG
+     * encodée en base64, produite par le canvas de valider_animal.php.
+     *
+     * @param string $signature
+     * @return bool
+     */
+    public static function signature_valide(string $signature): bool {
+        return (bool) preg_match('#^data:image/png;base64,[A-Za-z0-9+/=]{100,}$#', $signature);
+    }
+
+    /**
+     * Annule une validation sur animal vivant (erreur de saisie, validateur non habilité).
+     *
+     * @param int $id
+     * @return void
+     */
+    public static function annuler(int $id): void {
+        global $DB;
+
+        $DB->set_field(self::TABLE, 'statut', self::STATUT_ANNULE, ['id' => $id]);
+    }
+
+    /**
+     * Crée une nouvelle demande de validation, avec son propre lien à jeton.
+     *
+     * @param int $userid
+     * @param int $acteid
+     * @return \stdClass
      */
     public static function creer_demande(int $userid, int $acteid): \stdClass {
         global $DB;
@@ -78,7 +130,8 @@ class asv_valanimal {
         global $DB;
 
         $record = self::get_par_token($token);
-        if (!$record || !$certificationcochee) {
+        if (!$record || $record->statut !== self::STATUT_EN_ATTENTE || !$certificationcochee
+                || trim($nom) === '' || trim($prenom) === '' || !self::signature_valide($signature)) {
             return false;
         }
 

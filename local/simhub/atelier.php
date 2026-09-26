@@ -28,11 +28,57 @@ echo \local_simhub\local\navigation::barre();
 
 echo html_writer::tag('p', s($atelier->get('descriptioncourte')));
 
-echo html_writer::link(
+// Actions principales directement sur la fiche : c'est la page où arrive l'étudiant après
+// un scan QR ou depuis une recherche, il doit pouvoir y démarrer ou terminer sa séance.
+$actions = '';
+if ($atelier->get('statut') !== atelier::STATUT_ACTIF) {
+    $indispo = \local_simhub\record\indispo::get_en_cours($id);
+    $message = get_string('atelier_non_demarrable', 'local_simhub');
+    if ($indispo && $indispo->commentaire) {
+        $message .= ' ' . s($indispo->commentaire);
+    }
+    if ($indispo && $indispo->echeanceprevue) {
+        $message .= ' ' . get_string('indispo_retour_prevu', 'local_simhub',
+            userdate($indispo->echeanceprevue, get_string('strftimedatefullshort', 'langconfig')));
+    }
+    echo $OUTPUT->notification($message, \core\output\notification::NOTIFY_WARNING);
+}
+if (has_capability('local/simhub:startsession', $context)) {
+    $encours = null;
+    foreach (\local_simhub\persistent\session::get_pour_etudiant($USER->id, $id) as $session) {
+        if ($session->get('statut') === \local_simhub\persistent\session::STATUT_COMMENCE) {
+            $encours = $session;
+            break;
+        }
+    }
+    if ($encours) {
+        $actions .= html_writer::link(
+            new moodle_url('/local/simhub/session.php', ['atelierid' => $id, 'action' => 'terminer',
+                'sessionid' => $encours->get('id')]),
+            get_string('bouton_terminer', 'local_simhub'),
+            ['class' => 'btn btn-primary btn-sm mr-2 me-2']
+        );
+    } else if ($atelier->get('statut') === atelier::STATUT_ACTIF) {
+        $actions .= html_writer::link(
+            new moodle_url('/local/simhub/session.php', ['atelierid' => $id, 'action' => 'demarrer', 'sesskey' => sesskey()]),
+            get_string('bouton_commencer', 'local_simhub'),
+            ['class' => 'btn btn-primary btn-sm mr-2 me-2']
+        );
+    }
+}
+$actions .= html_writer::link(
     new moodle_url('/local/simhub/manage/atelier_fiche_pdf.php', ['id' => $id]),
-    'Télécharger la fiche (PDF)',
-    ['class' => 'btn btn-outline-secondary btn-sm mb-3']
+    get_string('telecharger_fiche_pdf', 'local_simhub'),
+    ['class' => 'btn btn-outline-secondary btn-sm mr-2 me-2']
 );
+if (has_capability('local/simhub:manageateliers', $context)) {
+    $actions .= html_writer::link(
+        new moodle_url('/local/simhub/manage/atelier_edit.php', ['id' => $id]),
+        get_string('gerer_atelier', 'local_simhub'),
+        ['class' => 'btn btn-outline-secondary btn-sm']
+    );
+}
+echo html_writer::div($actions, 'mb-3');
 
 echo html_writer::start_div('card mb-3', ['id' => 'localisation']);
 echo html_writer::div(get_string('champ_salle', 'local_simhub'), 'card-header');

@@ -29,7 +29,7 @@ if (empty($eligibles)) {
     );
 }
 
-$actes = asv_acte::get_referentiel($envcode, $niveau);
+$actes = asv_certification_helper::get_actes_requis($envcode, $niveau);
 $badgeid = (int) (get_config('local_simhub', 'badgeasv' . strtolower($niveau)) ?: 0);
 
 $zippath = tempnam(make_temp_directory('local_simhub'), 'asv_attestations_');

@@ -42,13 +42,13 @@ $maintenant = time();
 $table = new html_table();
 $table->head = [
     get_string('filtre_parcours', 'local_simhub'),
-    'Étudiants',
-    'Avancement moyen',
-    'Pas commencé',
-    'Commencé',
-    'Terminé',
-    'À reprendre',
-    'Échéance proche/dépassée',
+    get_string('dash_etudiants', 'local_simhub'),
+    get_string('dash_avancement_moyen', 'local_simhub'),
+    get_string('dash_pas_commence', 'local_simhub'),
+    get_string('dash_commence', 'local_simhub'),
+    get_string('dash_termine', 'local_simhub'),
+    get_string('dash_a_reprendre', 'local_simhub'),
+    get_string('dash_echeance', 'local_simhub'),
     '',
 ];
 
@@ -65,26 +65,7 @@ foreach ($parcourslist as $parcours) {
         $echeancesparatelier[$lien->atelierid] = $lien->echeance ?: null;
     }
 
-    $cohortid = $parcours->get('cohortid');
-    if ($cohortid) {
-        $users = $DB->get_records_sql(
-            "SELECT u.id
-               FROM {cohort_members} cm
-               JOIN {user} u ON u.id = cm.userid
-              WHERE cm.cohortid = :cohortid",
-            ['cohortid' => $cohortid]
-        );
-    } else {
-        [$insql, $sparams] = $DB->get_in_or_equal($atelierids);
-        $users = $DB->get_records_sql(
-            "SELECT u.id
-               FROM {local_simhub_session} s
-               JOIN {user} u ON u.id = s.userid
-              WHERE s.atelierid $insql
-           GROUP BY u.id",
-            $sparams
-        );
-    }
+    $users = \local_simhub\local\parcours_helper::etudiants($parcours);
 
     $nbnoncommence = 0;
     $nbencours = 0;
@@ -121,7 +102,7 @@ foreach ($parcourslist as $parcours) {
             }
         }
 
-        $pct = round(100 * $realises / count($atelierids));
+        $pct = \local_simhub\local\parcours_helper::progression($parcours, $user->id)['pct'];
         $sommepct += $pct;
 
         if (!$acommence) {
@@ -163,7 +144,7 @@ foreach ($parcourslist as $parcours) {
         $nbtermine,
         $nbareprendre ?: '—',
         $nbecheance ?: '—',
-        html_writer::link($suiviurl, 'Détail'),
+        html_writer::link($suiviurl, get_string('detail', 'local_simhub')),
     ];
 }
 

@@ -13,6 +13,7 @@ class asv_valsim {
 
     const STATUT_VALIDE = 'valide';
     const STATUT_NON_VALIDE = 'non_valide';
+    const STATUT_ANNULE = 'annule';
 
     /**
      * Enregistre une validation ASV en simulation.
@@ -62,11 +63,41 @@ class asv_valsim {
     public static function get_actes_valides(int $userid): array {
         global $DB;
 
-        return array_values($DB->get_records_menu(
+        return array_values(array_map('intval', $DB->get_records_menu(
             self::TABLE,
             ['userid' => $userid, 'statut' => self::STATUT_VALIDE],
             '',
             'id, acteid'
-        ));
+        )));
+    }
+
+    /**
+     * Toutes les décisions d'un encadrant pour un étudiant (validées, refusées, annulées),
+     * les plus récentes d'abord : l'historique complet reste consultable.
+     *
+     * @param int $userid
+     * @return \stdClass[]
+     */
+    public static function get_historique(int $userid): array {
+        global $DB;
+
+        return $DB->get_records(self::TABLE, ['userid' => $userid], 'datevalidation DESC, id DESC');
+    }
+
+    /**
+     * Annule une validation saisie par erreur : l'enregistrement est conservé pour la
+     * traçabilité, mais ne compte plus dans le livret ni dans la certification.
+     *
+     * @param int $id
+     * @param string $motif
+     * @return void
+     */
+    public static function annuler(int $id, string $motif): void {
+        global $DB;
+
+        $record = $DB->get_record(self::TABLE, ['id' => $id], '*', MUST_EXIST);
+        $record->statut = self::STATUT_ANNULE;
+        $record->commentaire = trim(($record->commentaire ?? '') . "\n" . $motif);
+        $DB->update_record(self::TABLE, $record);
     }
 }

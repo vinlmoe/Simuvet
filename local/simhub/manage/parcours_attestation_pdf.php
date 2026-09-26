@@ -31,21 +31,15 @@ $user = \core_user::get_user($userid, '*', MUST_EXIST);
 $composition = $parcours->get_ateliers();
 $atelierids = array_column($composition, 'atelierid');
 
-$realises = 0;
 $noms = [];
 foreach ($atelierids as $aid) {
-    $atelier = new atelier($aid);
-    $noms[$aid] = $atelier->get('nomcourt');
-
-    $sessions = session::get_pour_etudiant($userid, $aid);
-    $latest = $sessions ? reset($sessions) : null;
-    if ($latest && in_array($latest->get('statut'), [session::STATUT_REALISE, session::STATUT_CERTIFIE], true)) {
-        $realises++;
-    }
+    $noms[$aid] = (new atelier($aid))->get('nomcourt');
 }
+// L'attestation liste les ateliers effectivement réalisés parmi ceux du parcours.
+$atelierids = array_values(array_filter($atelierids,
+    fn($aid) => in_array(\local_simhub\local\parcours_helper::statut_atelier($userid, (int) $aid), ['realise', 'valide'], true)));
 
-$total = count($atelierids);
-$pct = $total > 0 ? round(100 * $realises / $total) : 0;
+['realises' => $realises, 'total' => $total, 'pct' => $pct] = \local_simhub\local\parcours_helper::progression($parcours, $userid);
 
 if ($total === 0 || $pct < 100) {
     $PAGE->set_context($context);
@@ -56,8 +50,8 @@ if ($total === 0 || $pct < 100) {
 
     echo $OUTPUT->header();
     echo $OUTPUT->notification(
-        'L\'attestation ne peut pas encore être délivrée : ' . fullname($user) . ' est à ' . $pct . '% '
-        . 'du parcours "' . s($parcours->get('nom')) . '" (' . $realises . '/' . $total . ' ateliers réalisés).',
+        get_string('attestation_incomplete', 'local_simhub', (object) ['nom' => fullname($user), 'pct' => $pct, 'parcours' => s($parcours->get('nom')),
+            'realises' => $realises, 'total' => $total]),
         \core\output\notification::NOTIFY_WARNING
     );
     echo $OUTPUT->continue_button(new moodle_url('/local/simhub/manage/parcours_suivi.php', ['parcoursid' => $parcoursid]));
@@ -72,7 +66,7 @@ badge_helper::delivrer($parcours->get('badgeid') ?: null, $userid);
 
 $pdf = new pdf();
 $pdf->SetCreator('SimHub');
-$pdf->SetTitle('Attestation — ' . $parcours->get('nom') . ' — ' . fullname($user));
+$pdf->SetTitle(get_string('attestation_titre', 'local_simhub') . ' — ' . $parcours->get('nom') . ' — ' . fullname($user));
 $pdf->setPrintHeader(false);
 $pdf->setPrintFooter(false);
 $pdf->AddPage();
@@ -80,14 +74,14 @@ pdf_helper::ajouter_entete($pdf);
 
 $pdf->Ln(15);
 $pdf->SetFont('helvetica', 'B', 20);
-$pdf->Cell(0, 12, 'Attestation de réalisation', 0, 1, 'C');
+$pdf->Cell(0, 12, get_string('attestation_titre', 'local_simhub'), 0, 1, 'C');
 $pdf->Ln(6);
 
 $pdf->SetFont('helvetica', '', 12);
 $pdf->writeHTML(
-    '<p>' . pdf_helper::get_etablissement_nom() . ' certifie que</p>'
+    '<p>' . get_string('pdf_certifie_que', 'local_simhub', pdf_helper::get_etablissement_nom()) . '</p>'
     . '<p style="text-align:center;font-size:15pt;"><b>' . s(fullname($user)) . '</b></p>'
-    . '<p>a réalisé l\'ensemble des ateliers du parcours <b>' . s($parcours->get('nom')) . '</b>.</p>',
+    . '<p>' . get_string('attestation_parcours_realise', 'local_simhub', s($parcours->get('nom'))) . '</p>',
     true,
     false,
     true,
@@ -95,7 +89,7 @@ $pdf->writeHTML(
     ''
 );
 
-$html = '<table border="1" cellpadding="4"><tr style="font-weight:bold;"><th>Atelier</th></tr>';
+$html = '<table border="1" cellpadding="4"><tr style="font-weight:bold;"><th>' . get_string('atelier', 'local_simhub') . '</th></tr>';
 foreach ($atelierids as $aid) {
     $html .= '<tr><td>' . s($noms[$aid]) . '</td></tr>';
 }
@@ -103,6 +97,6 @@ $html .= '</table>';
 $pdf->writeHTML($html, true, false, true, false, '');
 
 $pdf->Ln(10);
-$pdf->Cell(0, 6, 'Délivrée le ' . userdate(time(), get_string('strftimedate', 'langconfig')), 0, 1);
+$pdf->Cell(0, 6, get_string('pdf_delivree_le', 'local_simhub', userdate(time(), get_string('strftimedate', 'langconfig'))), 0, 1);
 
 $pdf->Output('simhub_attestation_parcours_' . $parcoursid . '_' . $userid . '.pdf', 'D');

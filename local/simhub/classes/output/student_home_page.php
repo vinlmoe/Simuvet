@@ -45,9 +45,13 @@ class student_home_page implements renderable, templatable {
         // Base commune : tous les ateliers actifs de l'établissement, et le statut
         // personnel de l'étudiant sur chacun (§5.3), calculés une seule fois et réutilisés
         // pour construire les différentes sections du §5.1.
-        $tousactifs = atelier::get_records(
-            $envcode !== '' ? ['envcode' => $envcode, 'statut' => atelier::STATUT_ACTIF] : ['statut' => atelier::STATUT_ACTIF]
-        );
+        // Les ateliers momentanément indisponibles restent listés, signalés comme tels, pour
+        // que l'étudiant sache pourquoi il ne peut pas les réaliser (§5.3, §6.1).
+        $tousactifs = [];
+        foreach ([atelier::STATUT_ACTIF, atelier::STATUT_INDISPONIBLE] as $statut) {
+            $tousactifs = array_merge($tousactifs, atelier::get_records(
+                $envcode !== '' ? ['envcode' => $envcode, 'statut' => $statut] : ['statut' => $statut]));
+        }
         $sessions = session::get_pour_etudiant($this->userid);
 
         $dernieresessionparatelier = [];
@@ -95,29 +99,27 @@ class student_home_page implements renderable, templatable {
         // 2. Mes parcours en cours : parcours dans lesquels l'étudiant a au moins une
         // session, avec un pourcentage d'avancement (§8.1), tant qu'il n'est pas à 100%.
         $parcoursencours = [];
-        $parcoursids = array_unique(array_filter(array_map(fn($s) => $s->get('parcoursid'), $sessions)));
-        foreach ($parcoursids as $pid) {
-            $parcours = new parcours($pid);
-            $composition = $parcours->get_ateliers();
-            $atelierids = array_column($composition, 'atelierid');
-            if (empty($atelierids)) {
+        foreach (\local_simhub\local\parcours_helper::parcours_pour_etudiant($this->userid, $envcode) as $pid => $parcours) {
+            $progression = \local_simhub\local\parcours_helper::progression($parcours, $this->userid);
+            if ($progression['pct'] >= 100) {
                 continue;
             }
-            $realises = 0;
-            foreach ($atelierids as $aid) {
-                if (($statutsparid[$aid] ?? 'pascommence') !== 'pascommence' && ($statutsparid[$aid] ?? '') !== 'commence') {
-                    $realises++;
+            // Prochaine échéance d'un atelier requis pas encore réalisé.
+            $prochaine = null;
+            foreach ($parcours->get_ateliers() as $lien) {
+                if ($lien->echeance && !in_array(($statutsparid[$lien->atelierid] ?? 'pascommence'), ['realise', 'valide', 'areprendre'], true)
+                        && ($prochaine === null || $lien->echeance < $prochaine)) {
+                    $prochaine = (int) $lien->echeance;
                 }
             }
-            $pct = round(100 * $realises / count($atelierids));
-            if ($pct < 100) {
-                $parcoursencours[] = [
-                    'id' => $pid,
-                    'nom' => s($parcours->get('nom')),
-                    'pct' => $pct,
-                    'url' => (new \moodle_url('/local/simhub/index.php', ['parcoursid' => $pid]))->out(false),
-                ];
-            }
+            $parcoursencours[] = [
+                'id' => $pid,
+                'nom' => s($parcours->get('nom')),
+                'pct' => $progression['pct'],
+                'echeance' => $prochaine ? userdate($prochaine, get_string('strftimedatefullshort', 'langconfig')) : '',
+                'enretard' => $prochaine && $prochaine < time(),
+                'url' => (new \moodle_url('/local/simhub/parcours.php', ['id' => $pid]))->out(false),
+            ];
         }
 
         // 7. Recommandés pour mon groupe : ateliers rattachés à une cohorte choisie
@@ -172,6 +174,15 @@ class student_home_page implements renderable, templatable {
             'hasateliers' => !empty($tousliste),
             'nomessage' => get_string('aucun_atelier', 'local_simhub'),
             'formurl' => (new \moodle_url('/local/simhub/index.php'))->out(false),
+            'disciplines' => $this->valeurs_distinctes($tousactifs, 'discipline', $this->filter->discipline),
+            'especes' => $this->valeurs_distinctes($tousactifs, 'espece', $this->filter->espece),
+            'niveaux' => array_map(function ($niveau) {
+                return [
+                    'value' => $niveau,
+                    'label' => get_string('niveau_' . $niveau, 'local_simhub'),
+                    'selected' => $this->filter->niveaudifficulte === $niveau,
+                ];
+            }, ['facile', 'intermediaire', 'avance']),
             'filtre' => [
                 'motcle' => s($this->filter->motcle),
                 'discipline' => s($this->filter->discipline),
@@ -200,6 +211,7 @@ class student_home_page implements renderable, templatable {
                 'boutonterminer' => get_string('bouton_terminer', 'local_simhub'),
                 'sectionmesuc' => get_string('section_mesuc', 'local_simhub'),
                 'sectionparcours' => get_string('section_parcours', 'local_simhub'),
+                'prochaineecheance' => get_string('parcours_prochaine_echeance', 'local_simhub'),
                 'sectionasv' => get_string('section_asv', 'local_simhub'),
                 'sectioncommences' => get_string('section_commences', 'local_simhub'),
                 'sectionareprendre' => get_string('section_areprendre', 'local_simhub'),
@@ -251,6 +263,10 @@ class student_home_page implements renderable, templatable {
             'statutatelier' => $atelier->statut,
             'estindisponible' => $atelier->statut === 'indisponible',
             'commentaireindispo' => $indisponibilite ? s($indisponibilite->commentaire) : '',
+            'retourprevu' => ($indisponibilite && $indisponibilite->echeanceprevue)
+                ? get_string('indispo_retour_prevu', 'local_simhub',
+                    userdate($indisponibilite->echeanceprevue, get_string('strftimedatefullshort', 'langconfig')))
+                : '',
             'statutperso' => $statutperso,
             'statutpersolabel' => get_string('statutperso_' . $statutperso, 'local_simhub'),
             'estcommence' => $statutperso === 'commence',
@@ -268,5 +284,27 @@ class student_home_page implements renderable, templatable {
         ];
 
         return [$card, $statutperso];
+    }
+
+    /**
+     * Valeurs distinctes d'un champ parmi les ateliers proposés, pour les listes de filtres
+     * (§5.2) : l'étudiant choisit une valeur existante au lieu de deviner l'orthographe.
+     *
+     * @param atelier[] $ateliers
+     * @param string $champ
+     * @param string $selection
+     * @return array
+     */
+    private function valeurs_distinctes(array $ateliers, string $champ, string $selection): array {
+        $valeurs = [];
+        foreach ($ateliers as $atelier) {
+            $valeur = trim((string) $atelier->get($champ));
+            if ($valeur !== '') {
+                $valeurs[$valeur] = true;
+            }
+        }
+        $valeurs = array_keys($valeurs);
+        \core_collator::asort($valeurs);
+        return array_values(array_map(fn($v) => ['value' => s($v), 'selected' => $v === $selection], $valeurs));
     }
 }

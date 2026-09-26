@@ -21,8 +21,8 @@ class asv_valide_animal extends \core\event\base {
     }
 
     public function get_description() {
-        return "L'acte ASV a été validé sur animal vivant pour l'étudiant avec l'id "
-            . "'{$this->relateduserid}' (enregistrement '{$this->objectid}').";
+        return "The ASV procedure was validated on a live animal for the student with id "
+            . "'{$this->relateduserid}' (record '{$this->objectid}').";
     }
 
     public function get_url() {

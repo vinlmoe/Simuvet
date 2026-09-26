@@ -21,6 +21,7 @@ $title = get_string('nav_plan', 'local_simhub');
     [get_string('manage_ateliers', 'local_simhub'), new moodle_url('/local/simhub/manage/ateliers.php')],
     [s($atelier->get('nomcourt')), new moodle_url('/local/simhub/manage/atelier_edit.php', ['id' => $id])],
 ]);
+\local_simhub\local\navigation::onglets('atelier', $id, 'plan');
 
 $submitted = optional_param('submit', 0, PARAM_BOOL);
 if ($submitted) {
@@ -46,7 +47,7 @@ echo \local_simhub\local\navigation::barre();
 
 if (!$atelier->get('planimageitemid')) {
     echo $OUTPUT->notification(
-        'Aucune image de plan n\'a encore été téléversée pour cet atelier.',
+        get_string('plan_absent', 'local_simhub'),
         \core\output\notification::NOTIFY_WARNING
     );
     echo $OUTPUT->continue_button(new moodle_url('/local/simhub/manage/atelier_edit.php', ['id' => $id]));
@@ -62,7 +63,7 @@ $planfile = reset($planfiles);
 
 if (!$planfile) {
     echo $OUTPUT->notification(
-        'Aucune image de plan n\'a encore été téléversée pour cet atelier.',
+        get_string('plan_absent', 'local_simhub'),
         \core\output\notification::NOTIFY_WARNING
     );
     echo $OUTPUT->continue_button(new moodle_url('/local/simhub/manage/atelier_edit.php', ['id' => $id]));
@@ -74,7 +75,7 @@ $planurl = moodle_url::make_pluginfile_url(
     $context->id, 'local_simhub', 'plan', $atelier->get('planimageitemid'), '/', $planfile->get_filename()
 );
 
-echo html_writer::tag('p', 'Cliquez sur le plan à l\'endroit où se trouve l\'atelier.');
+echo html_writer::tag('p', get_string('plan_consigne', 'local_simhub'));
 
 echo html_writer::start_tag('form', ['method' => 'post', 'id' => 'local-simhub-plan-form']);
 echo html_writer::empty_tag('input', ['type' => 'hidden', 'name' => 'sesskey', 'value' => sesskey()]);

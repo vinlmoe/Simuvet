@@ -25,16 +25,18 @@ class parcours_form extends \moodleform {
         $mform->addElement('textarea', 'description', get_string('champ_descriptioncourte', 'local_simhub'));
         $mform->setType('description', PARAM_TEXT);
 
-        $mform->addElement('select', 'type', get_string('champ_statut', 'local_simhub'), [
-            'recommande' => 'Recommandé',
-            'obligatoire' => 'Obligatoire',
-            'lie_uc' => 'Lié à une UC',
-            'lie_annee' => 'Lié à une année',
-            'certifiant' => 'Certifiant',
-            'asv' => 'ASV',
-        ]);
+        $types = [];
+        foreach (['recommande', 'obligatoire', 'lie_uc', 'lie_annee', 'certifiant', 'asv'] as $type) {
+            $types[$type] = get_string('parcours_type_' . $type, 'local_simhub');
+        }
+        $mform->addElement('select', 'type', get_string('type', 'local_simhub'), $types);
 
-        $mform->addElement('text', 'courseid', 'Id de l\'UC Moodle (optionnel)');
+        global $DB;
+        $cours = [0 => get_string('aucune_uc', 'local_simhub')];
+        foreach ($DB->get_records_select_menu('course', 'id <> :siteid', ['siteid' => SITEID], 'fullname', 'id, fullname') as $cid => $nom) {
+            $cours[$cid] = format_string($nom);
+        }
+        $mform->addElement('autocomplete', 'courseid', get_string('champ_uc_optionnel', 'local_simhub'), $cours);
         $mform->setType('courseid', PARAM_INT);
 
         $mform->addElement(

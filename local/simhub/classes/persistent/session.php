@@ -71,6 +71,37 @@ class session extends \core\persistent {
     }
 
     /**
+     * Point d'entrée unique pour démarrer une séance, quel que soit le chemin (bouton, QR,
+     * code de séance) : refuse un atelier qui n'est pas actif (indisponible, archivé...,
+     * §6.1) et reprend la séance déjà en cours plutôt que d'en créer une seconde (§7.1).
+     *
+     * @param int $userid
+     * @param int $atelierid
+     * @param array $extra Voir demarrer().
+     * @return session
+     */
+    public static function demarrer_ou_reprendre(int $userid, int $atelierid, array $extra = []): session {
+        $atelier = new atelier($atelierid);
+        if ($atelier->get('statut') !== atelier::STATUT_ACTIF) {
+            throw new \moodle_exception('atelier_non_demarrable', 'local_simhub',
+                new \moodle_url('/local/simhub/atelier.php', ['id' => $atelierid]));
+        }
+
+        foreach (self::get_pour_etudiant($userid, $atelierid) as $existante) {
+            if ($existante->get('statut') === self::STATUT_COMMENCE) {
+                return $existante;
+            }
+        }
+
+        $session = self::demarrer($userid, $atelierid, $extra);
+        \local_simhub\event\session_started::create([
+            'objectid' => $session->get('id'),
+            'context' => \context_system::instance(),
+        ])->trigger();
+        return $session;
+    }
+
+    /**
      * Termine la session courante : marque comme réalisée et horodate la fin.
      *
      * @return void

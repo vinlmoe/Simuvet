@@ -325,7 +325,8 @@
         <FIELD NAME="sessionid" TYPE="int" LENGTH="10" NOTNULL="false" COMMENT="Session SimHub liée, si applicable"/>
         <FIELD NAME="datevalidation" TYPE="int" LENGTH="10" NOTNULL="true"/>
         <FIELD NAME="validateuruserid" TYPE="int" LENGTH="10" NOTNULL="true"/>
-        <FIELD NAME="statut" TYPE="char" LENGTH="20" NOTNULL="true" DEFAULT="non_valide" COMMENT="valide|non_valide"/>
+        <FIELD NAME="statut" TYPE="char" LENGTH="20" NOTNULL="true" DEFAULT="non_valide" COMMENT="valide|non_valide|annule"/>
+        <FIELD NAME="commentaire" TYPE="text" NOTNULL="false" COMMENT="Observation de l'encadrant, motif d'un refus ou d'une annulation"/>
         <FIELD NAME="timecreated" TYPE="int" LENGTH="10" NOTNULL="true"/>
       </FIELDS>
       <KEYS>
@@ -350,7 +351,7 @@
         <FIELD NAME="prenomvalidateur" TYPE="char" LENGTH="255" NOTNULL="false"/>
         <FIELD NAME="certificationcochee" TYPE="int" LENGTH="1" NOTNULL="true" DEFAULT="0" COMMENT="Case attestant que le validateur est vétérinaire/encadrant autorisé"/>
         <FIELD NAME="signature" TYPE="text" NOTNULL="false" COMMENT="Tracé de signature (SVG/PNG base64) - niveau de preuve simple, non qualifié"/>
-        <FIELD NAME="statut" TYPE="char" LENGTH="20" NOTNULL="true" DEFAULT="en_attente" COMMENT="en_attente|valide"/>
+        <FIELD NAME="statut" TYPE="char" LENGTH="20" NOTNULL="true" DEFAULT="en_attente" COMMENT="en_attente|valide|annule"/>
         <FIELD NAME="token" TYPE="char" LENGTH="255" NOTNULL="true" COMMENT="Jeton unique du lien d'accès externe, sans compte Moodle"/>
         <FIELD NAME="tokenexpire" TYPE="int" LENGTH="10" NOTNULL="false"/>
         <FIELD NAME="timecreated" TYPE="int" LENGTH="10" NOTNULL="true"/>

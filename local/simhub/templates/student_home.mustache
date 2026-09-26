@@ -29,7 +29,9 @@
     <h4>{{strings.sectionparcours}}</h4>
     <ul class="list-unstyled mb-4">
         {{#parcoursencours}}
-        <li><a href="{{url}}">{{nom}}</a> — {{pct}} %</li>
+        <li><a href="{{url}}">{{nom}}</a> — {{pct}} %
+            {{#echeance}}<span class="small {{#enretard}}text-danger{{/enretard}}{{^enretard}}text-muted{{/enretard}}"> · {{strings.prochaineecheance}} {{echeance}}</span>{{/echeance}}
+        </li>
         {{/parcoursencours}}
     </ul>
     {{/hasparcoursencours}}
@@ -68,19 +70,27 @@
                    value="{{filtre.motcle}}">
         </div>
         <div class="form-group mr-2 mb-2">
-            <input type="text" name="discipline" class="form-control" placeholder="{{strings.filtrediscipline}}"
-                   value="{{filtre.discipline}}">
+            <select name="discipline" class="form-control" aria-label="{{strings.filtrediscipline}}">
+                <option value="">{{strings.filtrediscipline}}</option>
+                {{#disciplines}}
+                <option value="{{value}}"{{#selected}} selected{{/selected}}>{{value}}</option>
+                {{/disciplines}}
+            </select>
         </div>
         <div class="form-group mr-2 mb-2">
-            <input type="text" name="espece" class="form-control" placeholder="{{strings.filtreespece}}"
-                   value="{{filtre.espece}}">
+            <select name="espece" class="form-control" aria-label="{{strings.filtreespece}}">
+                <option value="">{{strings.filtreespece}}</option>
+                {{#especes}}
+                <option value="{{value}}"{{#selected}} selected{{/selected}}>{{value}}</option>
+                {{/especes}}
+            </select>
         </div>
         <div class="form-group mr-2 mb-2">
             <select name="niveaudifficulte" class="form-control">
                 <option value="">{{strings.filtreniveau}}</option>
-                <option value="facile">Facile</option>
-                <option value="intermediaire">Intermédiaire</option>
-                <option value="avance">Avancé</option>
+                {{#niveaux}}
+                <option value="{{value}}"{{#selected}} selected{{/selected}}>{{label}}</option>
+                {{/niveaux}}
             </select>
         </div>
         <div class="form-group mr-2 mb-2">

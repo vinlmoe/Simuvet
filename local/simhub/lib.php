@@ -78,7 +78,8 @@ function local_simhub_pluginfile($course, $cm, $context, $filearea, $args, $forc
         // Une source éditable (§6.2) n'est jamais servie à un utilisateur qui n'a pas la
         // capacité de gérer les ressources, quel que soit son droit de consultation générale.
         if ($ressource
-                && $ressource->visibilite === \local_simhub\persistent\ressource::VISIBILITE_INTERNE
+                && ($ressource->visibilite === \local_simhub\persistent\ressource::VISIBILITE_INTERNE
+                    || $ressource->type === \local_simhub\persistent\ressource::TYPE_SOURCE_EDITABLE)
                 && !has_capability('local/simhub:manageressources', $context)) {
             return false;
         }

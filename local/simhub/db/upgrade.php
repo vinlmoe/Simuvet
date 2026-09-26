@@ -57,5 +57,30 @@ function xmldb_local_simhub_upgrade($oldversion) {
         upgrade_plugin_savepoint(true, 2026090103, 'local', 'simhub');
     }
 
+    if ($oldversion < 2026092500) {
+        $caps = ['local/simhub:view', 'local/simhub:startsession', 'local/simhub:submitautoeval'];
+        $syscontext = context_system::instance();
+        foreach (get_archetype_roles('user') as $role) {
+            foreach ($caps as $cap) {
+                assign_capability($cap, CAP_ALLOW, $role->id, $syscontext->id);
+            }
+        }
+        upgrade_plugin_savepoint(true, 2026092500, 'local', 'simhub');
+    }
+
+    if ($oldversion < 2026092600) {
+        \local_simhub\local\roles::installer();
+        upgrade_plugin_savepoint(true, 2026092600, 'local', 'simhub');
+    }
+
+    if ($oldversion < 2026092700) {
+        $table = new xmldb_table('local_simhub_asv_valsim');
+        $field = new xmldb_field('commentaire', XMLDB_TYPE_TEXT, null, null, null, null, null, 'statut');
+        if (!$dbman->field_exists($table, $field)) {
+            $dbman->add_field($table, $field);
+        }
+        upgrade_plugin_savepoint(true, 2026092700, 'local', 'simhub');
+    }
+
     return true;
 }

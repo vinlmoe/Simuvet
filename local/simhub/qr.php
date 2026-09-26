@@ -35,7 +35,7 @@ if (get_config('local_simhub', 'controlepresenceactif')) {
     redirect(new moodle_url('/local/simhub/session_code.php', ['atelierid' => $qr->atelierid]));
 }
 
-session::demarrer($USER->id, $qr->atelierid, [
+session::demarrer_ou_reprendre($USER->id, $qr->atelierid, [
     'methodescan' => 'qr',
     'controlepresence' => null,
 ]);

@@ -3,7 +3,8 @@
 Plugin Moodle local (`local_simhub`) issu du cahier des charges *SimHub
 V0* (ENVA, ENVT, Oniris, VetAgro Sup — août 2026).
 
-**Statut : V1 en construction, non testé sur instance Moodle réelle.**
+**Statut : V1 en construction, testée de bout en bout sur Moodle 4.5 LTS (PHP 8.3) et
+Moodle 5.0 (PHP 8.4), PostgreSQL — voir « Vérification sur instance réelle » ci-dessous.**
 Ce dépôt contient désormais une implémentation fonctionnelle du
 périmètre "V1 indispensable" du cahier des charges (§13) : schéma de
 données complet, capacités, fiche atelier avec CRUD gestionnaire,
@@ -39,6 +40,7 @@ local/simhub/
 ├── lib.php                     Callbacks Moodle (navigation, fichiers, visibilité ressources)
 ├── settings.php                 Page de réglages admin
 ├── index.php                    Accueil étudiant (§5) : filtres + cartes atelier
+├── parcours.php                 Parcours côté étudiant : ordre, échéances, avancement (§8)
 ├── atelier.php                  Fiche atelier étudiant (§5.4 localisation, §5.5 ressources)
 ├── session.php                  Démarrage/fin de session + auto-évaluation guidée (§7, §5.6)
 ├── qr.php                       Point d'entrée QR code (§7)
@@ -354,6 +356,149 @@ de table SQL utilisés correspondent au schéma.
   (`edit`, `add`, `savechanges`, `changessaved`) là où c'est pertinent
   plutôt que de dupliquer du texte.
 
+## Vérification sur instance réelle (septembre 2026)
+
+Le plugin a été installé sur un Moodle 4.5 LTS vierge (PHP 8.3) et sur un Moodle 5.0
+(PHP 8.4, installation puis mise à jour depuis la version précédente du plugin), puis
+éprouvé par un navigateur automatisé (Playwright) avec quatre profils : administrateur,
+étudiant (compte ordinaire, inscrit à une UC et membre d'une cohorte), encadrant (rôle
+système « Encadrant SimHub », dont on vérifie aussi qu'il est refusé sur les pages de
+gestion des ateliers, des actes ASV et de l'import) et validateur externe sans compte. Les 50 pages du plugin s'affichent sans erreur ni avertissement
+PHP, et les 29 parcours fonctionnels suivants aboutissent : création/modification
+d'atelier (dont passage en indisponible), ressource, grille d'auto-évaluation
+(rubrique + critère), rattachement, parcours et composition avec échéance, repère plan,
+régénération QR, code de séance, import CSV, acte ASV, validation ASV en simulation,
+accueil et filtres étudiant, démarrage/fin de séance avec auto-évaluation, scan QR,
+code de séance absent, demande et signature de validation animal vivant, file de
+validation encadrant, attestations, suivi et tableaux de bord, exports CSV/PDF.
+
+Bugs réels corrigés à cette occasion :
+
+- **Aucun étudiant ne pouvait accéder à SimHub.** Les capacités étaient accordées au
+  rôle `student`, qui n'existe que dans les cours ; or SimHub vérifie tout au niveau
+  système. `view`, `startsession` et `submitautoeval` sont désormais accordées à
+  l'utilisateur authentifié (archétype `user`), y compris sur une instance déjà
+  installée (pas de mise à jour 2026092500).
+- **Validation ASV animal vivant impossible** : la balise `<canvas>` de signature
+  n'était pas fermée, si bien que le bouton d'envoi se retrouvait à l'intérieur du
+  canvas et n'était jamais affiché. Le bouton affichait en outre « Valider en
+  simulation » ; il indique maintenant « Valider cet acte ».
+- **Doublons refusés brutalement par la base** : un numéro d'atelier ou un code d'acte
+  ASV déjà utilisé dans l'établissement provoquait « Erreur d'écriture vers la base
+  de données ». Les deux sont désormais signalés dans le formulaire.
+
+## Rôles système SimHub (§11)
+
+Pour la même raison que ci-dessus, un rôle d'enseignant attribué dans un cours ne donne
+aucun droit SimHub. Le plugin crée donc lui-même, à l'installation comme à la mise à
+jour (`classes/local/roles.php`), quatre rôles attribuables **uniquement au niveau
+système** :
+
+| Rôle | Profil §11 | Droits |
+|---|---|---|
+| Encadrant SimHub | Enseignant / formateur | suivi des parcours, validation des séances, export du suivi, validation ASV en simulation |
+| Responsable d'UC SimHub | Responsable d'UC | droits d'encadrant + parcours et rattachements |
+| Gestionnaire de salle SimHub | Responsable de salle | fiches ateliers, ressources, statuts, QR codes, import/export, rattachements, séances |
+| Administrateur fonctionnel SimHub | Administrateur fonctionnel | tous les droits SimHub, dont le référentiel ASV et le paramétrage |
+
+Il reste à les attribuer aux personnes concernées : un raccourci **Rôles SimHub** dans la
+barre de navigation (visible des administrateurs) ouvre directement *Attribuer des rôles
+système*. Rejouer la création est sans danger : un rôle existant est complété, jamais
+recréé, et les ajustements faits à la main par l'établissement sont conservés.
+
+## Internationalisation
+
+Plus aucun texte affiché n'est écrit en dur dans le code : pages, formulaires, messages
+d'import, tableaux de bord, template de l'accueil et documents PDF (livret, attestations)
+passent tous par `lang/fr` et `lang/en` (345 chaînes, identiques dans les deux langues).
+Les descriptions d'événements (journaux Moodle) sont en anglais, selon la convention
+Moodle pour ces textes non traduits. Au passage, le filtre « niveau » de l'accueil
+étudiant conserve désormais la valeur choisie après une recherche.
+
+## Conformité des autres sections (§5 à §8, §12, RGPD)
+
+Même démarche que pour l'ASV : relecture de chaque section contre les exigences citées
+dans le code, correction des écarts, puis scénario automatisé dédié (18 contrôles, tous
+passants sur Moodle 4.5 et 5.0).
+
+| Écart corrigé | Section |
+|---|---|
+| « Mes parcours en cours » était toujours vide : aucune séance ne recevait de parcours. L'accueil propose désormais les parcours de la cohorte de l'étudiant, de ses UC et ceux qu'il a commencés, dès 0 %, avec la prochaine échéance (en rouge si dépassée). | §5.1, §8.1 |
+| Nouvelle page parcours côté étudiant (`parcours.php`) : ateliers dans l'ordre, requis ou non, échéances, statut personnel, barre d'avancement et attestation une fois terminé. | §8 |
+| La case « obligatoire » est prise en compte : s'il y a au moins un atelier obligatoire, seuls ceux-ci conditionnent l'achèvement et l'attestation ; sinon tous. Une seule règle (`classes/local/parcours_helper.php`) pour l'accueil, le suivi, le tableau de bord, l'export et l'attestation. | §8.1 |
+| Le suivi d'un parcours lié à une UC inclut les inscrits de l'UC (en plus de la cohorte et des étudiants ayant commencé). | §8.1, §12.2 |
+| Les ateliers indisponibles restent visibles de l'étudiant, avec le motif et la date de retour prévue, sans bouton « Commencer ». | §5.3, §6.1 |
+| Passer un atelier en indisponible exige un motif (affiché aux étudiants) et permet une date de remise en service ; l'historique complet (début, motif, échéance, référent, état) s'affiche sur la fiche. | §6.1 |
+| Aucune séance ne peut démarrer sur un atelier non actif (bouton, QR ou code de séance) ; une séance déjà en cours reste terminable. | §6.1, §7 |
+| Un nouveau scan QR (ou clic sur « Commencer ») reprend la séance en cours au lieu d'en créer une seconde. | §7.1 |
+| Une « source éditable » est toujours interne, même si « visible étudiant » est choisi, et n'est jamais listée ni servie à un étudiant. | §6.2 |
+| Filtres discipline et espèce de l'accueil : listes des valeurs existantes, comparaison insensible à la casse et aux accents. | §5.2 |
+| L'observation de l'encadrant ASV est déclarée au fournisseur RGPD. | RGPD |
+
+## Module ASV : conformité au §9 (septembre 2026)
+
+Relecture du module ASV contre les exigences du §9 citées dans le code, puis correction
+des écarts, vérifiée par un scénario automatisé dédié (17 contrôles, tous passants sur
+Moodle 4.5 et 5.0) :
+
+1. **Ordre simulation → animal vivant imposé côté serveur** (§9.1) : une demande de
+   validation sur animal vivant est refusée tant que l'acte n'est pas validé en
+   simulation, même en appelant la page directement ; un refus en simulation ne la
+   débloque pas.
+2. **Une seule demande active par acte** : revenir sur la page réaffiche le même lien
+   (avec sa date d'expiration) au lieu d'en générer un nouveau à chaque visite.
+3. **Signature obligatoire** (§9.3) : le navigateur bloque l'envoi sans tracé, et le
+   serveur refuse aussi toute signature vide ou invalide, avec un message explicite.
+4. **Signature dans le livret PDF** (§9.1 « date et signature ») : le tracé du
+   validateur apparaît sous la date et son nom ; le nom de l'encadrant figure aussi pour
+   la validation en simulation.
+5. **Refus et annulation** : l'encadrant enregistre « validé » ou « non validé (à
+   reprendre) » avec une observation. Une validation saisie par erreur peut être
+   annulée depuis la fiche de l'étudiant, avec un motif obligatoire. Elle reste tracée
+   en base (statut `annule`, motif, auteur, date) mais ne compte plus pour le livret ni
+   pour la certification.
+6. **Pilotage par étudiant** (§9.4) : la page ASV encadrant liste les étudiants
+   (filtrables par cohorte/promotion) avec leurs validations en simulation et sur animal
+   vivant, leurs demandes en attente et les certifications acquises. Chaque nom ouvre une
+   fiche ASV (`asv/etudiant.php`) : état acte par acte, livret PDF, attestations et
+   annulations. La synthèse par acte compte désormais des étudiants distincts.
+7. **Demandes en attente visibles par l'étudiant**, avec leur date d'expiration et un
+   lien pour réafficher le lien de validation.
+
+**Certification globale de fin de A3** (§9.4) : l'attestation A3 exige désormais la
+validation, en simulation puis sur animal vivant, de **tous les actes A1, A2 et A3**, et
+le document l'indique explicitement. Les attestations A1 et A2 restent disponibles comme
+étapes intermédiaires. La génération groupée et le badge du niveau A3 suivent la même
+règle.
+
+Au passage : les identifiants renvoyés par PostgreSQL (chaînes) sont normalisés avant
+comparaison dans le calcul de certification, et les appels CSV précisent leur caractère
+d'échappement (avertissement de dépréciation sous PHP 8.4).
+
+## Navigation par domaines et onglets
+
+- **Menus par domaine** : la barre interne ne présente plus une douzaine de boutons à
+  plat mais un menu déroulant par domaine (Ateliers, Parcours, Séances, ASV), chacun
+  surligné sur toutes ses sous-pages. Un domaine à une seule entrée reste un bouton.
+  Le menu Séances porte une **pastille** avec le nombre de séances non vérifiées en
+  attente de validation.
+- **Onglets de fiche** : toutes les sous-pages d'un atelier (fiche, ressources, grille
+  d'auto-évaluation, rattachements, plan, QR, validation ASV, vue étudiant, PDF) et d'un
+  parcours (fiche, composition, suivi, export) partagent les mêmes onglets — on passe
+  de l'une à l'autre sans revenir à la liste.
+- **Listes** : dans la liste des ateliers et des parcours, le nom mène à la fiche et
+  les liens « | » sont remplacés par un menu « Gérer », construit à partir des mêmes
+  onglets.
+- **Fiche atelier étudiant** : boutons « Commencer » / « Terminer et s'auto-évaluer »
+  directement sur la fiche (page d'arrivée après un scan QR), et lien « Gérer cet
+  atelier » pour les gestionnaires.
+- **Plus d'identifiants à taper** : UC, étudiant et atelier se choisissent dans des
+  listes avec recherche (`classes/local/selecteurs.php`) au lieu d'identifiants
+  numériques Moodle (rattachements, parcours, actes ASV, validation en simulation,
+  attestation A3).
+- Fil d'Ariane dédoublonné (`navbar->ignore_active()`), et chaînes françaises codées en
+  dur sur ces pages déplacées dans les fichiers de langue.
+
 ## Navigation interne (signalé en usage réel)
 
 Aucune page du plugin n'appelait `$PAGE->navbar->add()` : le fil d'Ariane
@@ -499,8 +644,8 @@ sophistiquée, gestion documentaire avec versioning complet.
   nom de table de ce schéma.
 - Aucune dépendance à un plugin tiers n'est requise en V1 : cohortes,
   rôles, cours et carnet de notes Moodle natifs suffisent (§10).
-- Ce code n'a pas été testé sur une instance Moodle réelle
-  (environnement de génération sans runtime Moodle disponible) : tous
+- Ce code a été vérifié sur Moodle 4.5 LTS et 5.0 (voir plus haut) ; reste à
+  confirmer la version exacte de l'infrastructure EVE. Historiquement : tous
   les fichiers PHP passent `php -l` et `db/install.xml` est un XML
   bien formé, mais aucune vérification contre l'API Moodle réelle
   (signatures exactes, comportements de `core\persistent`,

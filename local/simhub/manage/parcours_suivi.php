@@ -20,6 +20,7 @@ $parcours = new parcours($parcoursid);
 \local_simhub\local\navigation::preparer($PAGE, new moodle_url('/local/simhub/manage/parcours_suivi.php', ['parcoursid' => $parcoursid]), s($parcours->get('nom')), [
     [get_string('filtre_parcours', 'local_simhub'), new moodle_url('/local/simhub/manage/parcours.php')],
 ]);
+\local_simhub\local\navigation::onglets('parcours', $parcoursid, 'suivi');
 
 echo $OUTPUT->header();
 echo \local_simhub\local\navigation::barre();
@@ -43,38 +44,19 @@ if (empty($atelierids)) {
 
 // Étudiants concernés : membres de la cohorte rattachée au parcours si connue, sinon tout
 // étudiant ayant au moins une session sur l'un des ateliers du parcours (§8.1).
-$cohortid = $parcours->get('cohortid');
-if ($cohortid) {
-    $users = $DB->get_records_sql(
-        "SELECT u.id, u.firstname, u.lastname
-           FROM {cohort_members} cm
-           JOIN {user} u ON u.id = cm.userid
-          WHERE cm.cohortid = :cohortid
-       ORDER BY u.lastname, u.firstname",
-        ['cohortid' => $cohortid]
-    );
-} else {
-    [$insql, $params] = $DB->get_in_or_equal($atelierids);
-    $users = $DB->get_records_sql(
-        "SELECT u.id, u.firstname, u.lastname
-           FROM {local_simhub_session} s
-           JOIN {user} u ON u.id = s.userid
-          WHERE s.atelierid $insql
-       GROUP BY u.id, u.firstname, u.lastname
-       ORDER BY u.lastname, u.firstname",
-        $params
-    );
-}
+$users = \local_simhub\local\parcours_helper::etudiants($parcours);
+$requis = \local_simhub\local\parcours_helper::ateliers_requis($parcours);
 
 $table = new html_table();
-$head = ['Étudiant'];
+$head = [get_string('etudiant', 'local_simhub')];
 $ateliersbyid = [];
 foreach ($atelierids as $aid) {
     $atelier = new atelier($aid);
     $ateliersbyid[$aid] = $atelier;
-    $head[] = s($atelier->get('nomcourt'));
+    $head[] = s($atelier->get('nomcourt')) . (in_array((int) $aid, $requis, true) && count($requis) < count($atelierids)
+        ? ' *' : '');
 }
-$head[] = 'Avancement';
+$head[] = get_string('avancement', 'local_simhub');
 $head[] = '';
 $table->head = $head;
 
@@ -89,24 +71,24 @@ foreach ($users as $user) {
         if (!$latest) {
             $row[] = '—';
         } else if ($latest->get('statut') === session::STATUT_CERTIFIE) {
-            $row[] = 'Validé';
+            $row[] = get_string('suivi_valide', 'local_simhub');
             $realises++;
         } else if (in_array($latest->get('statut'), [session::STATUT_REALISE], true)) {
-            $row[] = 'Réalisé';
+            $row[] = get_string('suivi_realise', 'local_simhub');
             $realises++;
         } else {
-            $row[] = 'Commencé';
+            $row[] = get_string('suivi_commence', 'local_simhub');
         }
     }
 
-    $pct = round(100 * $realises / count($atelierids));
+    $pct = \local_simhub\local\parcours_helper::progression($parcours, $user->id)['pct'];
     $row[] = $pct . ' %';
 
     if ($pct >= 100) {
         $attestationurl = new moodle_url('/local/simhub/manage/parcours_attestation_pdf.php', [
             'parcoursid' => $parcoursid, 'userid' => $user->id,
         ]);
-        $row[] = html_writer::link($attestationurl, 'Attestation (PDF)');
+        $row[] = html_writer::link($attestationurl, get_string('attestation_pdf', 'local_simhub'));
     } else {
         $row[] = '';
     }

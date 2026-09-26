@@ -19,7 +19,7 @@ $context = context_system::instance();
 require_capability('local/simhub:view', $context);
 
 $userid = optional_param('userid', $USER->id, PARAM_INT);
-if ($userid != $USER->id) {
+if ($userid != $USER->id && !has_capability('local/simhub:validateasvsimulation', $context)) {
     require_capability('local/simhub:manageasv', $context);
 }
 
@@ -27,12 +27,12 @@ $envcode = optional_param('envcode', get_config('local_simhub', 'envcode') ?: ''
 $niveau = optional_param('niveau', 'A3', PARAM_ALPHANUM);
 
 $user = \core_user::get_user($userid, '*', MUST_EXIST);
-$actes = asv_acte::get_referentiel($envcode, $niveau);
+$actes = asv_certification_helper::get_actes_requis($envcode, $niveau);
 
 if (empty($actes)) {
     redirect(
         new moodle_url('/local/simhub/asv/index.php'),
-        'Aucun acte ' . $niveau . ' dans le référentiel de cet établissement.',
+        get_string('asv_aucun_acte_niveau', 'local_simhub', $niveau),
         null,
         \core\output\notification::NOTIFY_WARNING
     );
@@ -44,13 +44,12 @@ if (!empty($manquants)) {
     $PAGE->set_context($context);
     $PAGE->set_url(new moodle_url('/local/simhub/asv/attestation_pdf.php', ['userid' => $userid, 'niveau' => $niveau]));
     $PAGE->set_pagelayout('standard');
-    $PAGE->set_title('Certification ' . $niveau);
-    $PAGE->set_heading('Certification ' . $niveau);
+    $PAGE->set_title(get_string('asv_certification_niveau', 'local_simhub', $niveau));
+    $PAGE->set_heading(get_string('asv_certification_niveau', 'local_simhub', $niveau));
 
     echo $OUTPUT->header();
     echo $OUTPUT->notification(
-        'La certification ' . $niveau . ' de ' . fullname($user) . ' ne peut pas encore être délivrée : '
-        . count($manquants) . ' acte(s) restent à valider.',
+        get_string('asv_certification_incomplete', 'local_simhub', (object) ['niveau' => $niveau, 'nom' => fullname($user), 'nb' => count($manquants)]),
         \core\output\notification::NOTIFY_WARNING
     );
     echo html_writer::start_tag('ul');

@@ -23,11 +23,14 @@ echo \local_simhub\local\navigation::barre();
 
 $actes = asv_acte::get_referentiel($envcode);
 
-echo $OUTPUT->single_button(
-    new moodle_url('/local/simhub/asv/livret_pdf.php', ['envcode' => $envcode] + ($canpilot ? [] : ['userid' => $USER->id])),
-    'Exporter mon livret (PDF)',
-    'get'
-);
+// Côté encadrant, le livret d'un étudiant s'exporte depuis sa fiche (asv/etudiant.php).
+if (!$canpilot) {
+    echo $OUTPUT->single_button(
+        new moodle_url('/local/simhub/asv/livret_pdf.php', ['envcode' => $envcode]),
+        get_string('asv_exporter_livret', 'local_simhub'),
+        'get'
+    );
+}
 
 if (has_capability('local/simhub:manageasv', $context)) {
     echo $OUTPUT->single_button(
@@ -43,57 +46,95 @@ if (has_capability('local/simhub:manageasv', $context)) {
 }
 
 if (!$canpilot) {
-    // Vue étudiant : sa propre progression sur le référentiel (§9.4 "état d'avancement individuel").
-    $actesvalidessim = asv_valsim::get_actes_valides($USER->id);
-    $valanimal = asv_valanimal::get_pour_etudiant($USER->id);
-    $actesvalidesanimal = [];
-    foreach ($valanimal as $v) {
-        if ($v->statut === \local_simhub\record\asv_valanimal::STATUT_VALIDE) {
-            $actesvalidesanimal[$v->acteid] = true;
-        }
+    // Vue étudiant (§9.4 « état d'avancement individuel ») : avancement vers chaque
+    // certification, puis détail acte par acte avec les demandes sur animal vivant en attente.
+    echo \local_simhub\local\asv_vue::certifications($USER->id, $envcode);
+    echo \local_simhub\local\asv_vue::tableau($USER->id, $envcode, false);
+} else {
+    // Vue pilotage (§9.4) : étudiant par étudiant, filtrable par cohorte (promotion).
+    global $DB;
+
+    $cohortid = optional_param('cohortid', 0, PARAM_INT);
+    echo html_writer::start_tag('form', ['method' => 'get', 'class' => 'form-inline mb-3']);
+    echo html_writer::tag('label', get_string('champ_cohorte', 'local_simhub'), ['for' => 'id_cohortid', 'class' => 'mr-2 me-2']);
+    echo html_writer::select(\local_simhub\local\cohort_helper::get_options(false), 'cohortid', $cohortid,
+        ['0' => get_string('asv_tous_etudiants', 'local_simhub')], ['id' => 'id_cohortid', 'class' => 'form-control mr-2 me-2']);
+    echo html_writer::tag('button', get_string('filtrer', 'local_simhub'), ['type' => 'submit', 'class' => 'btn btn-secondary']);
+    echo html_writer::end_tag('form');
+
+    if ($cohortid) {
+        $userids = $DB->get_fieldset_select('cohort_members', 'userid', 'cohortid = ?', [$cohortid]);
+    } else {
+        // Sans cohorte choisie : tous les étudiants ayant au moins une trace ASV.
+        $userids = array_unique(array_merge(
+            $DB->get_fieldset_select('local_simhub_asv_valsim', 'DISTINCT userid', '1 = 1'),
+            $DB->get_fieldset_select('local_simhub_asv_valanimal', 'DISTINCT userid', '1 = 1')
+        ));
     }
 
+    $total = count($actes);
     $table = new html_table();
-    $table->head = ['Acte', 'Niveau', 'Simulation', 'Animal vivant', ''];
-    foreach ($actes as $acte) {
-        $simok = in_array($acte->get('id'), $actesvalidessim, true);
-        $animalok = !empty($actesvalidesanimal[$acte->get('id')]);
-        $demanderurl = new moodle_url('/local/simhub/asv/demander_validation_animal.php', ['acteid' => $acte->get('id')]);
-        $table->data[] = [
-            s($acte->get('nom')),
-            s($acte->get('niveau')),
-            $simok ? '✔' : '—',
-            $animalok ? '✔' : '—',
-            (!$animalok && $simok) ? html_writer::link($demanderurl, get_string('asv_demander_validation_animal', 'local_simhub')) : '',
+    $table->head = [
+        get_string('etudiant', 'local_simhub'),
+        get_string('asv_col_valides_simulation', 'local_simhub'),
+        get_string('asv_col_valides_animal', 'local_simhub'),
+        get_string('asv_col_en_attente', 'local_simhub'),
+        get_string('asv_col_certifications', 'local_simhub'),
+    ];
+    $lignes = [];
+    foreach ($userids as $uid) {
+        $user = \core_user::get_user($uid);
+        if (!$user || $user->deleted) {
+            continue;
+        }
+        $etat = \local_simhub\local\asv_certification_helper::etat_etudiant($uid, $envcode);
+        $nbsim = $nbanimal = $nbattente = 0;
+        foreach ($etat as $e) {
+            $nbsim += ($e['sim'] && $e['sim']->statut === asv_valsim::STATUT_VALIDE) ? 1 : 0;
+            $nbanimal += $e['animal'] ? 1 : 0;
+            $nbattente += $e['attente'] ? 1 : 0;
+        }
+        $certifs = [];
+        foreach (['A1', 'A2', 'A3'] as $niveau) {
+            if (!empty(\local_simhub\local\asv_certification_helper::get_actes_requis($envcode, $niveau))
+                    && empty(\local_simhub\local\asv_certification_helper::get_actes_manquants($uid, $niveau, $envcode))) {
+                $certifs[] = $niveau === 'A3' ? get_string('asv_certif_globale_courte', 'local_simhub') : $niveau;
+            }
+        }
+        $lignes[fullname($user) . $uid] = [
+            html_writer::link(new moodle_url('/local/simhub/asv/etudiant.php', ['userid' => $uid]), s(fullname($user))),
+            $nbsim . ' / ' . $total,
+            $nbanimal . ' / ' . $total,
+            $nbattente ?: '',
+            $certifs ? '✔ ' . implode(', ', $certifs) : '—',
         ];
     }
-    echo html_writer::table($table);
-} else {
-    // Vue pilotage (§9.4) : par acte, nombre d'étudiants validés en simulation / sur animal vivant.
-    global $DB;
-    $table = new html_table();
-    $table->head = ['Acte', 'Niveau', 'Validés en simulation', 'Validés sur animal vivant'];
-    foreach ($actes as $acte) {
-        $countsim = $DB->count_records('local_simhub_asv_valsim', ['acteid' => $acte->get('id'), 'statut' => 'valide']);
-        $countanimal = $DB->count_records('local_simhub_asv_valanimal', ['acteid' => $acte->get('id'), 'statut' => 'valide']);
-        $table->data[] = [s($acte->get('nom')), s($acte->get('niveau')), $countsim, $countanimal];
+    ksort($lignes);
+    $table->data = array_values($lignes);
+
+    if (empty($table->data)) {
+        echo $OUTPUT->notification(get_string('asv_aucun_etudiant', 'local_simhub'), \core\output\notification::NOTIFY_INFO);
+    } else {
+        echo html_writer::table($table);
     }
-    echo html_writer::table($table);
 
     echo $OUTPUT->single_button(
         new moodle_url('/local/simhub/asv/valider_simulation.php'),
         get_string('asv_valider_simulation', 'local_simhub')
     );
 
-    echo html_writer::tag('h4', 'Certification globale de fin de A3', ['class' => 'mt-4']);
-    echo html_writer::start_tag('form', ['method' => 'get', 'action' => new moodle_url('/local/simhub/asv/attestation_pdf.php')]);
-    echo html_writer::empty_tag('input', ['type' => 'hidden', 'name' => 'envcode', 'value' => $envcode]);
-    echo html_writer::empty_tag('input', [
-        'type' => 'number', 'name' => 'userid', 'placeholder' => 'Id étudiant', 'class' => 'form-control d-inline-block w-auto mr-2', 'required' => 'required',
-    ]);
-    echo html_writer::empty_tag('input', ['type' => 'hidden', 'name' => 'niveau', 'value' => 'A3']);
-    echo html_writer::tag('button', 'Générer l\'attestation A3', ['type' => 'submit', 'class' => 'btn btn-primary']);
-    echo html_writer::end_tag('form');
+    // Synthèse par acte, pour repérer les actes rarement validés.
+    echo html_writer::tag('h4', get_string('asv_synthese_par_acte', 'local_simhub'), ['class' => 'mt-4']);
+    $table = new html_table();
+    $table->head = [get_string('asv_acte', 'local_simhub'), get_string('asv_champ_niveau', 'local_simhub'), get_string('asv_col_valides_simulation', 'local_simhub'), get_string('asv_col_valides_animal', 'local_simhub')];
+    foreach ($actes as $acte) {
+        $countsim = $DB->count_records_select('local_simhub_asv_valsim', 'acteid = ? AND statut = ?',
+            [$acte->get('id'), asv_valsim::STATUT_VALIDE], 'COUNT(DISTINCT userid)');
+        $countanimal = $DB->count_records_select('local_simhub_asv_valanimal', 'acteid = ? AND statut = ?',
+            [$acte->get('id'), asv_valanimal::STATUT_VALIDE], 'COUNT(DISTINCT userid)');
+        $table->data[] = [s($acte->get('nom')), s($acte->get('niveau')), $countsim, $countanimal];
+    }
+    echo html_writer::table($table);
 }
 
 echo $OUTPUT->footer();

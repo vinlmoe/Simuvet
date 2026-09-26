@@ -31,7 +31,7 @@ if ($submitted) {
     require_sesskey();
 
     if ($sanscode) {
-        session::demarrer($USER->id, $atelierid, [
+        session::demarrer_ou_reprendre($USER->id, $atelierid, [
             'methodescan' => 'qr',
             'controlepresence' => 'non_verifie',
         ]);
@@ -45,7 +45,7 @@ if ($submitted) {
 
     $code = required_param('code', PARAM_ALPHANUMEXT);
     if (seancecode::est_valide($atelier->get('salle'), $code)) {
-        session::demarrer($USER->id, $atelierid, [
+        session::demarrer_ou_reprendre($USER->id, $atelierid, [
             'methodescan' => 'qr',
             'controlepresence' => 'code_seance',
         ]);

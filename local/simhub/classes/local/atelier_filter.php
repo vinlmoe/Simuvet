@@ -33,7 +33,10 @@ class atelier_filter {
     /** @var string */
     public $motcle = '';
     /** @var string */
-    public $statut = \local_simhub\persistent\atelier::STATUT_ACTIF;
+    /** Valeur de filtre : ateliers montrés aux étudiants, actifs ou momentanément indisponibles (§5.3, §6.1). */
+    const STATUT_VISIBLES = 'visibles';
+
+    public $statut = self::STATUT_VISIBLES;
 
     /**
      * Construit un filtre à partir des paramètres GET de la requête courante.
@@ -51,7 +54,7 @@ class atelier_filter {
         $filter->niveaudifficulte = optional_param('niveaudifficulte', '', PARAM_ALPHA);
         $filter->dureemax = optional_param('dureemax', 0, PARAM_INT);
         $filter->motcle = optional_param('motcle', '', PARAM_TEXT);
-        $filter->statut = optional_param('statut', \local_simhub\persistent\atelier::STATUT_ACTIF, PARAM_ALPHA);
+        $filter->statut = optional_param('statut', self::STATUT_VISIBLES, PARAM_ALPHAEXT);
         return $filter;
     }
 
@@ -84,12 +87,16 @@ class atelier_filter {
             $conditions[] = 'a.envcode = :envcode';
             $params['envcode'] = $this->envcode;
         }
-        if ($this->statut !== '') {
+        if ($this->statut === self::STATUT_VISIBLES) {
+            $conditions[] = 'a.statut IN (:statutactif, :statutindispo)';
+            $params['statutactif'] = \local_simhub\persistent\atelier::STATUT_ACTIF;
+            $params['statutindispo'] = \local_simhub\persistent\atelier::STATUT_INDISPONIBLE;
+        } else if ($this->statut !== '') {
             $conditions[] = 'a.statut = :statut';
             $params['statut'] = $this->statut;
         }
         if ($this->discipline !== '') {
-            $conditions[] = 'a.discipline = :discipline';
+            $conditions[] = $this->like_condition('a.discipline', 'discipline');
             $params['discipline'] = $this->discipline;
         }
         if ($this->espece !== '') {
@@ -134,6 +141,6 @@ class atelier_filter {
     private function like_condition(string $field, string $paramname): string {
         global $DB;
 
-        return $DB->sql_like($field, ":$paramname");
+        return $DB->sql_like($field, ":$paramname", false, false);
     }
 }

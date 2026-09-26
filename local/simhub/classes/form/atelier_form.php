@@ -41,9 +41,9 @@ class atelier_form extends \moodleform {
 
         $mform->addElement('select', 'niveaudifficulte', get_string('champ_niveaudifficulte', 'local_simhub'), [
             '' => '',
-            'facile' => 'Facile',
-            'intermediaire' => 'Intermédiaire',
-            'avance' => 'Avancé',
+            'facile' => get_string('niveau_facile', 'local_simhub'),
+            'intermediaire' => get_string('niveau_intermediaire', 'local_simhub'),
+            'avance' => get_string('niveau_avance', 'local_simhub'),
         ]);
 
         $mform->addElement('text', 'dureeindicative', get_string('champ_dureeindicative', 'local_simhub'));
@@ -55,6 +55,15 @@ class atelier_form extends \moodleform {
             atelier::STATUT_INDISPONIBLE => get_string('statut_indisponible', 'local_simhub'),
             atelier::STATUT_ARCHIVE => get_string('statut_archive', 'local_simhub'),
         ]);
+
+        // Motif et remise en service prévue d'une indisponibilité (§6.1), montrés à
+        // l'étudiant sur la carte et la fiche de l'atelier.
+        $mform->addElement('textarea', 'indispo_motif', get_string('indispo_motif', 'local_simhub'), ['rows' => 2]);
+        $mform->setType('indispo_motif', PARAM_TEXT);
+        $mform->hideIf('indispo_motif', 'statut', 'neq', atelier::STATUT_INDISPONIBLE);
+        $mform->addElement('date_selector', 'indispo_echeance', get_string('indispo_echeance', 'local_simhub'),
+            ['optional' => true]);
+        $mform->hideIf('indispo_echeance', 'statut', 'neq', atelier::STATUT_INDISPONIBLE);
 
         $mform->addElement('text', 'envcode', get_string('champ_envcode', 'local_simhub'));
         $mform->setType('envcode', PARAM_ALPHANUMEXT);
@@ -84,7 +93,7 @@ class atelier_form extends \moodleform {
         $mform->addElement('hidden', 'planrepy');
         $mform->setType('planrepy', PARAM_FLOAT);
 
-        $mform->addElement('filemanager', 'planimage', 'Image du plan de salle', null, [
+        $mform->addElement('filemanager', 'planimage', get_string('champ_planimage', 'local_simhub'), null, [
             'subdirs' => 0,
             'maxfiles' => 1,
             'accepted_types' => ['.png', '.jpg', '.jpeg'],
@@ -99,5 +108,28 @@ class atelier_form extends \moodleform {
         $mform->setType('id', PARAM_INT);
 
         $this->add_action_buttons();
+    }
+    /**
+     * Le numéro d'atelier est unique par établissement (§5.3) : le signaler dans le
+     * formulaire plutôt que de laisser la base refuser l'enregistrement.
+     *
+     * @param array $data
+     * @param array $files
+     * @return array
+     */
+    public function validation($data, $files) {
+        global $DB;
+
+        $errors = parent::validation($data, $files);
+        if (($data['statut'] ?? '') === atelier::STATUT_INDISPONIBLE && trim($data['indispo_motif'] ?? '') === '') {
+            $errors['indispo_motif'] = get_string('indispo_motif_requis', 'local_simhub');
+        }
+        $doublon = $DB->record_exists_select('local_simhub_atelier',
+            'envcode = :envcode AND numero = :numero AND id <> :id',
+            ['envcode' => $data['envcode'], 'numero' => $data['numero'], 'id' => (int) ($data['id'] ?? 0)]);
+        if ($doublon) {
+            $errors['numero'] = get_string('numero_existe', 'local_simhub');
+        }
+        return $errors;
     }
 }

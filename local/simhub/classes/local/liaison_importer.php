@@ -51,15 +51,15 @@ class liaison_importer {
             $data = self::map_row($line, $delimiter, $colmap);
 
             if (empty($data['numero'])) {
-                $result['erreurs'][] = 'Ligne ' . ($lineno + 2) . ' ignorée : numéro d\'atelier manquant.';
+                $result['erreurs'][] = get_string('import_ligne_numero', 'local_simhub', $lineno + 2);
                 continue;
             }
 
             $envcode = $data['envcode'] ?: $defaultenvcode;
             $atelier = atelier::get_record(['envcode' => $envcode, 'numero' => $data['numero']]);
             if (!$atelier) {
-                $result['erreurs'][] = 'Ligne ' . ($lineno + 2) . ' ignorée : atelier '
-                    . $data['numero'] . ' (' . $envcode . ') introuvable — importez-le d\'abord.';
+                $result['erreurs'][] = get_string('import_ligne_atelier_introuvable', 'local_simhub',
+                    (object) ['ligne' => $lineno + 2, 'numero' => $data['numero'], 'envcode' => $envcode]);
                 continue;
             }
 
@@ -110,15 +110,15 @@ class liaison_importer {
             $data = self::map_row($line, $delimiter, $colmap);
 
             if (empty($data['parcours']) || empty($data['numero'])) {
-                $result['erreurs'][] = 'Ligne ' . ($lineno + 2) . ' ignorée : parcours ou numéro d\'atelier manquant.';
+                $result['erreurs'][] = get_string('import_ligne_parcours', 'local_simhub', $lineno + 2);
                 continue;
             }
 
             $envcode = $data['envcode'] ?: $defaultenvcode;
             $atelier = atelier::get_record(['envcode' => $envcode, 'numero' => $data['numero']]);
             if (!$atelier) {
-                $result['erreurs'][] = 'Ligne ' . ($lineno + 2) . ' ignorée : atelier '
-                    . $data['numero'] . ' (' . $envcode . ') introuvable — importez-le d\'abord.';
+                $result['erreurs'][] = get_string('import_ligne_atelier_introuvable', 'local_simhub',
+                    (object) ['ligne' => $lineno + 2, 'numero' => $data['numero'], 'envcode' => $envcode]);
                 continue;
             }
 
@@ -165,10 +165,10 @@ class liaison_importer {
         $lines = array_values(array_filter($lines, fn($l) => trim($l) !== ''));
 
         if (empty($lines)) {
-            return [[], [], 'Fichier vide.'];
+            return [[], [], get_string('import_fichier_vide', 'local_simhub')];
         }
 
-        $headerscols = str_getcsv(array_shift($lines), $delimiter);
+        $headerscols = str_getcsv(array_shift($lines), $delimiter, '"', '');
         $colmap = [];
         foreach ($headerscols as $index => $header) {
             $normalised = atelier_importer::normalise_header($header);
@@ -179,7 +179,7 @@ class liaison_importer {
 
         foreach ($required as $property) {
             if (!in_array($property, $colmap, true)) {
-                return [[], [], 'Colonne obligatoire introuvable : ' . $property . '.'];
+                return [[], [], get_string('import_colonne_manquante', 'local_simhub', $property)];
             }
         }
 
@@ -210,7 +210,7 @@ class liaison_importer {
      * @return array
      */
     private static function map_row(string $line, string $delimiter, array $colmap): array {
-        $row = str_getcsv($line, $delimiter);
+        $row = str_getcsv($line, $delimiter, '"', '');
         $data = [];
         foreach ($colmap as $index => $property) {
             $data[$property] = isset($row[$index]) ? trim($row[$index]) : '';

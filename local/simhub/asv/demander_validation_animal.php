@@ -23,15 +23,28 @@ $acte = new asv_acte($acteid);
 echo $OUTPUT->header();
 echo \local_simhub\local\navigation::barre();
 
-$demande = asv_valanimal::creer_demande($USER->id, $acteid);
+// L'ordre du livret (§9.1) est imposé ici et pas seulement par l'affichage du lien : sans
+// validation en simulation, aucune demande sur animal vivant ne peut être générée.
+if (!in_array($acteid, \local_simhub\record\asv_valsim::get_actes_valides($USER->id))) {
+    echo $OUTPUT->notification(get_string('asv_simulation_requise', 'local_simhub'), \core\output\notification::NOTIFY_ERROR);
+    echo $OUTPUT->continue_button(new moodle_url('/local/simhub/asv/index.php'));
+    echo $OUTPUT->footer();
+    exit;
+}
+
+// Une seule demande active par acte : revenir sur cette page réaffiche le même lien au lieu
+// d'en générer un nouveau à chaque visite.
+$demande = asv_valanimal::get_ou_creer_demande($USER->id, $acteid);
 $lien = new moodle_url('/local/simhub/asv/valider_animal.php', ['token' => $demande->token]);
 
-echo html_writer::tag('p', 'Acte : ' . s($acte->get('nom')));
+echo html_writer::tag('p', get_string('asv_acte_libelle', 'local_simhub', s($acte->get('nom'))));
 echo html_writer::tag('p', get_string('asv_lien_valanimal', 'local_simhub') . ' :');
 echo html_writer::tag('p', html_writer::link($lien, $lien->out(false)));
+echo html_writer::tag('p', get_string('asv_lien_expire_le', 'local_simhub',
+    userdate($demande->tokenexpire, get_string('strftimedatetimeshort', 'langconfig'))));
 echo html_writer::tag(
     'p',
-    'Transmettez ce lien au vétérinaire, maître de stage ou encadrant autorisé qui a supervisé le geste sur animal vivant.'
+    get_string('asv_transmettre_lien', 'local_simhub')
 );
 
 echo $OUTPUT->footer();

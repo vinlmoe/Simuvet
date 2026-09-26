@@ -29,6 +29,7 @@ $title = get_string('nav_qrcode', 'local_simhub');
     [get_string('manage_ateliers', 'local_simhub'), new moodle_url('/local/simhub/manage/ateliers.php')],
     [s($atelier->get('nomcourt')), new moodle_url('/local/simhub/manage/atelier_edit.php', ['id' => $id])],
 ]);
+\local_simhub\local\navigation::onglets('atelier', $id, 'qr');
 
 echo $OUTPUT->header();
 echo \local_simhub\local\navigation::barre();

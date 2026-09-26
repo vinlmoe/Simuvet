@@ -32,26 +32,22 @@ $params = $envcode !== '' ? ['envcode' => $envcode] : [];
 $parcourslist = parcours::get_records($params, 'nom');
 
 $table = new html_table();
-$table->head = [get_string('filtre_parcours', 'local_simhub'), get_string('champ_statut', 'local_simhub'), 'Ateliers', '', ''];
+$table->head = [get_string('filtre_parcours', 'local_simhub'), get_string('type', 'local_simhub'),
+    get_string('nb_ateliers', 'local_simhub'), get_string('actions')];
 
 foreach ($parcourslist as $p) {
     $nbateliers = count($p->get_ateliers());
     $suiviurl = new moodle_url('/local/simhub/manage/parcours_suivi.php', ['parcoursid' => $p->get('id')]);
 
-    $gestionlinks = '';
-    if ($canmanage) {
-        $editurl = new moodle_url('/local/simhub/manage/parcours_edit.php', ['id' => $p->get('id')]);
-        $ateliersurl = new moodle_url('/local/simhub/manage/parcours_ateliers.php', ['parcoursid' => $p->get('id')]);
-        $gestionlinks = html_writer::link($editurl, get_string('edit')) . ' | '
-            . html_writer::link($ateliersurl, 'Composition');
-    }
+    $gestionlinks = \local_simhub\local\navigation::menu_actions(
+        \local_simhub\local\navigation::liens_parcours($p->get('id'))
+    );
 
     $table->data[] = [
-        s($p->get('nom')),
-        s($p->get('type')),
+        html_writer::link($suiviurl, s($p->get('nom'))),
+        get_string('parcours_type_' . $p->get('type'), 'local_simhub'),
         $nbateliers,
         $gestionlinks,
-        html_writer::link($suiviurl, 'Suivi'),
     ];
 }
 
