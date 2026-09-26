@@ -77,7 +77,7 @@ class parcours_form extends \moodleform {
         $mform->addElement(
             'select',
             'cohortid',
-            get_string('champ_cohorte', 'local_simhub') . ' (optionnel — pour recommander directement à ses membres)',
+            get_string('champ_cohorte_optionnel', 'local_simhub'),
             cohort_helper::get_options()
         );
         $mform->setType('cohortid', PARAM_INT);

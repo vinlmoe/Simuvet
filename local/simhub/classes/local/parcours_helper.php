@@ -47,19 +47,71 @@ class parcours_helper {
     }
 
     /**
-     * Statut d'un étudiant sur un atelier, d'après sa séance la plus récente.
+     * Statut de chaque étudiant sur chaque atelier, d'après sa séance la plus récente, en une
+     * requête par lot plutôt qu'une par étudiant et par atelier.
      *
-     * @param int $userid
-     * @param int $atelierid
-     * @return string pascommence|commence|realise|valide
+     * @param int[] $userids
+     * @param int[] $atelierids
+     * @return array [userid][atelierid] => pascommence|commence|realise|valide|areprendre
      */
-    public static function statut_atelier(int $userid, int $atelierid): string {
-        $sessions = session::get_pour_etudiant($userid, $atelierid);
-        $latest = reset($sessions);
-        if (!$latest) {
-            return 'pascommence';
+    public static function statuts(array $userids, array $atelierids): array {
+        $res = [];
+        foreach (self::dernieres_seances($userids, $atelierids) as $uid => $parseance) {
+            $res[$uid] = array_map(fn($s) => $s ? self::libelle($s->statut) : 'pascommence', $parseance);
         }
-        switch ($latest->get('statut')) {
+        return $res;
+    }
+
+    /**
+     * Séance la plus récente de chaque étudiant sur chaque atelier, par lot.
+     *
+     * @param int[] $userids
+     * @param int[] $atelierids
+     * @return array [userid][atelierid] => \stdClass (id, userid, atelierid, statut) ou null
+     */
+    public static function dernieres_seances(array $userids, array $atelierids): array {
+        global $DB;
+
+        $userids = array_values(array_unique(array_map('intval', $userids)));
+        $atelierids = array_values(array_unique(array_map('intval', $atelierids)));
+        $res = [];
+        foreach ($userids as $uid) {
+            $res[$uid] = array_fill_keys($atelierids, null);
+        }
+        if (!$userids || !$atelierids) {
+            return $res;
+        }
+        [$ainsql, $aparams] = $DB->get_in_or_equal($atelierids, SQL_PARAMS_NAMED, 'a');
+        $vus = [];
+        foreach (array_chunk($userids, 500) as $lot) {
+            [$uinsql, $uparams] = $DB->get_in_or_equal($lot, SQL_PARAMS_NAMED, 'u');
+            $rs = $DB->get_recordset_sql(
+                "SELECT id, userid, atelierid, statut
+                   FROM {local_simhub_session}
+                  WHERE userid $uinsql AND atelierid $ainsql
+               ORDER BY timestart DESC, id DESC",
+                $uparams + $aparams
+            );
+            foreach ($rs as $s) {
+                $cle = $s->userid . '-' . $s->atelierid;
+                if (!isset($vus[$cle])) {
+                    $vus[$cle] = true;
+                    $res[(int) $s->userid][(int) $s->atelierid] = $s;
+                }
+            }
+            $rs->close();
+        }
+        return $res;
+    }
+
+    /**
+     * Statut personnel correspondant au statut d'une séance.
+     *
+     * @param string $statutseance session::STATUT_*
+     * @return string
+     */
+    protected static function libelle(string $statutseance): string {
+        switch ($statutseance) {
             case session::STATUT_CERTIFIE:
                 return 'valide';
             case session::STATUT_REALISE:
@@ -72,6 +124,36 @@ class parcours_helper {
     }
 
     /**
+     * Statut d'un étudiant sur un atelier, d'après sa séance la plus récente.
+     *
+     * @param int $userid
+     * @param int $atelierid
+     * @return string pascommence|commence|realise|valide|areprendre
+     */
+    public static function statut_atelier(int $userid, int $atelierid): string {
+        return self::statuts([$userid], [$atelierid])[$userid][$atelierid];
+    }
+
+    /**
+     * Avancement de plusieurs étudiants dans un parcours.
+     *
+     * @param parcours $parcours
+     * @param int[] $userids
+     * @return array userid => ['realises' => int, 'total' => int, 'pct' => int]
+     */
+    public static function progressions(parcours $parcours, array $userids): array {
+        $requis = self::ateliers_requis($parcours);
+        $total = count($requis);
+        $res = [];
+        foreach (self::statuts($userids, $requis) as $uid => $parstatut) {
+            $realises = count(array_filter($parstatut, fn($st) => in_array($st, ['realise', 'valide'], true)));
+            $res[$uid] = ['realises' => $realises, 'total' => $total,
+                'pct' => $total ? (int) round(100 * $realises / $total) : 0];
+        }
+        return $res;
+    }
+
+    /**
      * Avancement d'un étudiant dans un parcours.
      *
      * @param parcours $parcours
@@ -79,15 +161,7 @@ class parcours_helper {
      * @return array ['realises' => int, 'total' => int, 'pct' => int]
      */
     public static function progression(parcours $parcours, int $userid): array {
-        $requis = self::ateliers_requis($parcours);
-        $realises = 0;
-        foreach ($requis as $aid) {
-            if (in_array(self::statut_atelier($userid, $aid), ['realise', 'valide'], true)) {
-                $realises++;
-            }
-        }
-        $total = count($requis);
-        return ['realises' => $realises, 'total' => $total, 'pct' => $total ? (int) round(100 * $realises / $total) : 0];
+        return self::progressions($parcours, [$userid])[$userid];
     }
 
     /**

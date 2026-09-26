@@ -57,11 +57,9 @@ if ($type === 'ateliers') {
         throw $refus('local/simhub:viewprogression');
     }
     $atelierids = array_map('intval', array_column($parcours->get_ateliers(), 'atelierid'));
-    [$entetes, $lignes] = exporteur::tableau_suivi(
-        droits::etudiants_du_parcours($parcours),
-        $atelierids,
-        fn($uid) => \local_simhub\local\parcours_helper::progression($parcours, $uid)['pct']
-    );
+    $users = droits::etudiants_du_parcours($parcours);
+    $progs = \local_simhub\local\parcours_helper::progressions($parcours, array_keys($users));
+    [$entetes, $lignes] = exporteur::tableau_suivi($users, $atelierids, fn($uid) => $progs[$uid]['pct']);
     exporteur::envoyer('simhub_parcours_' . $parcours->get('id'), $format, $entetes, $lignes);
 } else if ($type === 'uc') {
     $courseid = required_param('courseid', PARAM_INT);

@@ -36,8 +36,9 @@ class backup_simhub_activity_structure_step extends backup_activity_structure_st
      * @return backup_nested_element
      */
     protected function define_structure() {
-        $simhub = new backup_nested_element('simhub', ['id'], ['name', 'intro', 'introformat', 'grade', 'timecreated',
-            'timemodified']);
+        $simhub = new backup_nested_element('simhub', ['id'], [
+            'name', 'intro', 'introformat', 'grade', 'completionparcours', 'timecreated', 'timemodified',
+        ]);
         $ateliers = new backup_nested_element('ateliers');
         $atelier = new backup_nested_element('atelier', ['id'], ['atelierid', 'numero', 'ordre', 'obligatoire', 'echeance']);
 

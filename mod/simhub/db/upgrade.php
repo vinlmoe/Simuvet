@@ -15,18 +15,31 @@
 // along with Moodle.  If not, see <https://www.gnu.org/licenses/>.
 
 /**
- * Activité SimHub : ajoutée par le responsable d'UC dans le cours de son UC.
+ * Mises à jour du schéma de l'activité.
  *
  * @package    mod_simhub
  * @copyright  2026 Écoles nationales vétérinaires de France (ENVF)
  * @license    https://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
-defined('MOODLE_INTERNAL') || die();
+/**
+ * Mises à jour du schéma de l'activité.
+ *
+ * @param int $oldversion
+ * @return bool
+ */
+function xmldb_simhub_upgrade($oldversion) {
+    global $DB;
+    $dbman = $DB->get_manager();
 
-$plugin->component = 'mod_simhub';
-$plugin->version   = 2026092902;
-$plugin->requires  = 2023100900;
-$plugin->maturity  = MATURITY_ALPHA;
-$plugin->release   = '0.1.0-dev';
-$plugin->dependencies = ['local_simhub' => 2026092900];
+    if ($oldversion < 2026092902) {
+        $table = new xmldb_table('simhub');
+        $field = new xmldb_field('completionparcours', XMLDB_TYPE_INTEGER, '1', null, XMLDB_NOTNULL, null, '0', 'grade');
+        if (!$dbman->field_exists($table, $field)) {
+            $dbman->add_field($table, $field);
+        }
+        upgrade_mod_savepoint(true, 2026092902, 'simhub');
+    }
+
+    return true;
+}

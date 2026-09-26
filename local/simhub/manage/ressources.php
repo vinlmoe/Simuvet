@@ -68,7 +68,12 @@ global $DB;
 $ressources = $DB->get_records(ressource::TABLE, ['atelierid' => $atelierid], 'ordre ASC');
 
 $table = new html_table();
-$table->head = [get_string('champ_nomcourt', 'local_simhub'), 'Type', 'Visibilité', ''];
+$table->head = [
+    get_string('champ_nomcourt', 'local_simhub'),
+    get_string('champ_type', 'local_simhub'),
+    get_string('champ_visibilite', 'local_simhub'),
+    '',
+];
 foreach ($ressources as $r) {
     $editurl = new moodle_url('/local/simhub/manage/ressource_edit.php', ['atelierid' => $atelierid, 'id' => $r->id]);
     $delurl = new moodle_url('/local/simhub/manage/ressources.php', [
@@ -76,8 +81,8 @@ foreach ($ressources as $r) {
     ]);
     $table->data[] = [
         s($r->titre),
-        s($r->type),
-        s($r->visibilite),
+        get_string('ressource_type_' . $r->type, 'local_simhub'),
+        get_string('visibilite_' . $r->visibilite, 'local_simhub'),
         html_writer::link($editurl, get_string('edit')) . ' | '
             . html_writer::link($delurl, get_string('delete')),
     ];

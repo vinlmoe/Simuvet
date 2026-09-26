@@ -246,4 +246,33 @@ final class droits_test extends \advanced_testcase {
         course_delete_module($this->act['b']->cmid);
         $this->assertFalse($DB->record_exists('local_simhub_parcours', ['id' => $parcoursid]));
     }
+
+    /**
+     * L'activité est achevée quand l'étudiant a réalisé tous les ateliers requis de l'UC.
+     *
+     * @return void
+     */
+    public function test_achevement(): void {
+        global $CFG, $DB;
+        require_once($CFG->libdir . '/completionlib.php');
+        $CFG->enablecompletion = 1;
+        $course = $this->getDataGenerator()->create_course(['enablecompletion' => 1]);
+        $this->getDataGenerator()->enrol_user($this->u['etu']->id, $course->id, 'student');
+        $act = $this->getDataGenerator()->create_module('simhub', ['course' => $course->id,
+            'completion' => COMPLETION_TRACKING_AUTOMATIC, 'completionparcours' => 1]);
+        $parcours = new parcours($DB->get_field('simhub', 'parcoursid', ['id' => $act->id]));
+        parcours_helper::ajouter_atelier($parcours, $this->at[1]->get('id'), 1, true, null);
+
+        $cm = get_fast_modinfo($course)->get_cm($act->cmid);
+        $completion = new \completion_info($course);
+        $etat = fn() => $completion->get_data($cm, false, $this->u['etu']->id)->completionstate;
+        $this->assertEquals(COMPLETION_INCOMPLETE, $etat());
+
+        $this->setUser($this->u['etu']);
+        $s = session::demarrer_ou_reprendre($this->u['etu']->id, $this->at[1]->get('id'));
+        $s->terminer();
+        \local_simhub\event\session_completed::create(['objectid' => $s->get('id'), 'context' => contexte::racine()])
+            ->trigger();
+        $this->assertEquals(COMPLETION_COMPLETE, $etat());
+    }
 }

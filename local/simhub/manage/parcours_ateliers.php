@@ -80,7 +80,13 @@ echo html_writer::tag('h3', get_string('parcours_ateliers_titre', 'local_simhub'
 $composition = $parcours->get_ateliers();
 
 $table = new html_table();
-$table->head = [get_string('champ_nomcourt', 'local_simhub'), 'Ordre', 'Obligatoire', 'Échéance', ''];
+$table->head = [
+    get_string('champ_nomcourt', 'local_simhub'),
+    get_string('ordre', 'local_simhub'),
+    get_string('champ_obligatoire', 'local_simhub'),
+    get_string('champ_echeance', 'local_simhub'),
+    '',
+];
 foreach ($composition as $lien) {
     $atelier = new atelier($lien->atelierid);
     $removeurl = new moodle_url('/local/simhub/manage/parcours_ateliers.php', [
@@ -129,7 +135,7 @@ echo html_writer::empty_tag('input', [
 
 echo html_writer::start_tag('label', ['class' => 'mr-2']);
 echo html_writer::empty_tag('input', ['type' => 'checkbox', 'name' => 'obligatoire', 'value' => 1]);
-echo ' Obligatoire';
+echo ' ' . get_string('champ_obligatoire', 'local_simhub');
 echo html_writer::end_tag('label');
 
 echo html_writer::tag('button', get_string('add'), ['type' => 'submit', 'class' => 'btn btn-primary']);

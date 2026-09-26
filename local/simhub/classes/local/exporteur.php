@@ -64,25 +64,15 @@ class exporteur {
     }
 
     /**
-     * Libellé du statut personnel d'un étudiant sur un atelier.
-     *
-     * @param int $userid
-     * @param int $atelierid
-     * @return string
-     */
-    protected static function statut(int $userid, int $atelierid): string {
-        return get_string('statutperso_' . parcours_helper::statut_atelier($userid, $atelierid), 'local_simhub');
-    }
-
-    /**
      * Tableau étudiants × ateliers, avec l'avancement.
      *
      * @param array $users Enregistrements utilisateur.
      * @param int[] $atelierids
-     * @param callable $avancement fn(int $userid): int pourcentage.
+     * @param callable|null $avancement fn(int $userid): int pourcentage ; par défaut, part des
+     *                                  ateliers réalisés ou validés.
      * @return array [entêtes, lignes]
      */
-    public static function tableau_suivi(array $users, array $atelierids, callable $avancement): array {
+    public static function tableau_suivi(array $users, array $atelierids, ?callable $avancement = null): array {
         $entetes = [get_string('lastname'), get_string('firstname'), get_string('email')];
         foreach ($atelierids as $aid) {
             $a = new atelier($aid);
@@ -90,13 +80,23 @@ class exporteur {
         }
         $entetes[] = get_string('export_avancement', 'local_simhub');
 
+        $statuts = parcours_helper::statuts(array_column($users, 'id'), $atelierids);
+        $libelles = [];
+        foreach (['pascommence', 'commence', 'realise', 'valide', 'areprendre'] as $st) {
+            $libelles[$st] = get_string('statutperso_' . $st, 'local_simhub');
+        }
         $lignes = [];
         foreach ($users as $user) {
             $ligne = [$user->lastname, $user->firstname, $user->email ?? ''];
             foreach ($atelierids as $aid) {
-                $ligne[] = self::statut((int) $user->id, (int) $aid);
+                $ligne[] = $libelles[$statuts[(int) $user->id][(int) $aid]];
             }
-            $ligne[] = $avancement((int) $user->id);
+            if ($avancement) {
+                $ligne[] = $avancement((int) $user->id);
+            } else {
+                $faits = array_filter($statuts[(int) $user->id], fn($st) => in_array($st, ['realise', 'valide'], true));
+                $ligne[] = $atelierids ? (int) round(100 * count($faits) / count($atelierids)) : 0;
+            }
             $lignes[] = $ligne;
         }
         return [$entetes, $lignes];
@@ -122,7 +122,7 @@ class exporteur {
             get_enrolled_users($coursecontext, '', 0, 'u.*', 'u.lastname, u.firstname', 0, 0, true),
             fn($u) => !has_capability('moodle/course:manageactivities', $coursecontext, $u)
         );
-        return self::tableau_suivi($users, $atelierids, fn($uid) => self::pct($uid, $atelierids));
+        return self::tableau_suivi($users, $atelierids);
     }
 
     /**
@@ -145,7 +145,7 @@ class exporteur {
               WHERE cm.cohortid = ? AND u.deleted = 0 ORDER BY u.lastname, u.firstname",
             [$cohortid]
         );
-        return self::tableau_suivi($users, $atelierids, fn($uid) => self::pct($uid, $atelierids));
+        return self::tableau_suivi($users, $atelierids);
     }
 
     /**
@@ -182,24 +182,6 @@ class exporteur {
             ];
         }
         return [$entetes, $lignes];
-    }
-
-    /**
-     * Pourcentage d'ateliers réalisés ou validés.
-     *
-     * @param int $userid
-     * @param int[] $atelierids
-     * @return int
-     */
-    protected static function pct(int $userid, array $atelierids): int {
-        if (!$atelierids) {
-            return 0;
-        }
-        $faits = array_filter(
-            $atelierids,
-            fn($aid) => in_array(parcours_helper::statut_atelier($userid, $aid), ['realise', 'valide'], true)
-        );
-        return (int) round(100 * count($faits) / count($atelierids));
     }
 
     /**

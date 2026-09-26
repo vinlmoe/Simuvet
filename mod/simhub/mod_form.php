@@ -53,4 +53,52 @@ class mod_simhub_mod_form extends moodleform_mod {
         $this->standard_coursemodule_elements();
         $this->add_action_buttons();
     }
+
+    /**
+     * Suffixe des champs d'achèvement (Moodle 4.3+ : réglages par défaut en masse).
+     *
+     * @return string
+     */
+    protected function suffixe(): string {
+        return method_exists($this, 'get_suffix') ? $this->get_suffix() : '';
+    }
+
+    /**
+     * Règle d'achèvement : parcours de l'UC terminé.
+     *
+     * @return string[]
+     */
+    public function add_completion_rules() {
+        $nom = 'completionparcours' . $this->suffixe();
+        $this->_form->addElement('checkbox', $nom, '', get_string('completionparcours', 'simhub'));
+        return [$nom];
+    }
+
+    /**
+     * Vrai si la règle est cochée.
+     *
+     * @param array $data
+     * @return bool
+     */
+    public function completion_rule_enabled($data) {
+        return !empty($data['completionparcours' . $this->suffixe()]);
+    }
+
+    /**
+     * Décocher la règle doit l'enregistrer à 0.
+     *
+     * @param stdClass $data
+     * @return void
+     */
+    public function data_postprocessing($data) {
+        parent::data_postprocessing($data);
+        if (!empty($data->completionunlocked)) {
+            $suffixe = $this->suffixe();
+            $nom = 'completionparcours' . $suffixe;
+            $auto = ($data->{'completion' . $suffixe} ?? COMPLETION_TRACKING_NONE) == COMPLETION_TRACKING_AUTOMATIC;
+            if (!$auto || empty($data->$nom)) {
+                $data->$nom = 0;
+            }
+        }
+    }
 }

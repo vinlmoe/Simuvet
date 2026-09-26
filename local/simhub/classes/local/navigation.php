@@ -226,6 +226,13 @@ class navigation {
         );
         $ajouter('ae', $str('ae_modele'), '/local/simhub/manage/ae_modele_edit.php', ['atelierid' => $atelierid]);
         $ajouter(
+            'stats',
+            $str('stats_lien'),
+            '/local/simhub/manage/ae_stats.php',
+            ['atelierid' => $atelierid],
+            'local/simhub:viewprogression'
+        );
+        $ajouter(
             'rattachements',
             $str('rattachements'),
             '/local/simhub/manage/rattachements.php',

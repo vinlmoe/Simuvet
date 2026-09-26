@@ -77,11 +77,12 @@ echo \local_simhub\local\navigation::barre();
 
 if ($result !== null) {
     if ($type === 'rattachements') {
-        echo html_writer::tag('p', $result['crees'] . ' rattachement(s) créé(s)');
+        echo html_writer::tag('p', get_string('import_rattachements_crees', 'local_simhub', $result['crees']));
     } else if ($type === 'parcours') {
         echo html_writer::tag(
             'p',
-            $result['parcourscrees'] . ' parcours créé(s), ' . $result['crees'] . ' atelier(s) ajouté(s) à un parcours'
+            get_string('import_parcours_crees', 'local_simhub', (object) ['parcours' => $result['parcourscrees'],
+                'ateliers' => $result['crees']])
         );
     } else {
         echo html_writer::tag(
@@ -136,7 +137,7 @@ echo html_writer::end_tag('select');
 echo html_writer::end_div();
 
 echo html_writer::start_div('form-group');
-echo html_writer::tag('label', get_string('champ_envcode', 'local_simhub') . ' (par défaut si absent du fichier)');
+echo html_writer::tag('label', get_string('import_envcode_defaut', 'local_simhub'));
 echo html_writer::empty_tag('input', [
     'type' => 'text', 'name' => 'envcode', 'class' => 'form-control d-inline-block w-auto',
     'value' => get_config('local_simhub', 'envcode') ?: '',

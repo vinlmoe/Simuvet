@@ -62,7 +62,7 @@ class ressource_form extends \moodleform {
         ]);
 
         $mform->addElement('select', 'visibilite', get_string('champ_visibilite', 'local_simhub'), [
-            ressource::VISIBILITE_ETUDIANT => get_string('etudiant', 'local_simhub'),
+            ressource::VISIBILITE_ETUDIANT => get_string('visibilite_etudiant', 'local_simhub'),
             ressource::VISIBILITE_INTERNE => get_string('visibilite_interne', 'local_simhub'),
         ]);
 

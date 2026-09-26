@@ -116,27 +116,51 @@ foreach ($parcourslist as $parcours) {
     $nbecheance = 0;
     $sommepct = 0;
 
+    $userids = array_map('intval', array_keys($users));
+    $seances = \local_simhub\local\parcours_helper::dernieres_seances($userids, $atelierids);
+    $progressions = \local_simhub\local\parcours_helper::progressions($parcours, $userids);
+    // Séances les plus récentes dont l'auto-évaluation comporte un critère à retravailler.
+    $aretravailler = [];
+    $ids = [];
+    foreach ($seances as $parseance) {
+        foreach ($parseance as $s) {
+            if ($s && in_array($s->statut, [session::STATUT_REALISE, session::STATUT_CERTIFIE], true)) {
+                $ids[] = (int) $s->id;
+            }
+        }
+    }
+    foreach (array_chunk($ids, 500) as $lot) {
+        [$insql, $inparams] = $DB->get_in_or_equal($lot, SQL_PARAMS_NAMED, 's');
+        [$nsql, $nparams] = $DB->get_in_or_equal(
+            [ae_reponse::NIVEAU_A_CONSOLIDER, ae_reponse::NIVEAU_A_REPRENDRE],
+            SQL_PARAMS_NAMED,
+            'n'
+        );
+        $aretravailler += array_flip($DB->get_fieldset_select(
+            ae_reponse::TABLE,
+            'DISTINCT sessionid',
+            "sessionid $insql AND niveau $nsql",
+            $inparams + $nparams
+        ));
+    }
+
     foreach ($users as $user) {
-        $realises = 0;
         $acommence = false;
         $areprendre = false;
         $echeanceproche = false;
 
         foreach ($atelierids as $aid) {
-            $sessions = session::get_pour_etudiant($user->id, $aid);
-            $latest = $sessions ? reset($sessions) : null;
+            $latest = $seances[(int) $user->id][(int) $aid];
+            $fait = $latest && in_array($latest->statut, [session::STATUT_REALISE, session::STATUT_CERTIFIE], true);
 
             if ($latest) {
                 $acommence = true;
-                if (in_array($latest->get('statut'), [session::STATUT_REALISE, session::STATUT_CERTIFIE], true)) {
-                    $realises++;
-                    if (ae_reponse::get_a_retravailler($latest->get('id'))) {
-                        $areprendre = true;
-                    }
+                if ($fait && isset($aretravailler[(int) $latest->id])) {
+                    $areprendre = true;
                 }
             }
 
-            if (!$latest || !in_array($latest->get('statut'), [session::STATUT_REALISE, session::STATUT_CERTIFIE], true)) {
+            if (!$fait) {
                 $echeance = $echeancesparatelier[$aid] ?? null;
                 if ($echeance && $echeance <= $maintenant + $fenetreechujours * DAYSECS) {
                     $echeanceproche = true;
@@ -144,7 +168,7 @@ foreach ($parcourslist as $parcours) {
             }
         }
 
-        $pct = \local_simhub\local\parcours_helper::progression($parcours, $user->id)['pct'];
+        $pct = $progressions[(int) $user->id]['pct'];
         $sommepct += $pct;
 
         if (!$acommence) {

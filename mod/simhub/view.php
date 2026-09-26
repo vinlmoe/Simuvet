@@ -25,6 +25,7 @@
 
 require(__DIR__ . '/../../config.php');
 require_once(__DIR__ . '/lib.php');
+require_once($CFG->dirroot . '/user/lib.php');
 
 use local_simhub\local\parcours_helper;
 use local_simhub\persistent\atelier;
@@ -144,53 +145,95 @@ echo html_writer::div(
     'mb-3'
 );
 
-// Ateliers de l'UC, avec accès à leur grille d'auto-évaluation.
+// Liste des étudiants suivis, par groupe si l'activité est en mode groupes.
+$groupmode = groups_get_activity_groupmode($cm);
+groups_print_activity_menu($cm, $url);
+$groupid = $groupmode ? groups_get_activity_group($cm, true) : 0;
+$etudiants = simhub_etudiants_notes($simhub);
+if ($groupid) {
+    $membres = array_map('intval', array_keys(groups_get_members($groupid, 'u.id')));
+    $etudiants = array_values(array_intersect($etudiants, $membres));
+}
+$statuts = parcours_helper::statuts($etudiants, $atelierids);
+$stats = \local_simhub\local\statistiques::ateliers($atelierids, $etudiants);
+$maintenant = time();
+
+// Ateliers de l'UC : étudiants restants face à l'échéance (§8.1), critères à retravailler
+// (§7.1) et grille d'auto-évaluation.
 echo $OUTPUT->heading(get_string('ateliersuc', 'simhub'), 3);
 if ($composition) {
     $table = new html_table();
-    $table->head = [get_string('atelier', 'simhub'), get_string('obligatoire', 'simhub'),
-        get_string('echeance', 'simhub'), ''];
+    $table->head = [
+        get_string('atelier', 'simhub'),
+        get_string('obligatoire', 'simhub'),
+        get_string('echeance', 'simhub'),
+        get_string('restants', 'simhub'),
+        get_string('aretravailler', 'simhub'),
+        '',
+    ];
     foreach ($composition as $lien) {
-        $a = $ateliers[(int) $lien->atelierid];
-        $table->data[] = [
+        $aid = (int) $lien->atelierid;
+        $a = $ateliers[$aid];
+        $restants = count(array_filter(
+            $etudiants,
+            fn($uid) => !in_array($statuts[$uid][$aid], ['realise', 'valide'], true)
+        ));
+        $echeance = '';
+        $classe = '';
+        if ($lien->echeance) {
+            $echeance = userdate($lien->echeance, $datefmt);
+            if ($restants && $lien->echeance < $maintenant) {
+                $classe = 'table-danger';
+                $echeance .= ' ' . html_writer::span(get_string('echeancedepassee', 'simhub'), 'badge badge-danger bg-danger');
+            } else if ($restants && $lien->echeance < $maintenant + 14 * DAYSECS) {
+                $classe = 'table-warning';
+                $echeance .= ' ' . html_writer::span(get_string('echeanceproche', 'simhub'), 'badge badge-warning bg-warning');
+            }
+        }
+        $st = $stats[$aid];
+        $liens = [];
+        if ($st->total) {
+            $liens[] = html_writer::link(
+                new moodle_url('/local/simhub/manage/ae_stats.php', ['atelierid' => $aid, 'cmid' => $cm->id]),
+                get_string('stats_lien', 'local_simhub')
+            );
+        }
+        if (has_capability('mod/simhub:manageparcours', $context)) {
+            $liens[] = html_writer::link(
+                new moodle_url('/local/simhub/manage/ae_modele_edit.php', ['atelierid' => $aid]),
+                get_string('grille', 'simhub')
+            );
+        }
+        $row = new html_table_row([
             html_writer::link(
-                new moodle_url('/local/simhub/atelier.php', ['id' => $a->get('id')]),
+                new moodle_url('/local/simhub/atelier.php', ['id' => $aid]),
                 s($a->get('numero') . ' — ' . $a->get('nomcourt'))
             ),
             $lien->obligatoire ? get_string('yes') : '',
-            $lien->echeance ? userdate($lien->echeance, $datefmt) : '',
-            has_capability('mod/simhub:manageparcours', $context)
-                ? html_writer::link(
-                    new moodle_url('/local/simhub/manage/ae_modele_edit.php', ['atelierid' => $a->get('id')]),
-                    get_string('grille', 'simhub')
-                )
-                : '',
-        ];
+            $echeance,
+            $restants . ' / ' . count($etudiants),
+            $st->total ? get_string('tauxretravail', 'simhub', $st) : '—',
+            implode(' | ', $liens),
+        ]);
+        $row->attributes['class'] = $classe;
+        $table->data[] = $row;
     }
     echo html_writer::table($table);
 } else {
     echo $OUTPUT->notification(get_string('aucunatelier', 'simhub'), \core\output\notification::NOTIFY_INFO);
 }
 
-// Avancement des étudiants, par groupe si l'activité est en mode groupes.
-$groupmode = groups_get_activity_groupmode($cm);
+// Avancement des étudiants.
 echo $OUTPUT->heading(get_string('avancementetudiants', 'simhub'), 3);
-groups_print_activity_menu($cm, $url);
-$groupid = $groupmode ? groups_get_activity_group($cm, true) : 0;
-
-$etudiants = simhub_etudiants_notes($simhub);
-if ($groupid) {
-    $membres = array_map('intval', array_keys(groups_get_members($groupid, 'u.id')));
-    $etudiants = array_values(array_intersect($etudiants, $membres));
-}
-
 if ($etudiants) {
+    $progressions = parcours_helper::progressions($parcours, $etudiants);
+    $noms = user_get_users_by_id($etudiants);
     $table = new html_table();
     $table->head = [get_string('fullnameuser'), get_string('avancementcol', 'simhub'), get_string('historique', 'simhub')];
     foreach ($etudiants as $uid) {
-        $prog = parcours_helper::progression($parcours, $uid);
+        $prog = $progressions[$uid];
         $table->data[] = [
-            fullname(core_user::get_user($uid)),
+            fullname($noms[$uid]),
             $prog['pct'] . ' % (' . $prog['realises'] . '/' . $prog['total'] . ')',
             html_writer::link(
                 new moodle_url('/local/simhub/manage/export.php', ['type' => 'etudiant', 'userid' => $uid, 'format' => 'xlsx']),

@@ -88,11 +88,11 @@ $table = new html_table();
 $cohortoptions = cohort_helper::get_options(false);
 
 $table->head = [
-    'UC (id cours)',
+    get_string('col_uc', 'local_simhub'),
     get_string('filtre_annee', 'local_simhub'),
     get_string('champ_cohorte', 'local_simhub'),
     get_string('champ_statut', 'local_simhub'),
-    'Niveau attendu',
+    get_string('champ_niveauattendu', 'local_simhub'),
     '',
 ];
 foreach (rattachement::get_pour_atelier($atelierid) as $r) {

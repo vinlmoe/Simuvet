@@ -37,6 +37,7 @@ function simhub_supports($feature) {
         case FEATURE_SHOW_DESCRIPTION:
         case FEATURE_GRADE_HAS_GRADE:
         case FEATURE_COMPLETION_TRACKS_VIEWS:
+        case FEATURE_COMPLETION_HAS_RULES:
         case FEATURE_GROUPS:
         case FEATURE_GROUPINGS:
         case FEATURE_BACKUP_MOODLE2:
@@ -200,9 +201,9 @@ function simhub_get_user_grades($simhub, $userid = 0) {
         return [];
     }
     $grades = [];
-    foreach (simhub_etudiants_notes($simhub, (int) $userid) as $id) {
-        $pct = \local_simhub\local\parcours_helper::progression($parcours, $id)['pct'];
-        $grades[$id] = (object) ['userid' => $id, 'rawgrade' => $pct * $simhub->grade / 100];
+    $progressions = \local_simhub\local\parcours_helper::progressions($parcours, simhub_etudiants_notes($simhub, (int) $userid));
+    foreach ($progressions as $id => $prog) {
+        $grades[$id] = (object) ['userid' => $id, 'rawgrade' => $prog['pct'] * $simhub->grade / 100];
     }
     return $grades;
 }
@@ -216,6 +217,10 @@ function simhub_get_user_grades($simhub, $userid = 0) {
  * @return void
  */
 function simhub_update_grades($simhub, $userid = 0, $nullifnone = true) {
+    global $CFG;
+    require_once($CFG->libdir . '/completionlib.php');
+    simhub_update_completion($simhub, simhub_etudiants_notes($simhub, (int) $userid));
+
     $grades = simhub_get_user_grades($simhub, $userid);
     if ($grades) {
         simhub_grade_item_update($simhub, $grades);
@@ -244,4 +249,64 @@ function simhub_reset_userdata($data) {
             'item' => get_string('removeallgrades', 'grades'), 'error' => false];
     }
     return $status;
+}
+
+/**
+ * Informations de l'activité mises en cache pour la page du cours, dont la règle d'achèvement.
+ *
+ * @param stdClass $coursemodule
+ * @return cached_cm_info|false
+ */
+function simhub_get_coursemodule_info($coursemodule) {
+    global $DB;
+
+    $simhub = $DB->get_record('simhub', ['id' => $coursemodule->instance], 'id, name, intro, introformat, completionparcours');
+    if (!$simhub) {
+        return false;
+    }
+    $info = new cached_cm_info();
+    $info->name = $simhub->name;
+    if ($coursemodule->showdescription) {
+        $info->content = format_module_intro('simhub', $simhub, $coursemodule->id, false);
+    }
+    if ($coursemodule->completion == COMPLETION_TRACKING_AUTOMATIC) {
+        $info->customdata['customcompletionrules']['completionparcours'] = $simhub->completionparcours;
+    }
+    return $info;
+}
+
+/**
+ * Descriptions des règles d'achèvement actives.
+ *
+ * @param cm_info|stdClass $cm
+ * @return string[]
+ */
+function mod_simhub_get_completion_active_rule_descriptions($cm) {
+    if (empty($cm->customdata['customcompletionrules']) || $cm->completion != COMPLETION_TRACKING_AUTOMATIC) {
+        return [];
+    }
+    return !empty($cm->customdata['customcompletionrules']['completionparcours'])
+        ? [get_string('completiondetail:parcours', 'simhub')] : [];
+}
+
+/**
+ * Recalcule l'achèvement des étudiants après un changement d'avancement.
+ *
+ * @param stdClass $simhub
+ * @param int[] $userids
+ * @return void
+ */
+function simhub_update_completion($simhub, array $userids): void {
+    if (empty($simhub->completionparcours) || !$userids) {
+        return;
+    }
+    $course = get_course($simhub->course);
+    $cm = get_coursemodule_from_instance('simhub', $simhub->id, $simhub->course, false, MUST_EXIST);
+    $completion = new completion_info($course);
+    if (!$completion->is_enabled($cm)) {
+        return;
+    }
+    foreach ($userids as $userid) {
+        $completion->update_state($cm, COMPLETION_UNKNOWN, $userid);
+    }
 }

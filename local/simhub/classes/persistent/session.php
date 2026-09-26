@@ -162,7 +162,7 @@ class session extends \core\persistent {
         if ($atelierid !== null) {
             $params['atelierid'] = $atelierid;
         }
-        return self::get_records($params, 'timestart', 'DESC');
+        return self::get_records($params, 'timestart DESC, id', 'DESC');
     }
 
     /**

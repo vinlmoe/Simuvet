@@ -162,4 +162,54 @@ final class lots_test extends \advanced_testcase {
         $this->assertCount(1, $lignes);
         $this->assertEquals('E1', $lignes[0][0]);
     }
+
+    /**
+     * Statuts par lot identiques au calcul unitaire.
+     *
+     * @return void
+     */
+    public function test_statuts_par_lot(): void {
+        $this->resetAfterTest();
+        $u1 = $this->getDataGenerator()->create_user();
+        $u2 = $this->getDataGenerator()->create_user();
+        $a = $this->atelier('L1');
+        $b = $this->atelier('L2');
+        session::demarrer($u1->id, $a->get('id'))->terminer();
+        session::demarrer($u2->id, $b->get('id'));
+        $lot = parcours_helper::statuts([$u1->id, $u2->id], [$a->get('id'), $b->get('id')]);
+        $this->assertEquals('realise', $lot[$u1->id][$a->get('id')]);
+        $this->assertEquals('pascommence', $lot[$u1->id][$b->get('id')]);
+        $this->assertEquals('commence', $lot[$u2->id][$b->get('id')]);
+        $this->assertEquals($lot[$u2->id][$b->get('id')], parcours_helper::statut_atelier($u2->id, $b->get('id')));
+    }
+
+    /**
+     * Critères les plus souvent à reprendre en tête, restreints aux étudiants demandés.
+     *
+     * @return void
+     */
+    public function test_statistiques_criteres(): void {
+        global $DB;
+        $this->resetAfterTest();
+        $a = $this->atelier('S1');
+        $m = new \local_simhub\persistent\ae_modele(0, (object) ['atelierid' => $a->get('id'), 'titre' => 'Grille', 'actif' => 1]);
+        $m->create();
+        $rub = \local_simhub\record\ae_rubrique::ajouter($m->get('id'), 'Préparation', 1, false);
+        $c1 = \local_simhub\record\ae_critere::ajouter($rub, 'Asepsie', 1);
+        $c2 = \local_simhub\record\ae_critere::ajouter($rub, 'Matériel', 2);
+        $users = [];
+        foreach (['a_reprendre', 'a_reprendre', 'reussi'] as $i => $niveau) {
+            $users[$i] = $this->getDataGenerator()->create_user();
+            $s = session::demarrer($users[$i]->id, $a->get('id'));
+            \local_simhub\record\ae_reponse::repondre($s->get('id'), $c1, $niveau);
+            \local_simhub\record\ae_reponse::repondre($s->get('id'), $c2, 'reussi');
+        }
+        $lignes = \local_simhub\local\statistiques::criteres($a->get('id'));
+        $this->assertEquals('Asepsie', $lignes[0]->critere);
+        $this->assertEquals(67, $lignes[0]->pctreprendre);
+        $this->assertEquals(0, $lignes[1]->pctreprendre);
+        $restreint = \local_simhub\local\statistiques::criteres($a->get('id'), [(int) $users[2]->id]);
+        $this->assertEquals(0, $restreint[0]->pctreprendre);
+        $this->assertEquals([], \local_simhub\local\statistiques::criteres($a->get('id'), []));
+    }
 }

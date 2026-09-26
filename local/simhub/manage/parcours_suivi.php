@@ -99,28 +99,17 @@ $head[] = get_string('avancement', 'local_simhub');
 $head[] = '';
 $table->head = $head;
 
+$userids = array_map('intval', array_keys($users));
+$statuts = \local_simhub\local\parcours_helper::statuts($userids, $atelierids);
+$progressions = \local_simhub\local\parcours_helper::progressions($parcours, $userids);
 foreach ($users as $user) {
     $row = [fullname($user)];
-    $realises = 0;
-
     foreach ($atelierids as $aid) {
-        $sessions = session::get_pour_etudiant($user->id, $aid);
-        $latest = $sessions ? reset($sessions) : null;
-
-        if (!$latest) {
-            $row[] = '—';
-        } else if ($latest->get('statut') === session::STATUT_CERTIFIE) {
-            $row[] = get_string('suivi_valide', 'local_simhub');
-            $realises++;
-        } else if (in_array($latest->get('statut'), [session::STATUT_REALISE], true)) {
-            $row[] = get_string('suivi_realise', 'local_simhub');
-            $realises++;
-        } else {
-            $row[] = get_string('suivi_commence', 'local_simhub');
-        }
+        $statut = $statuts[(int) $user->id][(int) $aid];
+        $row[] = $statut === 'pascommence' ? '—' : get_string('statutperso_' . $statut, 'local_simhub');
     }
 
-    $pct = \local_simhub\local\parcours_helper::progression($parcours, $user->id)['pct'];
+    $pct = $progressions[(int) $user->id]['pct'];
     $row[] = $pct . ' %';
 
     if ($pct >= 100) {
