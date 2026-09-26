@@ -43,6 +43,7 @@ class atelier_importer {
         'nomlong' => 'nomlong', 'nomcomplet' => 'nomlong', 'description' => 'nomlong',
         'descriptioncourte' => 'descriptioncourte', 'resume' => 'descriptioncourte',
         'discipline' => 'discipline', 'matiere' => 'discipline', 'domaine' => 'discipline',
+        'categorie' => 'categorie', 'category' => 'categorie', 'typeatelier' => 'categorie',
         'espece' => 'espece', 'especes' => 'espece',
         'niveau' => 'niveaudifficulte', 'niveaudedifficulte' => 'niveaudifficulte', 'difficulte' => 'niveaudifficulte',
         'duree' => 'dureeindicative', 'dureeminutes' => 'dureeindicative', 'dureeindicative' => 'dureeindicative',

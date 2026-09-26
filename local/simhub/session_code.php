@@ -45,6 +45,19 @@ $pageurl = new moodle_url('/local/simhub/session_code.php', ['atelierid' => $ate
     [s($atelier->get('nomcourt')), new moodle_url('/local/simhub/atelier.php', ['id' => $atelierid])],
 ]);
 
+if (\local_simhub\local\reseau::dans_la_salle()) {
+    session::demarrer_ou_reprendre($USER->id, $atelierid, [
+        'methodescan' => 'qr',
+        'controlepresence' => 'reseau_local',
+    ]);
+    redirect(
+        new moodle_url('/local/simhub/atelier.php', ['id' => $atelierid]),
+        get_string('session_demarree', 'local_simhub'),
+        null,
+        \core\output\notification::NOTIFY_SUCCESS
+    );
+}
+
 $submitted = optional_param('submit', 0, PARAM_BOOL);
 $sanscode = optional_param('sanscode', '', PARAM_RAW) !== '';
 $erreur = false;

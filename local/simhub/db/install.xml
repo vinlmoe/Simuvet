@@ -13,6 +13,7 @@
         <FIELD NAME="nomcourt" TYPE="char" LENGTH="255" NOTNULL="true"/>
         <FIELD NAME="nomlong" TYPE="text" NOTNULL="false"/>
         <FIELD NAME="descriptioncourte" TYPE="text" NOTNULL="false"/>
+        <FIELD NAME="categorie" TYPE="char" LENGTH="100" NOTNULL="false" COMMENT="Catégorie affichée sur la carte étudiante (§5.3)"/>
         <FIELD NAME="discipline" TYPE="char" LENGTH="100" NOTNULL="false"/>
         <FIELD NAME="espece" TYPE="char" LENGTH="255" NOTNULL="false" COMMENT="Liste séparée par virgules en V1 ; table dédiée envisageable en V2"/>
         <FIELD NAME="niveaudifficulte" TYPE="char" LENGTH="20" NOTNULL="false" COMMENT="facile|intermediaire|avance"/>
@@ -175,6 +176,7 @@
         <FIELD NAME="statut" TYPE="char" LENGTH="20" NOTNULL="true" DEFAULT="commence" COMMENT="commence|realise|certifie|non_termine"/>
         <FIELD NAME="methodescan" TYPE="char" LENGTH="20" NOTNULL="false" COMMENT="qr|manuel"/>
         <FIELD NAME="controlepresence" TYPE="char" LENGTH="20" NOTNULL="false" COMMENT="reseau_local|code_seance|validation_encadrant|non_verifie (§7.3)"/>
+        <FIELD NAME="dureesuspecte" TYPE="int" LENGTH="1" NOTNULL="true" DEFAULT="0" COMMENT="1 si la séance a été terminée anormalement vite (§7.1)"/>
         <FIELD NAME="timecreated" TYPE="int" LENGTH="10" NOTNULL="true"/>
         <FIELD NAME="timemodified" TYPE="int" LENGTH="10" NOTNULL="true"/>
         <FIELD NAME="usermodified" TYPE="int" LENGTH="10" NOTNULL="true" COMMENT="Dernier auteur de la modification (étudiant ou encadrant validant)"/>

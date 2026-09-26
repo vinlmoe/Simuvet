@@ -94,11 +94,27 @@ class student_home_page implements renderable, templatable {
             }
         }
 
+        // UC associées à chaque atelier et niveau attendu (§5.3).
+        $ucsparatelier = [];
+        $nomsuc = [];
+        $sql = "SELECT r.id, r.atelierid, r.courseid, r.niveauattendu, c.fullname
+                  FROM {local_simhub_rattachement} r
+                  JOIN {course} c ON c.id = r.courseid";
+        foreach ($DB->get_records_sql($sql) as $r) {
+            $nomsuc[$r->courseid] = format_string($r->fullname, true, ['context' => \context_course::instance($r->courseid)]);
+            $ucsparatelier[$r->atelierid][] = $nomsuc[$r->courseid]
+                . ($r->niveauattendu ? ' (' . s($r->niveauattendu) . ')' : '');
+        }
+
         $cardsbyid = [];
         $statutsparid = [];
         foreach ($tousactifs as $atelier) {
             $record = $atelier->to_record();
-            [$card, $statutperso] = $this->build_card($record, $dernieresessionparatelier[$record->id] ?? null);
+            [$card, $statutperso] = $this->build_card(
+                $record,
+                $dernieresessionparatelier[$record->id] ?? null,
+                $ucsparatelier[$record->id] ?? []
+            );
             $cardsbyid[$record->id] = $card;
             $statutsparid[$record->id] = $statutperso;
         }
@@ -174,12 +190,15 @@ class student_home_page implements renderable, templatable {
         }
 
         // 3. Parcours ASV : résumé rapide (nombre d'actes validés / total du référentiel).
-        $asvtotal = $envcode !== '' ? count(asv_acte::get_referentiel($envcode)) : 0;
+        $asvtotal = count(asv_acte::get_referentiel($envcode));
         $asvvalides = count(asv_valsim::get_actes_valides($this->userid));
 
         // 6. Tous les ateliers disponibles, avec le filtre libre de l'étudiant (§5.2).
         $tousliste = [];
         foreach ($this->filter->get_ateliers() as $atelier) {
+            if ($this->filter->statutperso !== '' && ($statutsparid[$atelier->id] ?? '') !== $this->filter->statutperso) {
+                continue;
+            }
             if (isset($cardsbyid[$atelier->id])) {
                 $tousliste[] = $cardsbyid[$atelier->id];
             }
@@ -229,6 +248,26 @@ class student_home_page implements renderable, templatable {
                 'dureemax' => $this->filter->dureemax ?: '',
                 'anneeetude' => $this->filter->anneeetude ?: '',
             ],
+            'ucoptions' => array_map(fn($cid) => [
+                'value' => $cid,
+                'label' => $nomsuc[$cid],
+                'selected' => (int) $cid === (int) $this->filter->courseid,
+            ], array_values(array_intersect($courseids, array_keys($nomsuc)))),
+            'parcoursoptions' => array_values(array_map(fn($p) => [
+                'value' => $p->get('id'),
+                'label' => format_string($p->get('nom')),
+                'selected' => (int) $p->get('id') === (int) $this->filter->parcoursid,
+            ], \local_simhub\local\parcours_helper::parcours_pour_etudiant($this->userid, $envcode))),
+            'statutpersooptions' => array_map(fn($st) => [
+                'value' => $st,
+                'label' => get_string('statutperso_' . $st, 'local_simhub'),
+                'selected' => $st === $this->filter->statutperso,
+            ], atelier_filter::STATUTS_PERSO),
+            'statutoptions' => array_map(fn($st) => [
+                'value' => $st,
+                'label' => get_string('filtre_statut_' . $st, 'local_simhub'),
+                'selected' => $st === $this->filter->statut,
+            ], [atelier_filter::STATUT_VISIBLES, atelier::STATUT_ACTIF, atelier::STATUT_INDISPONIBLE]),
             'anneeoptions' => array_map(
                 fn(
                     $val,
@@ -244,6 +283,11 @@ class student_home_page implements renderable, templatable {
                 'filtreniveau' => get_string('filtre_niveau', 'local_simhub'),
                 'filtreduree' => get_string('filtre_duree', 'local_simhub'),
                 'filtreannee' => get_string('filtre_annee', 'local_simhub'),
+                'filtreuc' => get_string('filtre_uc', 'local_simhub'),
+                'filtreparcours' => get_string('filtre_parcours', 'local_simhub'),
+                'filtrestatutperso' => get_string('filtre_statutperso', 'local_simhub'),
+                'filtrestatut' => get_string('filtre_statut', 'local_simhub'),
+                'ucassociees' => get_string('carte_uc', 'local_simhub'),
                 'filtreappliquer' => get_string('filtre_appliquer', 'local_simhub'),
                 'filtrereinitialiser' => get_string('filtre_reinitialiser', 'local_simhub'),
                 'boutonlocalisation' => get_string('bouton_localisation', 'local_simhub'),
@@ -269,9 +313,10 @@ class student_home_page implements renderable, templatable {
      *
      * @param \stdClass $atelier Enregistrement brut d'atelier.
      * @param session|null $sessionencours Dernière session de l'étudiant sur cet atelier, si existante.
+     * @param string[] $ucs UC associées, avec le niveau attendu.
      * @return array{0: array, 1: string}
      */
-    private function build_card(\stdClass $atelier, ?session $sessionencours): array {
+    private function build_card(\stdClass $atelier, ?session $sessionencours, array $ucs = []): array {
         $statutperso = 'pascommence';
 
         if ($sessionencours) {
@@ -279,6 +324,8 @@ class student_home_page implements renderable, templatable {
                 $statutperso = 'commence';
             } else if ($sessionencours->get('statut') === session::STATUT_CERTIFIE) {
                 $statutperso = 'valide';
+            } else if ($sessionencours->get('statut') === session::STATUT_NON_TERMINE) {
+                $statutperso = 'areprendre';
             } else {
                 $statutperso = 'realise';
                 if (ae_reponse::get_a_retravailler($sessionencours->get('id'))) {
@@ -296,8 +343,10 @@ class student_home_page implements renderable, templatable {
             'id' => $atelier->id,
             'numero' => s($atelier->numero),
             'nomcourt' => s($atelier->nomcourt),
+            'categorie' => s($atelier->categorie ?? ''),
             'discipline' => s($atelier->discipline),
             'espece' => s($atelier->espece),
+            'ucs' => implode(', ', $ucs),
             'dureeindicative' => (int) $atelier->dureeindicative,
             'salle' => s($atelier->salle),
             'zone' => s($atelier->zone),

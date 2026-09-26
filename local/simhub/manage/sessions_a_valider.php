@@ -56,7 +56,7 @@ global $DB;
 $sessions = $DB->get_records_sql(
     "SELECT s.*
        FROM {local_simhub_session} s
-      WHERE s.controlepresence = 'non_verifie'
+      WHERE (s.controlepresence = 'non_verifie' OR s.dureesuspecte = 1)
         AND NOT EXISTS (SELECT 1 FROM {local_simhub_val_encadrant} v WHERE v.sessionid = s.id)
    ORDER BY s.timestart DESC"
 );
@@ -69,10 +69,11 @@ if (empty($sessions)) {
 
 $table = new html_table();
 $table->head = [
-    'Étudiant',
+    get_string('fullnameuser'),
     get_string('champ_nomcourt', 'local_simhub'),
     get_string('champ_statut', 'local_simhub'),
-    'Démarrée le',
+    get_string('session_demarree_le', 'local_simhub'),
+    get_string('session_motif', 'local_simhub'),
     '',
 ];
 
@@ -92,6 +93,7 @@ foreach ($sessions as $s) {
         s($atelier->get('nomcourt')),
         get_string('statutperso_' . ($s->statut === session::STATUT_COMMENCE ? 'commence' : 'realise'), 'local_simhub'),
         userdate($s->timestart, get_string('strftimedatetimeshort', 'langconfig')),
+        \local_simhub\local\parcours_helper::motif_a_valider($s),
         html_writer::link($validerurl, get_string('session_valider', 'local_simhub'), ['class' => 'btn btn-sm btn-success mr-1'])
             . html_writer::link(
                 $refuserurl,

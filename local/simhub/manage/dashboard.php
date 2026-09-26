@@ -45,6 +45,26 @@ $pageurl = new moodle_url('/local/simhub/manage/dashboard.php');
 echo $OUTPUT->header();
 echo \local_simhub\local\navigation::barre();
 
+// Export du suivi par cohorte (§12.3).
+if (has_capability('local/simhub:exportsuivi', $context)) {
+    $cohortes = $DB->get_records_menu('cohort', ['visible' => 1], 'name', 'id, name');
+    $cohortid = optional_param('cohortid', 0, PARAM_INT);
+    echo html_writer::start_tag('form', ['method' => 'get', 'class' => 'form-inline mb-3']);
+    echo html_writer::label(get_string('export_cohorte', 'local_simhub'), 'id_cohortid', true, ['class' => 'mr-2 me-2']);
+    echo html_writer::select(
+        array_map('format_string', $cohortes),
+        'cohortid',
+        $cohortid,
+        ['' => 'choosedots'],
+        ['id' => 'id_cohortid', 'class' => 'form-control mr-2 me-2']
+    );
+    echo html_writer::tag('button', get_string('choose'), ['type' => 'submit', 'class' => 'btn btn-secondary']);
+    echo html_writer::end_tag('form');
+    if ($cohortid && isset($cohortes[$cohortid])) {
+        echo html_writer::div(\local_simhub\local\exporteur::liens(['type' => 'cohorte', 'cohortid' => $cohortid]), 'mb-3');
+    }
+}
+
 global $DB;
 
 $params = $envcode !== '' ? ['envcode' => $envcode] : [];

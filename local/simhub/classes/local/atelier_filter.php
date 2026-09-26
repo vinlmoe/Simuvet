@@ -51,7 +51,12 @@ class atelier_filter {
     public $dureemax = 0;
     /** @var string */
     public $motcle = '';
-    /** @var string */
+    /** @var string Statut personnel filtré (pascommence, commence, realise, valide, areprendre), vide pour tous. */
+    public $statutperso = '';
+
+    /** Statuts personnels proposés au filtre (§5.2). */
+    const STATUTS_PERSO = ['pascommence', 'commence', 'realise', 'valide', 'areprendre'];
+
     /** Valeur de filtre : ateliers montrés aux étudiants, actifs ou momentanément indisponibles (§5.3, §6.1). */
     const STATUT_VISIBLES = 'visibles';
 
@@ -74,7 +79,12 @@ class atelier_filter {
         $filter->niveaudifficulte = optional_param('niveaudifficulte', '', PARAM_ALPHA);
         $filter->dureemax = optional_param('dureemax', 0, PARAM_INT);
         $filter->motcle = optional_param('motcle', '', PARAM_TEXT);
-        $filter->statut = optional_param('statut', self::STATUT_VISIBLES, PARAM_ALPHAEXT);
+        // Un étudiant ne peut pas afficher les ateliers archivés ou non utilisés (§5.2).
+        $statut = optional_param('statut', self::STATUT_VISIBLES, PARAM_ALPHAEXT);
+        $filter->statut = in_array($statut, [self::STATUT_VISIBLES, \local_simhub\persistent\atelier::STATUT_ACTIF,
+            \local_simhub\persistent\atelier::STATUT_INDISPONIBLE], true) ? $statut : self::STATUT_VISIBLES;
+        $statutperso = optional_param('statutperso', '', PARAM_ALPHA);
+        $filter->statutperso = in_array($statutperso, self::STATUTS_PERSO, true) ? $statutperso : '';
         return $filter;
     }
 

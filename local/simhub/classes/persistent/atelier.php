@@ -67,6 +67,11 @@ class atelier extends \core\persistent {
                 'default' => '',
                 'null' => NULL_ALLOWED,
             ],
+            'categorie' => [
+                'type' => PARAM_TEXT,
+                'default' => '',
+                'null' => NULL_ALLOWED,
+            ],
             'discipline' => [
                 'type' => PARAM_TEXT,
                 'default' => '',

@@ -53,8 +53,9 @@ class session extends \core\persistent {
             'courseid' => ['type' => PARAM_INT, 'default' => 0, 'null' => NULL_ALLOWED],
             'timestart' => ['type' => PARAM_INT],
             'timeend' => ['type' => PARAM_INT, 'default' => 0, 'null' => NULL_ALLOWED],
+            // PARAM_ALPHANUMEXT : PARAM_ALPHA refuserait le « _ » de non_termine.
             'statut' => [
-                'type' => PARAM_ALPHA,
+                'type' => PARAM_ALPHANUMEXT,
                 'default' => self::STATUT_COMMENCE,
                 'choices' => [
                     self::STATUT_COMMENCE,
@@ -74,6 +75,10 @@ class session extends \core\persistent {
                 'default' => '',
                 'null' => NULL_ALLOWED,
                 'choices' => ['', 'reseau_local', 'code_seance', 'validation_encadrant', 'non_verifie'],
+            ],
+            'dureesuspecte' => [
+                'type' => PARAM_INT,
+                'default' => 0,
             ],
         ];
     }
@@ -140,6 +145,7 @@ class session extends \core\persistent {
      */
     public function terminer(): void {
         $this->set('timeend', time());
+        $this->set('dureesuspecte', self::est_trop_courte($this->get('atelierid'), time() - $this->get('timestart')) ? 1 : 0);
         $this->set('statut', self::STATUT_REALISE);
         $this->update();
     }
@@ -157,5 +163,23 @@ class session extends \core\persistent {
             $params['atelierid'] = $atelierid;
         }
         return self::get_records($params, 'timestart', 'DESC');
+    }
+
+    /**
+     * Vrai si une séance de cette durée est anormalement courte (§7.1) : moins que le
+     * pourcentage paramétré de la durée indicative de l'atelier. Sans réglage ou sans durée
+     * indicative, aucune séance n'est signalée.
+     *
+     * @param int $atelierid
+     * @param int $duree Durée de la séance, en secondes.
+     * @return bool
+     */
+    public static function est_trop_courte(int $atelierid, int $duree): bool {
+        $pct = (int) get_config('local_simhub', 'dureeminpct');
+        if ($pct <= 0) {
+            return false;
+        }
+        $indicative = (int) (new atelier($atelierid))->get('dureeindicative');
+        return $indicative > 0 && $duree < $indicative * MINSECS * $pct / 100;
     }
 }

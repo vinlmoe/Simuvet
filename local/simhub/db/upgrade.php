@@ -120,5 +120,19 @@ function xmldb_local_simhub_upgrade($oldversion) {
         upgrade_plugin_savepoint(true, 2026092900, 'local', 'simhub');
     }
 
+    if ($oldversion < 2026092902) {
+        $table = new xmldb_table('local_simhub_atelier');
+        $field = new xmldb_field('categorie', XMLDB_TYPE_CHAR, '100', null, null, null, null, 'descriptioncourte');
+        if (!$dbman->field_exists($table, $field)) {
+            $dbman->add_field($table, $field);
+        }
+        $table = new xmldb_table('local_simhub_session');
+        $field = new xmldb_field('dureesuspecte', XMLDB_TYPE_INTEGER, '1', null, XMLDB_NOTNULL, null, '0', 'controlepresence');
+        if (!$dbman->field_exists($table, $field)) {
+            $dbman->add_field($table, $field);
+        }
+        upgrade_plugin_savepoint(true, 2026092902, 'local', 'simhub');
+    }
+
     return true;
 }

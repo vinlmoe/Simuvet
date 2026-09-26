@@ -113,6 +113,7 @@ if (!$enseignant) {
     echo $composition ? html_writer::table($table)
         : $OUTPUT->notification(get_string('aucunatelier', 'simhub'), \core\output\notification::NOTIFY_INFO);
     echo html_writer::tag('p', get_string('scaninfo', 'simhub'), ['class' => 'text-muted']);
+    echo html_writer::div(\local_simhub\local\exporteur::liens(['type' => 'etudiant']), 'mb-3');
     echo $OUTPUT->footer();
     exit;
 }
@@ -129,14 +130,6 @@ $boutons[] = html_writer::link(new moodle_url(
     '/local/simhub/manage/parcours_suivi.php',
     ['parcoursid' => $parcours->get('id')]
 ), get_string('suividetaille', 'simhub'), ['class' => 'btn btn-secondary mr-2 me-2']);
-$boutons[] = html_writer::link(
-    new moodle_url(
-        '/local/simhub/manage/export.php',
-        ['type' => 'parcours', 'parcoursid' => $parcours->get('id')]
-    ),
-    get_string('exportcsv', 'simhub'),
-    ['class' => 'btn btn-secondary mr-2 me-2']
-);
 if (has_capability('mod/simhub:validateasvsimulation', $context)) {
     $boutons[] = html_writer::link(
         new moodle_url('/local/simhub/asv/valider_simulation.php'),
@@ -145,6 +138,11 @@ if (has_capability('mod/simhub:validateasvsimulation', $context)) {
     );
 }
 echo html_writer::div(implode('', $boutons), 'mb-3');
+echo html_writer::div(
+    html_writer::tag('strong', get_string('exportuc', 'simhub')) . ' '
+        . \local_simhub\local\exporteur::liens(['type' => 'uc', 'courseid' => $course->id]),
+    'mb-3'
+);
 
 // Ateliers de l'UC, avec accès à leur grille d'auto-évaluation.
 echo $OUTPUT->heading(get_string('ateliersuc', 'simhub'), 3);
@@ -188,12 +186,16 @@ if ($groupid) {
 
 if ($etudiants) {
     $table = new html_table();
-    $table->head = [get_string('fullnameuser'), get_string('avancementcol', 'simhub')];
+    $table->head = [get_string('fullnameuser'), get_string('avancementcol', 'simhub'), get_string('historique', 'simhub')];
     foreach ($etudiants as $uid) {
         $prog = parcours_helper::progression($parcours, $uid);
         $table->data[] = [
             fullname(core_user::get_user($uid)),
             $prog['pct'] . ' % (' . $prog['realises'] . '/' . $prog['total'] . ')',
+            html_writer::link(
+                new moodle_url('/local/simhub/manage/export.php', ['type' => 'etudiant', 'userid' => $uid, 'format' => 'xlsx']),
+                get_string('export_format_xlsx', 'local_simhub')
+            ),
         ];
     }
     echo html_writer::table($table);
@@ -228,7 +230,7 @@ if (has_capability('mod/simhub:validatesession', $context) && $atelierids && $et
                 s($ateliers[(int) $s->atelierid]->get('nomcourt')),
                 userdate($s->timestart, get_string('strftimedatetimeshort', 'langconfig')),
                 get_string('statutperso_' . ($s->statut === 'commence' ? 'commence' : 'realise'), 'local_simhub')
-                    . ($s->controlepresence === 'non_verifie' ? ' — ' . get_string('nonverifie', 'simhub') : ''),
+                    . (($motif = parcours_helper::motif_a_valider($s)) !== '' ? ' — ' . $motif : ''),
                 html_writer::link(
                     new moodle_url($url, $params + ['action' => 'valider']),
                     get_string('session_valider', 'local_simhub'),

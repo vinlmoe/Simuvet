@@ -222,4 +222,32 @@ class droits {
         }
         return array_values(array_unique($userids));
     }
+
+    /**
+     * Export du suivi d'une UC : profil transversal, ou enseignant d'une activité SimHub du cours.
+     *
+     * @param int $courseid
+     * @return bool
+     */
+    public static function peut_suivre_uc(int $courseid): bool {
+        if (has_capability('local/simhub:exportsuivi', contexte::racine())) {
+            return true;
+        }
+        $activites = array_filter(self::activites(), fn($cid) => (int) $cid === $courseid);
+        return self::dans_une_activite($activites, 'mod/simhub:viewprogression');
+    }
+
+    /**
+     * Historique d'un étudiant : lui-même, un profil transversal, ou un enseignant d'une de ses UC.
+     *
+     * @param int $etudiantid
+     * @return bool
+     */
+    public static function peut_suivre_etudiant(int $etudiantid): bool {
+        global $USER;
+
+        return (int) $USER->id === $etudiantid
+            || has_capability('local/simhub:viewprogression', contexte::racine())
+            || self::dans_une_activite(self::activites(), 'mod/simhub:viewprogression', $etudiantid);
+    }
 }

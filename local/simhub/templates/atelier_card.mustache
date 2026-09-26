@@ -58,9 +58,11 @@
             </span>
         </h5>
         <p class="card-text">
+            {{#categorie}}<span class="badge badge-secondary bg-secondary">{{categorie}}</span> {{/categorie}}
             {{discipline}} {{#espece}}&middot; {{espece}}{{/espece}}
             {{#dureeindicative}}&middot; {{dureeindicative}} min{{/dureeindicative}}
         </p>
+        {{#ucs}}<p class="small text-muted mb-1">{{strings.ucassociees}} {{ucs}}</p>{{/ucs}}
         {{#estindisponible}}
             <p class="text-warning mb-1">{{commentaireindispo}}</p>
             {{#retourprevu}}<p class="small text-muted">{{retourprevu}}</p>{{/retourprevu}}

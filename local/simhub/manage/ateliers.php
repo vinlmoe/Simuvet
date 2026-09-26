@@ -51,11 +51,7 @@ echo $OUTPUT->single_button(
 );
 
 if (has_capability('local/simhub:exportsuivi', $context)) {
-    echo $OUTPUT->single_button(
-        new moodle_url('/local/simhub/manage/export.php', ['type' => 'ateliers', 'envcode' => $envcode]),
-        get_string('export_csv', 'local_simhub'),
-        'get'
-    );
+    echo html_writer::div(\local_simhub\local\exporteur::liens(['type' => 'ateliers']), 'mb-3');
 }
 
 $params = $envcode !== '' ? ['envcode' => $envcode] : [];

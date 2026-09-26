@@ -57,11 +57,7 @@ if (!\local_simhub\local\droits::peut_suivre_parcours($parcours)) {
 echo $OUTPUT->header();
 echo \local_simhub\local\navigation::barre();
 
-echo $OUTPUT->single_button(
-    new moodle_url('/local/simhub/manage/export.php', ['type' => 'parcours', 'parcoursid' => $parcoursid]),
-    get_string('export_csv', 'local_simhub'),
-    'get'
-);
+echo html_writer::div(\local_simhub\local\exporteur::liens(['type' => 'parcours', 'parcoursid' => $parcoursid]), 'mb-3');
 
 global $DB;
 
@@ -77,6 +73,17 @@ if (empty($atelierids)) {
 // Les étudiants concernés sont : membres de la cohorte rattachée au parcours si connue, sinon tout
 // étudiant ayant au moins une session sur l'un des ateliers du parcours (§8.1).
 $users = \local_simhub\local\droits::etudiants_du_parcours($parcours);
+
+// Parcours d'UC : les groupes de l'activité filtrent le suivi (un encadrant suit son groupe de TP).
+$cm = $parcours->get('cmid') ? get_coursemodule_from_id('simhub', $parcours->get('cmid')) : false;
+if ($cm && groups_get_activity_groupmode($cm)) {
+    groups_print_activity_menu($cm, new moodle_url('/local/simhub/manage/parcours_suivi.php', ['parcoursid' => $parcoursid]));
+    $groupid = groups_get_activity_group($cm, true);
+    if ($groupid) {
+        $membres = array_map('intval', array_keys(groups_get_members($groupid, 'u.id')));
+        $users = array_filter($users, fn($u) => in_array((int) $u->id, $membres, true));
+    }
+}
 $requis = \local_simhub\local\parcours_helper::ateliers_requis($parcours);
 
 $table = new html_table();

@@ -52,13 +52,16 @@ if (!has_capability('local/simhub:startsession', $context)) {
     redirect(new moodle_url('/local/simhub/atelier.php', ['id' => $qr->atelierid]));
 }
 
-if (get_config('local_simhub', 'controlepresenceactif')) {
+$controle = get_config('local_simhub', 'controlepresenceactif');
+// Sur le réseau de la salle, la présence est vérifiée sans code (§7.3).
+$dansalle = $controle && \local_simhub\local\reseau::dans_la_salle();
+if ($controle && !$dansalle) {
     redirect(new moodle_url('/local/simhub/session_code.php', ['atelierid' => $qr->atelierid]));
 }
 
 session::demarrer_ou_reprendre($USER->id, $qr->atelierid, [
     'methodescan' => 'qr',
-    'controlepresence' => null,
+    'controlepresence' => $dansalle ? 'reseau_local' : null,
 ]);
 
 redirect(new moodle_url('/local/simhub/atelier.php', ['id' => $qr->atelierid]));

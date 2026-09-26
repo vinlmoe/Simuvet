@@ -189,7 +189,7 @@ class navigation {
         return $DB->count_records_sql(
             "SELECT COUNT(1)
                FROM {local_simhub_session} s
-              WHERE s.controlepresence = 'non_verifie'
+              WHERE (s.controlepresence = 'non_verifie' OR s.dureesuspecte = 1)
                 AND NOT EXISTS (SELECT 1 FROM {local_simhub_val_encadrant} v WHERE v.sessionid = s.id)"
         );
     }

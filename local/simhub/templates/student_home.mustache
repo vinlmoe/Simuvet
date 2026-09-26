@@ -278,6 +278,41 @@
             <input type="number" name="dureemax" class="form-control" placeholder="{{strings.filtreduree}}"
                    value="{{filtre.dureemax}}" min="0">
         </div>
+        {{#ucoptions.0}}
+        <div class="form-group mr-2 mb-2">
+            <select name="courseid" class="form-control" aria-label="{{strings.filtreuc}}">
+                <option value="">{{strings.filtreuc}}</option>
+                {{#ucoptions}}
+                <option value="{{value}}"{{#selected}} selected{{/selected}}>{{label}}</option>
+                {{/ucoptions}}
+            </select>
+        </div>
+        {{/ucoptions.0}}
+        {{#parcoursoptions.0}}
+        <div class="form-group mr-2 mb-2">
+            <select name="parcoursid" class="form-control" aria-label="{{strings.filtreparcours}}">
+                <option value="">{{strings.filtreparcours}}</option>
+                {{#parcoursoptions}}
+                <option value="{{value}}"{{#selected}} selected{{/selected}}>{{label}}</option>
+                {{/parcoursoptions}}
+            </select>
+        </div>
+        {{/parcoursoptions.0}}
+        <div class="form-group mr-2 mb-2">
+            <select name="statutperso" class="form-control" aria-label="{{strings.filtrestatutperso}}">
+                <option value="">{{strings.filtrestatutperso}}</option>
+                {{#statutpersooptions}}
+                <option value="{{value}}"{{#selected}} selected{{/selected}}>{{label}}</option>
+                {{/statutpersooptions}}
+            </select>
+        </div>
+        <div class="form-group mr-2 mb-2">
+            <select name="statut" class="form-control" aria-label="{{strings.filtrestatut}}">
+                {{#statutoptions}}
+                <option value="{{value}}"{{#selected}} selected{{/selected}}>{{label}}</option>
+                {{/statutoptions}}
+            </select>
+        </div>
         <div class="form-group mr-2 mb-2">
             <select name="anneeetude" class="form-control">
                 <option value="">{{strings.filtreannee}}</option>

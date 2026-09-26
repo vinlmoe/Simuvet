@@ -59,6 +59,9 @@ class atelier_form extends \moodleform {
         $mform->addElement('textarea', 'descriptioncourte', get_string('champ_descriptioncourte', 'local_simhub'));
         $mform->setType('descriptioncourte', PARAM_TEXT);
 
+        $mform->addElement('text', 'categorie', get_string('champ_categorie', 'local_simhub'));
+        $mform->setType('categorie', PARAM_TEXT);
+
         $mform->addElement('text', 'discipline', get_string('champ_discipline', 'local_simhub'));
         $mform->setType('discipline', PARAM_TEXT);
 

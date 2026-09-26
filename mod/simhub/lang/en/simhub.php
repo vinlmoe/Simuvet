@@ -24,23 +24,23 @@
 
 defined('MOODLE_INTERNAL') || die();
 
-$string['aucunatelier'] = 'No workshop is linked to this course unit yet.';
-$string['aucunetudiant'] = 'No enrolled student.';
-$string['aucuneseance'] = 'No session awaiting validation.';
 $string['atelier'] = 'Workshop';
 $string['ateliersuc'] = 'Course unit workshops';
+$string['aucunatelier'] = 'No workshop is linked to this course unit yet.';
+$string['aucuneseance'] = 'No session awaiting validation.';
+$string['aucunetudiant'] = 'No enrolled student.';
 $string['avancement'] = 'Your progress: {$a->pct} % ({$a->realises} of {$a->total} workshops).';
 $string['avancementcol'] = 'Progress';
 $string['avancementetudiants'] = 'Student progress';
 $string['composer'] = 'Choose the course unit workshops';
 $string['echeance'] = 'Due date';
 $string['etat'] = 'Status';
-$string['exportcsv'] = 'Export tracking (CSV)';
+$string['exportuc'] = 'Course unit tracking:';
 $string['grille'] = 'Self-assessment grid';
+$string['historique'] = 'History';
 $string['modulename'] = 'SimHub';
 $string['modulename_help'] = 'Links simulation room workshops to this course unit. Students complete workshops by scanning their QR code, without going through the course; their progress and grade are updated in every course unit that contains the workshop. Teachers track their students, validate their sessions and, as course unit leads, choose the workshops and edit their self-assessment grid.';
 $string['modulenameplural'] = 'SimHub';
-$string['nonverifie'] = 'presence not verified';
 $string['notecalcul'] = 'The grade is the student\'s progress percentage on the course unit workshops (the mandatory ones if any, otherwise all), scaled to the maximum grade.';
 $string['obligatoire'] = 'Mandatory';
 $string['pluginadministration'] = 'SimHub administration';

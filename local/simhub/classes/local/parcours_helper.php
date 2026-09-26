@@ -64,6 +64,8 @@ class parcours_helper {
                 return 'valide';
             case session::STATUT_REALISE:
                 return 'realise';
+            case session::STATUT_NON_TERMINE:
+                return 'areprendre';
             default:
                 return 'commence';
         }
@@ -245,15 +247,35 @@ class parcours_helper {
     public static function valider_seance(int $sessionid, int $validateurid, string $statut, string $commentaire = ''): void {
         \local_simhub\record\val_encadrant::valider($sessionid, $validateurid, $statut, $commentaire);
         $session = new session($sessionid);
-        if ($statut === \local_simhub\record\val_encadrant::STATUT_VALIDE) {
-            $session->set('statut', session::STATUT_CERTIFIE);
-            $session->update();
-        }
+        // Une séance refusée ne compte plus comme réalisée : l'atelier est à refaire.
+        $session->set('statut', $statut === \local_simhub\record\val_encadrant::STATUT_VALIDE
+            ? session::STATUT_CERTIFIE : session::STATUT_NON_TERMINE);
+        $session->update();
         \local_simhub\event\session_validated::create([
             'objectid' => $sessionid,
             'relateduserid' => $session->get('userid'),
             'context' => contexte::racine(),
             'other' => ['atelierid' => (int) $session->get('atelierid'), 'statut' => $statut],
         ])->trigger();
+    }
+
+    /**
+     * Raison pour laquelle une séance attend l'avis d'un encadrant.
+     *
+     * @param \stdClass $session Enregistrement de local_simhub_session.
+     * @return string Texte affichable, vide si rien à signaler.
+     */
+    public static function motif_a_valider(\stdClass $session): string {
+        $motifs = [];
+        if ($session->controlepresence === 'non_verifie') {
+            $motifs[] = get_string('session_motif_nonverifie', 'local_simhub');
+        }
+        if (!empty($session->dureesuspecte)) {
+            $motifs[] = get_string('session_motif_duree', 'local_simhub', (object) [
+                'duree' => (int) round(($session->timeend - $session->timestart) / MINSECS),
+                'indicative' => (int) (new \local_simhub\persistent\atelier($session->atelierid))->get('dureeindicative'),
+            ]);
+        }
+        return implode(' ; ', $motifs);
     }
 }

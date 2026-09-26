@@ -69,6 +69,22 @@ if ($hassiteconfig) {
         0
     ));
 
+    $settings->add(new admin_setting_configtextarea(
+        'local_simhub/reseauxsalle',
+        get_string('setting_reseauxsalle', 'local_simhub'),
+        get_string('setting_reseauxsalle_desc', 'local_simhub'),
+        '',
+        PARAM_RAW_TRIMMED
+    ));
+
+    $settings->add(new admin_setting_configtext(
+        'local_simhub/dureeminpct',
+        get_string('setting_dureeminpct', 'local_simhub'),
+        get_string('setting_dureeminpct_desc', 'local_simhub'),
+        0,
+        PARAM_INT
+    ));
+
     $settings->add(new admin_setting_configtext(
         'local_simhub/etablissementnom',
         get_string('setting_etablissementnom', 'local_simhub'),

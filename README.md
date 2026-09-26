@@ -439,6 +439,21 @@ retrouvée dans le référentiel du site ; un atelier absent est signalé dans l
 restauration. Les séances des étudiants restent dans SimHub : les notes sont recalculées
 pour les inscrits du nouveau cours à la fin de la restauration.
 
+## Lots 4 à 8 du rapport (septembre 2026)
+
+| Lot | Réalisé | Section |
+|---|---|---|
+| 4 | Filtres de l'accueil étudiant : **UC**, **parcours**, **statut personnel** (pas commencé, commencé, réalisé, validé, à reprendre) et **disponibilité** (actifs et indisponibles, ou l'un des deux ; jamais les archivés). Champ **catégorie** sur la fiche atelier (formulaire, import, export) et la carte. La carte affiche aussi les **UC associées et le niveau attendu**. | §5.2, §5.3 |
+| 5 | **Séance trop courte** : réglage `dureeminpct` (% de la durée indicative, 0 = désactivé). La séance reste réalisée (non bloquant) mais rejoint la file « Séances à valider » avec son motif. Un **refus** d'encadrant remet désormais l'atelier « à reprendre » au lieu de le laisser compter comme réalisé. | §7.1, §7.3 |
+| 6 | Exports **CSV** (séparateur « ; », BOM pour Excel), **XLSX** et **ODS** via l'API `dataformat` de Moodle (`classes/local/exporteur.php`). Nouveaux exports **par UC** (activité SimHub), **par cohorte** (tableau de bord) et **par étudiant** (historique des séances, pour l'étudiant lui-même ou ses enseignants). | §12.3 |
+| 7 | **Groupes** : le suivi détaillé d'un parcours d'UC suit le mode de groupe de l'activité, comme sa page de suivi. | §10, §8.1 |
+| 8 | **Réseau de la salle** : réglage `reseauxsalle` (plages IP au format Moodle). Contrôle anti-faux-scan actif et étudiant sur ce réseau : la séance démarre sans code, marquée `reseau_local`. Hors réseau, le code de séance reste demandé, toujours contournable par validation encadrant. | §7.3 |
+
+Au passage : la section « Parcours ASV » de l'accueil étudiant réapparaît (elle dépendait du
+code établissement), et le statut `non_termine` d'une séance est désormais enregistrable (le
+type `PARAM_ALPHA` refusait le « _ »). Vérifié : 14 tests PHPUnit, 24 contrôles navigateur
+dont des téléchargements XLSX/ODS/CSV réels, non-régression des 28 pages précédentes.
+
 ## Conformité aux règles Moodle (septembre 2026)
 
 | Contrôle | Résultat |
@@ -447,7 +462,7 @@ pour les inscrits du nouveau cours à la fin de la restauration.
 | En-tête GPL et bloc `@package` / `@copyright` / `@license` | Tous les fichiers PHP et templates |
 | Schéma (`admin/cli/check_database_schema.php`), installation neuve et mise à jour | « Database structure is ok » |
 | API Privacy : test de conformité du cœur (`privacy/tests/privacy/provider_test.php`) | Passe ; `core_userlist_provider` ajouté, champs du personnel déclarés |
-| PHPUnit `local_simhub` (confidentialité) et `mod_simhub` (droits, notes, sauvegarde) | 9 tests, 38 assertions |
+| PHPUnit `local_simhub` (confidentialité, lots 4 à 8) et `mod_simhub` (droits, notes, sauvegarde) | 14 tests, 61 assertions |
 | Templates Mustache : exemple de contexte rendu par Moodle | Les deux templates |
 | Événements standard d'activité (`course_module_viewed`, `..._instance_list_viewed`) | Déclenchés |
 | Requêtes compatibles toutes bases (pas de `DISTINCT` sur une colonne texte) | Corrigé dans l'observateur |
@@ -674,7 +689,6 @@ dans l'interface ne l'indique).
 **Import/export (§12)**
 - [ ] Import XLSX natif (l'import actuel n'accepte que le CSV ; un
       export Excel non converti doit d'abord être enregistré en CSV).
-- [ ] Export XLSX (seul CSV et PDF sont couverts pour l'instant).
 
 **Ergonomie et robustesse**
 - [ ] Web services / API externe (`classes/external/`) pour un futur
@@ -685,11 +699,10 @@ dans l'interface ne l'indique).
       étudiants restent de la gestion Moodle standard, hors périmètre
       de ce plugin.
 
-**V1+ souhaitable (§13)**
-- [ ] Reconnaissance réseau local pour le contrôle anti-faux-scan
-      (§7.3) : seuls le code de séance et la validation encadrant sont
-      implémentés pour l'instant ; le contrôle par plage IP de salle
-      demanderait de connaître l'infrastructure réseau réelle des ENV.
+**À paramétrer par chaque école**
+- [ ] Plages d'adresses du réseau de la salle (`local_simhub/reseauxsalle`) et seuil de
+      séance trop courte (`local_simhub/dureeminpct`), selon l'infrastructure Wi-Fi et les
+      pratiques locales.
 
 **Hors périmètre V1** (rappel §14, pour éviter la dérive de périmètre)
 Ticketing complet, mode OSCE, signature électronique qualifiée,
