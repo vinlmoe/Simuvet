@@ -23,7 +23,7 @@ class asv_vue {
      * @return string HTML
      */
     public static function tableau(int $userid, string $envcode, bool $pilote): string {
-        $context = \context_system::instance();
+        $context = contexte::racine();
         $format = get_string('strftimedatefullshort', 'langconfig');
         $str = function (string $cle, $a = null): string {
             return get_string($cle, 'local_simhub', $a);
@@ -66,7 +66,7 @@ class asv_vue {
             $actions = [];
             $params = ['userid' => $userid];
             if ($pilote) {
-                if ($simok && has_capability('local/simhub:validateasvsimulation', $context)) {
+                if ($simok && droits::peut_valider_asv($userid)) {
                     $actions[] = \html_writer::link(new \moodle_url('/local/simhub/asv/etudiant.php',
                         $params + ['action' => 'annulersim', 'id' => $sim->id]), $str('asv_annuler_simulation'),
                         ['class' => 'text-danger']);

@@ -8,7 +8,7 @@ use local_simhub\persistent\ressource;
 
 require_login();
 
-$context = context_system::instance();
+$context = \local_simhub\local\contexte::racine();
 require_capability('local/simhub:manageressources', $context);
 
 $atelierid = required_param('atelierid', PARAM_INT);
@@ -21,7 +21,7 @@ if ($action === 'supprimer') {
 
     global $DB;
     $fs = get_file_storage();
-    $fs->delete_area_files($context->id, 'local_simhub', 'ressource', $id);
+    $fs->delete_area_files(\local_simhub\local\contexte::fichiers()->id, 'local_simhub', 'ressource', $id);
     $DB->delete_records(ressource::TABLE, ['id' => $id, 'atelierid' => $atelierid]);
 
     redirect(new moodle_url('/local/simhub/manage/ressources.php', ['atelierid' => $atelierid]));

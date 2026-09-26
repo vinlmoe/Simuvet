@@ -65,9 +65,9 @@ class atelier_form extends \moodleform {
             ['optional' => true]);
         $mform->hideIf('indispo_echeance', 'statut', 'neq', atelier::STATUT_INDISPONIBLE);
 
-        $mform->addElement('text', 'envcode', get_string('champ_envcode', 'local_simhub'));
+        // Chaque école a son propre Moodle : le code établissement ne sert qu'à la traçabilité.
+        $mform->addElement('hidden', 'envcode');
         $mform->setType('envcode', PARAM_ALPHANUMEXT);
-        $mform->addRule('envcode', null, 'required', null, 'client');
         $mform->setDefault('envcode', get_config('local_simhub', 'envcode') ?: '');
 
         $mform->addElement('header', 'localisation', get_string('champ_salle', 'local_simhub'));

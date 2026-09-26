@@ -10,7 +10,7 @@ use local_simhub\persistent\atelier;
 
 require_login();
 
-$context = context_system::instance();
+$context = \local_simhub\local\contexte::racine();
 require_capability('local/simhub:manageateliers', $context);
 
 $id = required_param('id', PARAM_INT);
@@ -57,7 +57,7 @@ if (!$atelier->get('planimageitemid')) {
 
 $fs = get_file_storage();
 $planfiles = $fs->get_area_files(
-    $context->id, 'local_simhub', 'plan', $atelier->get('planimageitemid'), 'filepath, filename', false
+    \local_simhub\local\contexte::fichiers()->id, 'local_simhub', 'plan', $atelier->get('planimageitemid'), 'filepath, filename', false
 );
 $planfile = reset($planfiles);
 
@@ -72,7 +72,7 @@ if (!$planfile) {
 }
 
 $planurl = moodle_url::make_pluginfile_url(
-    $context->id, 'local_simhub', 'plan', $atelier->get('planimageitemid'), '/', $planfile->get_filename()
+    \local_simhub\local\contexte::fichiers()->id, 'local_simhub', 'plan', $atelier->get('planimageitemid'), '/', $planfile->get_filename()
 );
 
 echo html_writer::tag('p', get_string('plan_consigne', 'local_simhub'));

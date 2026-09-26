@@ -36,9 +36,10 @@ class selecteurs {
      * @param string $name
      * @param int $selection
      * @param string $id Attribut id HTML.
+     * @param callable|null $filtre fn(int $userid): bool, pour ne proposer qu'une partie des utilisateurs.
      * @return string HTML
      */
-    public static function etudiants(string $name, int $selection, string $id): string {
+    public static function etudiants(string $name, int $selection, string $id, ?callable $filtre = null): string {
         global $DB, $CFG;
 
         $options = ['' => get_string('choisir_etudiant', 'local_simhub')];
@@ -50,6 +51,9 @@ class selecteurs {
             'id, username, email, ' . implode(', ', \core_user\fields::get_name_fields())
         );
         foreach ($users as $user) {
+            if ($filtre && !$filtre((int) $user->id)) {
+                continue;
+            }
             $options[$user->id] = fullname($user) . ' (' . $user->username . ')';
         }
         return self::select($options, $name, $selection, $id, true);

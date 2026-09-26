@@ -12,7 +12,7 @@ $string['nav_retour'] = 'Back';
 $string['simhub:studenthome'] = 'My workshops';
 
 $string['setting_envcode'] = 'Institution code';
-$string['setting_envcode_desc'] = 'Short code identifying the veterinary school (e.g. ENVA, ENVT, ONIRIS, VETAGROSUP).';
+$string['setting_envcode_desc'] = 'Short code of the school (e.g. ENVA, ENVT, ONIRIS, VETAGROSUP). Each school has its own Moodle, so it is only used for traceability: it is stored on created or imported workshops, pathways and ASV acts, and included in exports.';
 $string['setting_seancecodeduration'] = 'Session code validity';
 $string['setting_seancecodeduration_desc'] = 'How long a temporary session code (anti-fake-scan control) stays valid.';
 $string['setting_asvtokenexpiry'] = 'ASV external validation link validity';
@@ -283,14 +283,14 @@ $string['numero_existe'] = 'This workshop number is already used in this institu
 // Rôles système (§11).
 $string['nav_roles'] = 'SimHub roles';
 $string['nav_groupe_roles'] = 'Roles';
-$string['role_simhubencadrant'] = 'SimHub supervisor';
-$string['role_simhubencadrant_desc'] = 'Teacher or trainer: pathway tracking, session and simulation ASV validation (§11).';
+$string['role_simhubencadrant'] = 'SimHub trainer';
+$string['role_simhubencadrant_desc'] = 'Cross-cutting trainer assigned in the SimHub category: tracking of all pathways, session and simulation ASV validation for every student. A course unit teacher does not need it (§11).';
 $string['role_simhubresponsableuc'] = 'SimHub course unit lead';
-$string['role_simhubresponsableuc_desc'] = 'Supervisor rights, plus pathway and course unit link management (§11).';
+$string['role_simhubresponsableuc_desc'] = 'Cross-cutting view of pathways and links of every course unit. A course unit lead manages their own from the SimHub activity of their course, without this role (§11).';
 $string['role_simhubgestionnairesalle'] = 'SimHub room manager';
 $string['role_simhubgestionnairesalle_desc'] = 'Room manager: workshop records, resources, statuses, QR codes, import/export (§11).';
 $string['role_simhubadminfonctionnel'] = 'SimHub functional administrator';
-$string['role_simhubadminfonctionnel_desc'] = 'All SimHub rights, including the ASV framework and configuration (§11).';
+$string['role_simhubadminfonctionnel_desc'] = 'All SimHub rights, including the ASV framework and configuration, and assignment of the other SimHub roles in the SimHub category (§11).';
 
 // Textes auparavant codés en dur dans les pages.
 $string['ae_autobilan'] = 'Self-review';
@@ -427,3 +427,9 @@ $string['indispo_cloturee'] = 'Closed';
 $string['indispo_en_cours'] = 'Ongoing';
 $string['indispo_retour_prevu'] = 'Expected back on {$a}.';
 $string['privacy:metadata:local_simhub_asv_valsim:commentaire'] = 'Supervisor remark or reason for cancelling the validation';
+$string['setting_categoryid'] = 'SimHub category';
+$string['setting_categoryid_desc'] = 'Course category where cross-cutting SimHub roles are assigned (room manager, functional administrator, ASV trainer). The functional administrator assigns these roles there, without an administrator account. Teachers do not need them: their rights come from the SimHub activity of their course unit. Roles already assigned at system level remain valid.';
+$string['setting_categoryid_systeme'] = 'None (system level)';
+$string['ae_derniere_modification'] = 'Grid shared by every course unit using this workshop. Last change: {$a->auteur}, on {$a->date}.';
+$string['event_session_validated'] = 'Workshop session validated or refused';
+$string['event_parcours_updated'] = 'Pathway workshops changed';

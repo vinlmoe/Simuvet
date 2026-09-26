@@ -8,13 +8,13 @@ use local_simhub\persistent\parcours;
 
 require_login();
 
-$context = context_system::instance();
+$context = \local_simhub\local\contexte::racine();
 $canmanage = has_capability('local/simhub:manageparcours', $context);
 if (!$canmanage && !has_capability('local/simhub:viewprogression', $context)) {
     throw new required_capability_exception($context, 'local/simhub:manageparcours', 'nopermissions', '');
 }
 
-$envcode = optional_param('envcode', get_config('local_simhub', 'envcode') ?: '', PARAM_ALPHANUMEXT);
+$envcode = '';
 
 \local_simhub\local\navigation::preparer($PAGE, new moodle_url('/local/simhub/manage/parcours.php'), get_string('filtre_parcours', 'local_simhub'));
 

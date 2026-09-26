@@ -11,7 +11,7 @@ use local_simhub\persistent\session;
 
 require_login();
 
-$context = context_system::instance();
+$context = \local_simhub\local\contexte::racine();
 
 $type = required_param('type', PARAM_ALPHA);
 
@@ -41,7 +41,7 @@ function local_simhub_export_csv(string $filename, array $rows): void {
 if ($type === 'ateliers') {
     require_capability('local/simhub:exportsuivi', $context);
 
-    $envcode = optional_param('envcode', get_config('local_simhub', 'envcode') ?: '', PARAM_ALPHANUMEXT);
+    $envcode = '';
     $params = $envcode !== '' ? ['envcode' => $envcode] : [];
     $ateliers = atelier::get_records($params, 'nomcourt');
 
@@ -59,16 +59,17 @@ if ($type === 'ateliers') {
 
     local_simhub_export_csv('simhub_ateliers.csv', $rows);
 } else if ($type === 'parcours') {
-    require_capability('local/simhub:viewprogression', $context);
-
     $parcoursid = required_param('parcoursid', PARAM_INT);
     $parcours = new parcours($parcoursid);
+    if (!\local_simhub\local\droits::peut_suivre_parcours($parcours)) {
+        throw new required_capability_exception(\local_simhub\local\contexte::racine(), 'local/simhub:viewprogression', 'nopermissions', '');
+    }
 
     global $DB;
     $composition = $parcours->get_ateliers();
     $atelierids = array_column($composition, 'atelierid');
 
-    $users = \local_simhub\local\parcours_helper::etudiants($parcours);
+    $users = \local_simhub\local\droits::etudiants_du_parcours($parcours);
 
     $head = ['etudiant'];
     $ateliernoms = [];

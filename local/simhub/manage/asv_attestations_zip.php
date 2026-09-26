@@ -13,10 +13,10 @@ use local_simhub\local\badge_helper;
 
 require_login();
 
-$context = context_system::instance();
+$context = \local_simhub\local\contexte::racine();
 require_capability('local/simhub:manageasv', $context);
 
-$envcode = optional_param('envcode', get_config('local_simhub', 'envcode') ?: '', PARAM_ALPHANUMEXT);
+$envcode = '';
 $niveau = optional_param('niveau', 'A3', PARAM_ALPHANUM);
 
 $eligibles = asv_certification_helper::get_etudiants_eligibles($niveau, $envcode);

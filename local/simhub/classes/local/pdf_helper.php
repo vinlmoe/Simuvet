@@ -21,7 +21,7 @@ class pdf_helper {
      */
     public static function get_logo_content(): ?string {
         $fs = get_file_storage();
-        $context = \context_system::instance();
+        $context = contexte::fichiers();
 
         $files = $fs->get_area_files($context->id, 'local_simhub', 'logo', 0, 'filepath, filename', false);
         $file = reset($files);

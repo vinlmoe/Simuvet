@@ -99,7 +99,7 @@ class navigation {
             $ajouter('asv', 'asv', $str('asv_parcours'), '/local/simhub/asv/index.php',
                 ['/local/simhub/asv/index.php', '/local/simhub/asv/demander', '/local/simhub/asv/livret', '/local/simhub/asv/attestation']);
         }
-        if (has_capability('local/simhub:validateasvsimulation', $context)) {
+        if (droits::peut_valider_asv()) {
             $ajouter('asvvalider', 'asv', $str('asv_valider_simulation'), '/local/simhub/asv/valider_simulation.php');
         }
         if (has_capability('local/simhub:manageasv', $context)) {
@@ -142,7 +142,7 @@ class navigation {
      * @return array clé => ['libelle' => string, 'url' => \moodle_url]
      */
     public static function liens_atelier(int $atelierid): array {
-        $context = \context_system::instance();
+        $context = contexte::racine();
         $liens = [];
         $ajouter = function (string $cle, string $libelle, string $chemin, array $params, ?string $cap = null)
                 use (&$liens, $context) {
@@ -178,17 +178,20 @@ class navigation {
      * @return array clé => ['libelle' => string, 'url' => \moodle_url]
      */
     public static function liens_parcours(int $parcoursid): array {
-        $context = \context_system::instance();
+        $context = contexte::racine();
+        $parcours = new \local_simhub\persistent\parcours($parcoursid);
         $liens = [];
         if (has_capability('local/simhub:manageparcours', $context)) {
             $liens['fiche'] = ['libelle' => get_string('onglet_fiche', 'local_simhub'),
                 'url' => new \moodle_url('/local/simhub/manage/parcours_edit.php', ['id' => $parcoursid])];
+        }
+        if (droits::peut_gerer_parcours($parcours)) {
             $liens['ateliers'] = ['libelle' => get_string('onglet_composition', 'local_simhub'),
                 'url' => new \moodle_url('/local/simhub/manage/parcours_ateliers.php', ['parcoursid' => $parcoursid])];
         }
         $liens['suivi'] = ['libelle' => get_string('onglet_suivi', 'local_simhub'),
             'url' => new \moodle_url('/local/simhub/manage/parcours_suivi.php', ['parcoursid' => $parcoursid])];
-        if (has_capability('local/simhub:exportsuivi', $context)) {
+        if (has_capability('local/simhub:exportsuivi', $context) || droits::peut_suivre_parcours($parcours)) {
             $liens['export'] = ['libelle' => get_string('onglet_export_csv', 'local_simhub'),
                 'url' => new \moodle_url('/local/simhub/manage/export.php', ['type' => 'parcours', 'parcoursid' => $parcoursid])];
         }
@@ -305,7 +308,7 @@ class navigation {
      * @return string HTML
      */
     public static function barre(): string {
-        $context = \context_system::instance();
+        $context = contexte::racine();
 
         $retour = self::url_accueil();
         if (!empty(self::$ariane)) {

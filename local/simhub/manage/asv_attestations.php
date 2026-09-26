@@ -10,10 +10,10 @@ use local_simhub\local\asv_certification_helper;
 
 require_login();
 
-$context = context_system::instance();
+$context = \local_simhub\local\contexte::racine();
 require_capability('local/simhub:manageasv', $context);
 
-$envcode = optional_param('envcode', get_config('local_simhub', 'envcode') ?: '', PARAM_ALPHANUMEXT);
+$envcode = '';
 $niveau = optional_param('niveau', 'A3', PARAM_ALPHANUM);
 
 \local_simhub\local\navigation::preparer($PAGE, new moodle_url('/local/simhub/manage/asv_attestations.php', ['envcode' => $envcode, 'niveau' => $niveau]), get_string('asv_attestations_groupees', 'local_simhub'), [

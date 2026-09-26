@@ -10,10 +10,10 @@ use local_simhub\record\asv_valanimal;
 
 require_login();
 
-$context = context_system::instance();
+$context = \local_simhub\local\contexte::racine();
 require_capability('local/simhub:view', $context);
 
-$envcode = optional_param('envcode', get_config('local_simhub', 'envcode') ?: '', PARAM_ALPHANUMEXT);
+$envcode = '';
 $canpilot = has_capability('local/simhub:manageasv', $context) || has_capability('local/simhub:validateasvsimulation', $context);
 
 \local_simhub\local\navigation::preparer($PAGE, new moodle_url('/local/simhub/asv/index.php'), get_string('asv_parcours', 'local_simhub'));

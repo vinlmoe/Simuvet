@@ -11,7 +11,7 @@ use local_simhub\record\val_encadrant;
 
 require_login();
 
-$context = context_system::instance();
+$context = \local_simhub\local\contexte::racine();
 require_capability('local/simhub:validatesession', $context);
 
 $action = optional_param('action', '', PARAM_ALPHA);
@@ -20,13 +20,7 @@ if ($action === 'valider' || $action === 'refuser') {
     $sessionid = required_param('sessionid', PARAM_INT);
 
     $statut = $action === 'valider' ? val_encadrant::STATUT_VALIDE : val_encadrant::STATUT_REFUSE;
-    val_encadrant::valider($sessionid, $USER->id, $statut);
-
-    if ($statut === val_encadrant::STATUT_VALIDE) {
-        $session = new session($sessionid);
-        $session->set('statut', session::STATUT_CERTIFIE);
-        $session->update();
-    }
+    \local_simhub\local\parcours_helper::valider_seance($sessionid, $USER->id, $statut);
 
     redirect(new moodle_url('/local/simhub/manage/sessions_a_valider.php'));
 }

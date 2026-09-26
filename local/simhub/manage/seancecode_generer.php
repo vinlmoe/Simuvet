@@ -11,7 +11,7 @@ use local_simhub\persistent\atelier;
 
 require_login();
 
-$context = context_system::instance();
+$context = \local_simhub\local\contexte::racine();
 require_capability('local/simhub:validatesession', $context);
 
 \local_simhub\local\navigation::preparer($PAGE, new moodle_url('/local/simhub/manage/seancecode_generer.php'), get_string('seancecode_generer', 'local_simhub'));

@@ -1,9 +1,7 @@
 <?php
-// Rôles système SimHub correspondant aux profils du §11.
-//
-// SimHub vérifie toutes ses capacités au niveau système : un rôle d'enseignant attribué
-// dans un cours n'y donne aucun droit. Ces rôles, attribuables uniquement au niveau
-// système, évitent à chaque établissement de les recréer à la main.
+// Rôles SimHub transversaux (§11), attribuables au système ou dans la catégorie SimHub
+// (contexte::racine()). Les enseignants et responsables d'UC n'en ont pas besoin : leurs
+// droits viennent de leur rôle dans le cours de l'UC, via l'activité mod_simhub.
 
 namespace local_simhub\local;
 
@@ -45,6 +43,9 @@ class roles {
         $adminfonctionnel = array_values(array_unique(array_merge($responsableuc, $gestionnairesalle, [
             'local/simhub:manageasv',
             'local/simhub:configure',
+            // Attribue lui-même les autres rôles SimHub dans la catégorie, sans compte admin.
+            'moodle/role:assign',
+            'moodle/role:review',
         ])));
 
         return [
@@ -79,10 +80,22 @@ class roles {
                     $shortname,
                     get_string('role_' . $shortname . '_desc', 'local_simhub')
                 );
-                set_role_contextlevels($roleid, [CONTEXT_SYSTEM]);
             }
+            $niveaux = array_values(array_unique(array_merge(
+                array_values(get_role_contextlevels($roleid)), [CONTEXT_SYSTEM, CONTEXT_COURSECAT])));
+            set_role_contextlevels($roleid, $niveaux);
             foreach ($caps as $cap) {
                 assign_capability($cap, CAP_ALLOW, $roleid, $syscontext->id, true);
+            }
+        }
+
+        // L'administrateur fonctionnel ne peut attribuer que les rôles SimHub.
+        $adminid = $DB->get_field('role', 'id', ['shortname' => 'simhubadminfonctionnel']);
+        foreach (array_keys(self::definitions()) as $shortname) {
+            $cibleid = $DB->get_field('role', 'id', ['shortname' => $shortname]);
+            if ($adminid && $cibleid
+                    && !$DB->record_exists('role_allow_assign', ['roleid' => $adminid, 'allowassign' => $cibleid])) {
+                core_role_set_assign_allowed($adminid, $cibleid);
             }
         }
 

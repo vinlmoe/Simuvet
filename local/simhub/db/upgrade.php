@@ -82,5 +82,18 @@ function xmldb_local_simhub_upgrade($oldversion) {
         upgrade_plugin_savepoint(true, 2026092700, 'local', 'simhub');
     }
 
+    if ($oldversion < 2026092900) {
+        $table = new xmldb_table('local_simhub_parcours');
+        $field = new xmldb_field('cmid', XMLDB_TYPE_INTEGER, '10', null, null, null, null, 'badgeid');
+        if (!$dbman->field_exists($table, $field)) {
+            $dbman->add_field($table, $field);
+            $dbman->add_key($table, new xmldb_key('cmid_fk', XMLDB_KEY_FOREIGN, ['cmid'], 'course_modules', ['id']));
+        }
+
+        // Rôles SimHub attribuables dans la catégorie, délégation à l'administrateur fonctionnel.
+        \local_simhub\local\roles::installer();
+        upgrade_plugin_savepoint(true, 2026092900, 'local', 'simhub');
+    }
+
     return true;
 }

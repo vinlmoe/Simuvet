@@ -31,7 +31,10 @@ class asv_acte extends \core\persistent {
      * @return asv_acte[]
      */
     public static function get_referentiel(string $envcode, ?string $niveau = null): array {
-        $params = ['envcode' => $envcode, 'actif' => 1];
+        $params = ['actif' => 1];
+        if ($envcode !== '') {
+            $params['envcode'] = $envcode;
+        }
         if ($niveau !== null) {
             $params['niveau'] = $niveau;
         }

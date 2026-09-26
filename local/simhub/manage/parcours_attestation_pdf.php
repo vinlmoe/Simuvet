@@ -14,18 +14,20 @@ use local_simhub\local\badge_helper;
 
 require_login();
 
-$context = context_system::instance();
+$context = \local_simhub\local\contexte::racine();
 
 $parcoursid = required_param('parcoursid', PARAM_INT);
 $userid = optional_param('userid', $USER->id, PARAM_INT);
 
+$parcours = new parcours($parcoursid);
 if ($userid != $USER->id) {
-    require_capability('local/simhub:viewprogression', $context);
+    if (!array_key_exists($userid, \local_simhub\local\droits::etudiants_du_parcours($parcours))
+            || !\local_simhub\local\droits::peut_suivre_parcours($parcours)) {
+        throw new required_capability_exception(\local_simhub\local\contexte::racine(), 'local/simhub:viewprogression', 'nopermissions', '');
+    }
 } else {
     require_capability('local/simhub:view', $context);
 }
-
-$parcours = new parcours($parcoursid);
 $user = \core_user::get_user($userid, '*', MUST_EXIST);
 
 $composition = $parcours->get_ateliers();

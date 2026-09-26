@@ -10,18 +10,26 @@ use local_simhub\persistent\ae_modele;
 
 require_login();
 
-$context = context_system::instance();
-require_capability('local/simhub:manageateliers', $context);
+$context = \local_simhub\local\contexte::racine();
 
 $atelierid = required_param('atelierid', PARAM_INT);
 $atelier = new atelier($atelierid);
-
-$title = get_string('ae_modele', 'local_simhub');
-\local_simhub\local\navigation::preparer($PAGE, new moodle_url('/local/simhub/manage/ae_modele_edit.php', ['atelierid' => $atelierid]), $title, [
+if (!\local_simhub\local\droits::peut_editer_grille($atelierid)) {
+    throw new required_capability_exception($context, 'local/simhub:manageateliers', 'nopermissions', '');
+}
+$gestionnaire = has_capability('local/simhub:manageateliers', $context);
+// Un responsable d'UC n'a pas accès aux pages de gestion de l'atelier : son fil d'Ariane
+// passe par la fiche étudiant.
+$etapesatelier = $gestionnaire ? [
     [get_string('manage_ateliers', 'local_simhub'), new moodle_url('/local/simhub/manage/ateliers.php')],
     [s($atelier->get('nomcourt')), new moodle_url('/local/simhub/manage/atelier_edit.php', ['id' => $atelierid])],
-]);
-\local_simhub\local\navigation::onglets('atelier', $atelierid, 'ae');
+] : [[s($atelier->get('nomcourt')), new moodle_url('/local/simhub/atelier.php', ['id' => $atelierid])]];
+
+$title = get_string('ae_modele', 'local_simhub');
+\local_simhub\local\navigation::preparer($PAGE, new moodle_url('/local/simhub/manage/ae_modele_edit.php', ['atelierid' => $atelierid]), $title, $etapesatelier);
+if ($gestionnaire) {
+    \local_simhub\local\navigation::onglets('atelier', $atelierid, 'ae');
+}
 
 $modele = ae_modele::get_pour_atelier($atelierid);
 
@@ -55,6 +63,16 @@ if ($submitted) {
 
 echo $OUTPUT->header();
 echo \local_simhub\local\navigation::barre();
+
+// La grille est partagée par toutes les UC qui utilisent l'atelier : on montre qui l'a
+// modifiée en dernier.
+if ($modele && $modele->get('usermodified')) {
+    $auteur = \core_user::get_user($modele->get('usermodified'));
+    echo $OUTPUT->notification(get_string('ae_derniere_modification', 'local_simhub', [
+        'auteur' => $auteur ? fullname($auteur) : '-',
+        'date' => userdate($modele->get('timemodified')),
+    ]), \core\output\notification::NOTIFY_INFO);
+}
 
 echo html_writer::start_tag('form', ['method' => 'post']);
 echo html_writer::empty_tag('input', ['type' => 'hidden', 'name' => 'sesskey', 'value' => sesskey()]);

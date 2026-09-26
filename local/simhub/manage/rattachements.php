@@ -13,7 +13,7 @@ use local_simhub\local\cohort_helper;
 
 require_login();
 
-$context = context_system::instance();
+$context = \local_simhub\local\contexte::racine();
 require_capability('local/simhub:managerattachement', $context);
 
 $atelierid = required_param('atelierid', PARAM_INT);

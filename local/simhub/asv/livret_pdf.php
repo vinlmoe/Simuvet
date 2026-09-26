@@ -15,15 +15,15 @@ use local_simhub\local\pdf_helper;
 
 require_login();
 
-$context = context_system::instance();
+$context = \local_simhub\local\contexte::racine();
 require_capability('local/simhub:view', $context);
 
 $userid = optional_param('userid', $USER->id, PARAM_INT);
-if ($userid != $USER->id && !has_capability('local/simhub:validateasvsimulation', $context)) {
+if ($userid != $USER->id && !\local_simhub\local\droits::peut_valider_asv($userid)) {
     require_capability('local/simhub:manageasv', $context);
 }
 
-$envcode = optional_param('envcode', get_config('local_simhub', 'envcode') ?: '', PARAM_ALPHANUMEXT);
+$envcode = '';
 
 $user = \core_user::get_user($userid, '*', MUST_EXIST);
 $actes = asv_acte::get_referentiel($envcode);

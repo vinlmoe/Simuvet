@@ -18,7 +18,7 @@ defined('MOODLE_INTERNAL') || die();
  * facilement passer inaperçu selon le thème.
  */
 function local_simhub_extend_navigation(global_navigation $nav) {
-    $context = context_system::instance();
+    $context = \local_simhub\local\contexte::racine();
     if (!has_capability('local/simhub:view', $context)) {
         return;
     }
@@ -80,7 +80,7 @@ function local_simhub_pluginfile($course, $cm, $context, $filearea, $args, $forc
         if ($ressource
                 && ($ressource->visibilite === \local_simhub\persistent\ressource::VISIBILITE_INTERNE
                     || $ressource->type === \local_simhub\persistent\ressource::TYPE_SOURCE_EDITABLE)
-                && !has_capability('local/simhub:manageressources', $context)) {
+                && !has_capability('local/simhub:manageressources', \local_simhub\local\contexte::racine())) {
             return false;
         }
     }

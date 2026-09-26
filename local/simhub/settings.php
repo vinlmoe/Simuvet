@@ -1,7 +1,7 @@
 <?php
 // Page de réglages "Administration fonctionnelle" (§11, profil
 // Administrateur fonctionnel). Regroupe les paramètres transverses,
-// paramétrables par établissement (principe "Paramétrable ENVF", §4).
+// propres à l'école : chaque école a son propre Moodle (§4).
 
 defined('MOODLE_INTERNAL') || die();
 
@@ -15,6 +15,16 @@ if ($hassiteconfig) {
         get_string('setting_envcode_desc', 'local_simhub'),
         '',
         PARAM_ALPHANUMEXT
+    ));
+
+    $categories = [0 => get_string('setting_categoryid_systeme', 'local_simhub')]
+        + core_course_category::make_categories_list();
+    $settings->add(new admin_setting_configselect(
+        'local_simhub/categoryid',
+        get_string('setting_categoryid', 'local_simhub'),
+        get_string('setting_categoryid_desc', 'local_simhub'),
+        0,
+        $categories
     ));
 
     $settings->add(new admin_setting_configduration(

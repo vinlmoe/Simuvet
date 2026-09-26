@@ -13,10 +13,10 @@ use local_simhub\record\ae_reponse;
 
 require_login();
 
-$context = context_system::instance();
+$context = \local_simhub\local\contexte::racine();
 require_capability('local/simhub:viewprogression', $context);
 
-$envcode = optional_param('envcode', get_config('local_simhub', 'envcode') ?: '', PARAM_ALPHANUMEXT);
+$envcode = '';
 
 \local_simhub\local\navigation::preparer($PAGE, new moodle_url('/local/simhub/manage/dashboard.php'), get_string('dashboard_parcours', 'local_simhub'));
 

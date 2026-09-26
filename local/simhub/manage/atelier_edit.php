@@ -11,7 +11,7 @@ use local_simhub\record\indispo;
 
 require_login();
 
-$context = context_system::instance();
+$context = \local_simhub\local\contexte::racine();
 require_capability('local/simhub:manageateliers', $context);
 
 $id = optional_param('id', 0, PARAM_INT);
@@ -29,7 +29,7 @@ $oldstatut = $atelier->get('id') ? $atelier->get('statut') : null;
 
 $planoptions = ['subdirs' => 0, 'maxfiles' => 1, 'accepted_types' => ['.png', '.jpg', '.jpeg']];
 $plandraftid = file_get_submitted_draft_itemid('planimage');
-file_prepare_draft_area($plandraftid, $context->id, 'local_simhub', 'plan', $id ?: null, $planoptions);
+file_prepare_draft_area($plandraftid, \local_simhub\local\contexte::fichiers()->id, 'local_simhub', 'plan', $id ?: null, $planoptions);
 
 $form = new atelier_form();
 $formdata = $atelier->to_record();
@@ -68,9 +68,9 @@ if ($form->is_cancelled()) {
 
     // L'itemid de la zone de fichiers 'plan' est l'id de l'atelier lui-même (§5.4), une fois
     // celui-ci connu (création comprise).
-    file_save_draft_area_files($data->planimage, $context->id, 'local_simhub', 'plan', $atelier->get('id'), $planoptions);
+    file_save_draft_area_files($data->planimage, \local_simhub\local\contexte::fichiers()->id, 'local_simhub', 'plan', $atelier->get('id'), $planoptions);
     $fs = get_file_storage();
-    $planfiles = $fs->get_area_files($context->id, 'local_simhub', 'plan', $atelier->get('id'), 'filepath, filename', false);
+    $planfiles = $fs->get_area_files(\local_simhub\local\contexte::fichiers()->id, 'local_simhub', 'plan', $atelier->get('id'), 'filepath, filename', false);
     $atelier->set('planimageitemid', !empty($planfiles) ? $atelier->get('id') : 0);
     $atelier->update();
 

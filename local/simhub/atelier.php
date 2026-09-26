@@ -13,7 +13,7 @@ use local_simhub\persistent\ressource;
 
 require_login();
 
-$context = context_system::instance();
+$context = \local_simhub\local\contexte::racine();
 require_capability('local/simhub:view', $context);
 
 $id = required_param('id', PARAM_INT);
@@ -101,13 +101,13 @@ if ($atelier->get('planimageitemid')) {
     // sans géolocalisation intérieure sophistiquée (hors périmètre V1, §14).
     $fs = get_file_storage();
     $planfiles = $fs->get_area_files(
-        $context->id, 'local_simhub', 'plan', $atelier->get('planimageitemid'), 'filepath, filename', false
+        \local_simhub\local\contexte::fichiers()->id, 'local_simhub', 'plan', $atelier->get('planimageitemid'), 'filepath, filename', false
     );
     $planfile = reset($planfiles);
 
     if ($planfile) {
         $planurl = moodle_url::make_pluginfile_url(
-            $context->id, 'local_simhub', 'plan', $atelier->get('planimageitemid'), '/', $planfile->get_filename()
+            \local_simhub\local\contexte::fichiers()->id, 'local_simhub', 'plan', $atelier->get('planimageitemid'), '/', $planfile->get_filename()
         );
         echo html_writer::start_div('local-simhub-plan', ['style' => 'position:relative;display:inline-block;']);
         echo html_writer::empty_tag('img', ['src' => $planurl->out(false), 'style' => 'max-width:100%;']);
@@ -141,12 +141,12 @@ if (empty($ressources)) {
         $href = $r->get('url');
         if (!$href && $r->get('fileitemid')) {
             $resfiles = $fs->get_area_files(
-                $context->id, 'local_simhub', 'ressource', $r->get('fileitemid'), 'filepath, filename', false
+                \local_simhub\local\contexte::fichiers()->id, 'local_simhub', 'ressource', $r->get('fileitemid'), 'filepath, filename', false
             );
             $resfile = reset($resfiles);
             if ($resfile) {
                 $href = moodle_url::make_pluginfile_url(
-                    $context->id, 'local_simhub', 'ressource', $r->get('fileitemid'), '/', $resfile->get_filename()
+                    \local_simhub\local\contexte::fichiers()->id, 'local_simhub', 'ressource', $r->get('fileitemid'), '/', $resfile->get_filename()
                 )->out(false);
             }
         }

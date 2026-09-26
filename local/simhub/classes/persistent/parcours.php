@@ -29,6 +29,7 @@ class parcours extends \core\persistent {
             'cohortid' => ['type' => PARAM_INT, 'default' => 0, 'null' => NULL_ALLOWED],
             'envcode' => ['type' => PARAM_ALPHANUMEXT],
             'badgeid' => ['type' => PARAM_INT, 'default' => 0, 'null' => NULL_ALLOWED],
+            'cmid' => ['type' => PARAM_INT, 'default' => null, 'null' => NULL_ALLOWED],
         ];
     }
 

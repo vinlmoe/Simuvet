@@ -12,8 +12,13 @@ use local_simhub\record\acte_atelier;
 
 require_login();
 
-$context = context_system::instance();
-require_capability('local/simhub:validateasvsimulation', $context);
+$context = \local_simhub\local\contexte::racine();
+if (!\local_simhub\local\droits::peut_valider_asv()) {
+    throw new required_capability_exception($context, 'local/simhub:validateasvsimulation', 'nopermissions', '');
+}
+// Un enseignant d'UC ne valide que les étudiants inscrits à l'une de ses UC.
+$transversal = has_capability('local/simhub:validateasvsimulation', $context);
+$autorises = $transversal ? [] : array_flip(\local_simhub\local\droits::etudiants_asv_autorises());
 
 $atelierid = optional_param('atelierid', 0, PARAM_INT);
 $preselection = optional_param('userid', 0, PARAM_INT);
@@ -25,7 +30,7 @@ if ($atelierid) {
     \local_simhub\local\navigation::onglets('atelier', $atelierid, 'asv');
 }
 
-$envcode = get_config('local_simhub', 'envcode') ?: '';
+$envcode = '';
 
 // Si on arrive depuis un atelier précis, ne proposer que les actes qui s'y pratiquent
 // réellement (liés via manage/asv_acte_edit.php) : ça évite de faire chercher l'acte dans
@@ -54,6 +59,9 @@ if ($submitted) {
     $atelierid = optional_param('atelierid', 0, PARAM_INT);
 
     core_user::require_active_user(core_user::get_user($userid, '*', MUST_EXIST));
+    if (!\local_simhub\local\droits::peut_valider_asv($userid)) {
+        throw new required_capability_exception($context, 'local/simhub:validateasvsimulation', 'nopermissions', '');
+    }
 
     $extra = [];
     if ($atelierid) {
@@ -93,7 +101,8 @@ echo html_writer::empty_tag('input', ['type' => 'hidden', 'name' => 'submit', 'v
 
 echo html_writer::start_div('form-group');
 echo html_writer::tag('label', get_string('etudiant', 'local_simhub'), ['for' => 'id_userid']);
-echo \local_simhub\local\selecteurs::etudiants('userid', $preselection, 'id_userid');
+echo \local_simhub\local\selecteurs::etudiants('userid', $preselection, 'id_userid',
+    $transversal ? null : fn(int $uid) => isset($autorises[$uid]));
 echo html_writer::end_div();
 
 echo html_writer::start_div('form-group');

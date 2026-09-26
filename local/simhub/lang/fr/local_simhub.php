@@ -13,7 +13,7 @@ $string['simhub:studenthome'] = 'Mon espace ateliers';
 
 // Réglages.
 $string['setting_envcode'] = 'Code établissement';
-$string['setting_envcode_desc'] = 'Code court identifiant l\'école (ex. ENVA, ENVT, ONIRIS, VETAGROSUP). Utilisé pour distinguer les référentiels par établissement.';
+$string['setting_envcode_desc'] = 'Code court de l\'école (ex. ENVA, ENVT, ONIRIS, VETAGROSUP). Chaque école ayant son propre Moodle, il sert uniquement à la traçabilité : il est enregistré sur les ateliers, parcours et actes ASV créés ou importés, et figure dans les exports.';
 $string['setting_seancecodeduration'] = 'Durée de validité d\'un code de séance';
 $string['setting_seancecodeduration_desc'] = 'Durée pendant laquelle un code de séance temporaire (§7.3, contrôle anti-faux-scan) reste valable.';
 $string['setting_asvtokenexpiry'] = 'Durée de validité d\'un lien de validation ASV externe';
@@ -297,14 +297,14 @@ $string['numero_existe'] = 'Ce numéro d\'atelier est déjà utilisé dans cet �
 // Rôles système (§11).
 $string['nav_roles'] = 'Rôles SimHub';
 $string['nav_groupe_roles'] = 'Rôles';
-$string['role_simhubencadrant'] = 'Encadrant SimHub';
-$string['role_simhubencadrant_desc'] = 'Enseignant ou formateur : suivi des parcours, validation des séances et des actes ASV en simulation (§11).';
+$string['role_simhubencadrant'] = 'Formateur SimHub';
+$string['role_simhubencadrant_desc'] = 'Formateur transversal désigné dans la catégorie SimHub : suivi de tous les parcours, validation des séances et des actes ASV en simulation pour tous les étudiants. Un enseignant d\'UC n\'en a pas besoin (§11).';
 $string['role_simhubresponsableuc'] = 'Responsable d\'UC SimHub';
-$string['role_simhubresponsableuc_desc'] = 'Droits d\'encadrant, plus la gestion des parcours et des rattachements aux UC (§11).';
+$string['role_simhubresponsableuc_desc'] = 'Vue transversale des parcours et rattachements de toutes les UC. Un responsable d\'UC gère la sienne depuis l\'activité SimHub de son cours, sans ce rôle (§11).';
 $string['role_simhubgestionnairesalle'] = 'Gestionnaire de salle SimHub';
 $string['role_simhubgestionnairesalle_desc'] = 'Responsable de salle : fiches ateliers, ressources, statuts, QR codes, import/export (§11).';
 $string['role_simhubadminfonctionnel'] = 'Administrateur fonctionnel SimHub';
-$string['role_simhubadminfonctionnel_desc'] = 'Tous les droits SimHub, y compris le référentiel ASV et le paramétrage (§11).';
+$string['role_simhubadminfonctionnel_desc'] = 'Tous les droits SimHub, y compris le référentiel ASV et le paramétrage, et l\'attribution des autres rôles SimHub dans la catégorie SimHub (§11).';
 
 // Textes auparavant codés en dur dans les pages.
 $string['ae_autobilan'] = 'Auto-bilan';
@@ -441,3 +441,9 @@ $string['indispo_cloturee'] = 'Clôturée';
 $string['indispo_en_cours'] = 'En cours';
 $string['indispo_retour_prevu'] = 'Retour prévu le {$a}.';
 $string['privacy:metadata:local_simhub_asv_valsim:commentaire'] = 'Observation de l\'encadrant ou motif d\'annulation de la validation';
+$string['setting_categoryid'] = 'Catégorie SimHub';
+$string['setting_categoryid_desc'] = 'Catégorie de cours où sont attribués les rôles SimHub transversaux (gestionnaire de salle, administrateur fonctionnel, formateur ASV). L\'administrateur fonctionnel y attribue lui-même ces rôles, sans compte administrateur. Les enseignants n\'en ont pas besoin : leurs droits viennent de l\'activité SimHub de leur UC. Les rôles déjà attribués au niveau système restent valables.';
+$string['setting_categoryid_systeme'] = 'Aucune (niveau système)';
+$string['ae_derniere_modification'] = 'Grille partagée par toutes les UC qui utilisent cet atelier. Dernière modification : {$a->auteur}, le {$a->date}.';
+$string['event_session_validated'] = 'Séance d\'atelier validée ou refusée';
+$string['event_parcours_updated'] = 'Ateliers d\'un parcours modifiés';

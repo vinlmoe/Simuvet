@@ -10,14 +10,13 @@ use local_simhub\record\asv_valanimal;
 
 require_login();
 
-$context = context_system::instance();
-if (!has_capability('local/simhub:validateasvsimulation', $context)) {
+$context = \local_simhub\local\contexte::racine();
+$userid = required_param('userid', PARAM_INT);
+if (!\local_simhub\local\droits::peut_valider_asv($userid)) {
     require_capability('local/simhub:manageasv', $context);
 }
-
-$userid = required_param('userid', PARAM_INT);
 $action = optional_param('action', '', PARAM_ALPHA);
-$envcode = optional_param('envcode', get_config('local_simhub', 'envcode') ?: '', PARAM_ALPHANUMEXT);
+$envcode = '';
 
 $user = \core_user::get_user($userid, '*', MUST_EXIST);
 $url = new moodle_url('/local/simhub/asv/etudiant.php', ['userid' => $userid]);
@@ -29,7 +28,9 @@ $url = new moodle_url('/local/simhub/asv/etudiant.php', ['userid' => $userid]);
 if ($action === 'annulersim' || $action === 'annuleranimal') {
     $id = required_param('id', PARAM_INT);
     $table = $action === 'annulersim' ? asv_valsim::TABLE : asv_valanimal::TABLE;
-    require_capability($action === 'annulersim' ? 'local/simhub:validateasvsimulation' : 'local/simhub:manageasv', $context);
+    if ($action !== 'annulersim' || !\local_simhub\local\droits::peut_valider_asv($userid)) {
+        require_capability('local/simhub:manageasv', $context);
+    }
     $validation = $DB->get_record($table, ['id' => $id, 'userid' => $userid, 'statut' => 'valide'], '*', MUST_EXIST);
 
     if (optional_param('confirmer', 0, PARAM_BOOL)) {
@@ -78,7 +79,7 @@ echo \local_simhub\local\navigation::barre();
 echo html_writer::div(
     html_writer::link(new moodle_url('/local/simhub/asv/livret_pdf.php', ['userid' => $userid, 'envcode' => $envcode]),
         get_string('asv_exporter_livret', 'local_simhub'), ['class' => 'btn btn-outline-secondary btn-sm mr-2 me-2'])
-    . (has_capability('local/simhub:validateasvsimulation', $context)
+    . (\local_simhub\local\droits::peut_valider_asv($userid)
         ? html_writer::link(new moodle_url('/local/simhub/asv/valider_simulation.php', ['userid' => $userid]),
             get_string('asv_valider_simulation', 'local_simhub'), ['class' => 'btn btn-primary btn-sm'])
         : ''),

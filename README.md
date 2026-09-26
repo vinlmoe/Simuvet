@@ -13,24 +13,23 @@ ASV (validation simulation + animal vivant). Certains points restent
 volontairement simplifiés ou en attente des retours des responsables
 de salle (§15) — voir "Ce qui reste à faire" ci-dessous.
 
-## Pourquoi un plugin `local` et pas un bloc ou une activité
+## Deux plugins : `local_simhub` et l'activité `mod_simhub`
 
-Le cahier des charges (§10) laisse ce choix au prestataire. Un plugin
-`local` a été retenu ici car SimHub :
-- n'est pas rattaché à un cours ou une activité Moodle en particulier
-  (les ateliers sont transverses à toutes les UC) ;
-- a besoin de ses propres tables et pages, avec un contexte système ;
-- doit rester un point d'entrée central, tout en consommant les rôles,
-  cohortes, UC et carnet de notes Moodle par API plutôt qu'en devenant
-  lui-même une activité de cours.
+Le cahier des charges (§10) laisse le choix de la forme au prestataire. SimHub en combine
+deux :
+- **`local/simhub`** porte tout ce qui est transversal à l'école : fiches ateliers, salle,
+  ressources, QR codes, séances, grilles d'auto-évaluation, module ASV, accueil étudiant.
+- **`mod/simhub`** est une activité que le **responsable d'UC ajoute lui-même dans le cours
+  de son UC**. Elle porte le parcours d'ateliers de l'UC, le suivi de ses étudiants, la
+  validation de leurs séances et la note (pourcentage d'avancement) dans le carnet du cours.
 
-Ce choix est un point de départ raisonnable, pas un arbitrage définitif
-— à confirmer une fois les contraintes de l'infrastructure EVE connues.
+Ainsi, **un enseignant n'a de droits que sur les UC où il est inscrit comme enseignant**, et
+en obtient sur une autre UC dès qu'il y est ajouté : aucun rôle système à attribuer.
 
-**Important : le plugin doit vivre dans `local/simhub/`** dans une
-installation Moodle (le composant `local_simhub` est résolu par
-Moodle à partir de ce chemin). Ce dépôt place directement ce dossier
-à la racine.
+**Important : les plugins doivent vivre dans `local/simhub/` et `mod/simhub/`** d'une
+installation Moodle (les composants sont résolus à partir de ces chemins). Ce dépôt reproduit
+directement cette arborescence. Copier les dossiers plutôt que de créer des liens
+symboliques : `require(__DIR__ . '/../../config.php')` suit le chemin réel du fichier.
 
 ## Arborescence
 
@@ -387,24 +386,56 @@ Bugs réels corrigés à cette occasion :
   ASV déjà utilisé dans l'établissement provoquait « Erreur d'écriture vers la base
   de données ». Les deux sont désormais signalés dans le formulaire.
 
-## Rôles système SimHub (§11)
+## Droits par UC et catégorie SimHub (§10, §11)
 
-Pour la même raison que ci-dessus, un rôle d'enseignant attribué dans un cours ne donne
-aucun droit SimHub. Le plugin crée donc lui-même, à l'installation comme à la mise à
-jour (`classes/local/roles.php`), quatre rôles attribuables **uniquement au niveau
-système** :
+Décisions validées le 26 septembre 2026 (rapport `docs/rapport_architecture_droits.pdf`).
 
-| Rôle | Profil §11 | Droits |
+**Chaque école a son propre Moodle.** Le code établissement (`envcode`) ne sert plus qu'à la
+traçabilité : il est enregistré sur les ateliers, parcours et actes ASV, figure dans les
+exports, mais ne filtre plus aucune liste et n'est plus saisi dans les formulaires.
+
+**Deux contextes de droits** (`classes/local/contexte.php`, `classes/local/droits.php`) :
+
+| Profil | Où sont ses droits | Qui les donne |
 |---|---|---|
-| Encadrant SimHub | Enseignant / formateur | suivi des parcours, validation des séances, export du suivi, validation ASV en simulation |
-| Responsable d'UC SimHub | Responsable d'UC | droits d'encadrant + parcours et rattachements |
-| Gestionnaire de salle SimHub | Responsable de salle | fiches ateliers, ressources, statuts, QR codes, import/export, rattachements, séances |
-| Administrateur fonctionnel SimHub | Administrateur fonctionnel | tous les droits SimHub, dont le référentiel ASV et le paramétrage |
+| Étudiant | Utilisateur authentifié + inscription au cours | Automatique |
+| Enseignant | Rôle `teacher` dans le cours de l'UC (activité `mod_simhub`) | Inscription au cours |
+| Responsable d'UC | Rôle `editingteacher` dans le cours de l'UC | Inscription au cours ; il ajoute l'activité |
+| Gestionnaire de salle, formateur ASV | Rôle SimHub dans la **catégorie SimHub** | L'administrateur fonctionnel |
+| Administrateur fonctionnel | Rôle SimHub dans la catégorie SimHub | Un administrateur Moodle, une fois |
 
-Il reste à les attribuer aux personnes concernées : un raccourci **Rôles SimHub** dans la
-barre de navigation (visible des administrateurs) ouvre directement *Attribuer des rôles
-système*. Rejouer la création est sans danger : un rôle existant est complété, jamais
-recréé, et les ajustements faits à la main par l'établissement sont conservés.
+- **Catégorie SimHub** : réglage `local_simhub/categoryid`. Les capacités transversales y
+  sont vérifiées (`contexte::racine()`) ; sans réglage, c'est le niveau système, comme
+  avant. Un rôle déjà attribué au système reste valable (le système est parent de la
+  catégorie). Les fichiers restent stockés au contexte système (`contexte::fichiers()`).
+- **Délégation** : l'administrateur fonctionnel reçoit `moodle/role:assign` et ne peut
+  attribuer que les rôles SimHub, dans la catégorie (raccourci « Rôles SimHub »).
+- **Enseignant d'UC** : il suit uniquement les inscrits de son cours, valide les séances d'un
+  étudiant de son UC sur un atelier de son UC (où que la séance ait été lancée), et valide
+  les actes ASV en simulation de ses étudiants.
+- **Responsable d'UC** : choisit les ateliers de son UC (un rattachement au cours est créé ou
+  retiré automatiquement) et modifie leur grille d'auto-évaluation. La grille étant partagée
+  par toutes les UC, la page affiche l'auteur et la date de la dernière modification.
+- **Validation ASV en simulation** : enseignants de l'UC *et* formateurs désignés dans la
+  catégorie (rôle « Formateur SimHub »).
+
+**Une séance, plusieurs UC.** L'étudiant scanne le QR code de l'atelier sans choisir d'UC.
+L'état d'un atelier ne dépend que de ses séances sur cet atelier ; à chaque séance terminée
+ou validée (événements `session_completed`, `session_validated`), l'observateur de
+`mod_simhub` recalcule la note de l'étudiant dans **toutes** les UC qui contiennent l'atelier.
+Modifier la composition d'un parcours (`parcours_updated`) recalcule toute l'UC.
+
+**Note** : pourcentage d'avancement (ateliers obligatoires s'il y en a, sinon tous),
+rapporté à la note maximale de l'activité. Les groupes du cours filtrent le suivi.
+
+Vérifié sur Moodle 5.0 (PHP 8.4, PostgreSQL), en installation neuve et en mise à jour depuis
+la version précédente : 31 contrôles de droits et de notes, 28 pages parcourues par
+navigateur (responsable d'UC, enseignant, étudiant, gestionnaire, administrateur
+fonctionnel, administrateur), validation d'une séance depuis le cours.
+
+Limites connues : l'activité n'est pas encore sauvegardée avec le cours
+(`FEATURE_BACKUP_MOODLE2` désactivé) ; les ateliers de l'UC se recomposent après une
+restauration.
 
 ## Internationalisation
 

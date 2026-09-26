@@ -6,19 +6,19 @@ require(__DIR__ . '/../../../config.php');
 
 use local_simhub\persistent\parcours;
 use local_simhub\persistent\atelier;
-use local_simhub\record\parc_atelier;
 
 require_login();
 
-$context = context_system::instance();
-require_capability('local/simhub:manageparcours', $context);
-
 $parcoursid = required_param('parcoursid', PARAM_INT);
 $parcours = new parcours($parcoursid);
+if (!\local_simhub\local\droits::peut_gerer_parcours($parcours)) {
+    throw new required_capability_exception(\local_simhub\local\contexte::racine(), 'local/simhub:manageparcours',
+        'nopermissions', '');
+}
 
-\local_simhub\local\navigation::preparer($PAGE, new moodle_url('/local/simhub/manage/parcours_ateliers.php', ['parcoursid' => $parcoursid]), s($parcours->get('nom')), [
-    [get_string('filtre_parcours', 'local_simhub'), new moodle_url('/local/simhub/manage/parcours.php')],
-]);
+\local_simhub\local\navigation::preparer($PAGE, new moodle_url('/local/simhub/manage/parcours_ateliers.php', ['parcoursid' => $parcoursid]), s($parcours->get('nom')),
+    \local_simhub\local\droits::etape_activite($parcours)
+        ?: [[get_string('filtre_parcours', 'local_simhub'), new moodle_url('/local/simhub/manage/parcours.php')]]);
 \local_simhub\local\navigation::onglets('parcours', $parcoursid, 'ateliers');
 
 $action = optional_param('action', '', PARAM_ALPHA);
@@ -31,14 +31,14 @@ if ($action === 'ajouter') {
     $echeancedate = optional_param('echeance', '', PARAM_TEXT);
     $echeance = $echeancedate !== '' ? strtotime($echeancedate) : 0;
 
-    parc_atelier::ajouter($parcoursid, $atelierid, $ordre, (bool) $obligatoire, $echeance ?: null);
+    \local_simhub\local\parcours_helper::ajouter_atelier($parcours, $atelierid, $ordre, (bool) $obligatoire, $echeance ?: null);
 
     redirect(new moodle_url('/local/simhub/manage/parcours_ateliers.php', ['parcoursid' => $parcoursid]));
 } else if ($action === 'retirer') {
     require_sesskey();
     $atelierid = required_param('atelierid', PARAM_INT);
 
-    parc_atelier::retirer($parcoursid, $atelierid);
+    \local_simhub\local\parcours_helper::retirer_atelier($parcours, $atelierid);
 
     redirect(new moodle_url('/local/simhub/manage/parcours_ateliers.php', ['parcoursid' => $parcoursid]));
 }
@@ -69,10 +69,8 @@ echo html_writer::table($table);
 
 echo html_writer::tag('h3', get_string('parcours_ajouter_atelier', 'local_simhub'));
 
-$envcode = get_config('local_simhub', 'envcode') ?: '';
-$params = $envcode !== '' ? ['envcode' => $envcode] : [];
-$ateliers = atelier::get_records($params, 'nomcourt');
-$dejadans = array_column($composition, 'atelierid');
+$ateliers = atelier::get_records([], 'nomcourt');
+$dejadans = array_map('intval', array_column($composition, 'atelierid'));
 
 echo html_writer::start_tag('form', ['method' => 'post']);
 echo html_writer::empty_tag('input', ['type' => 'hidden', 'name' => 'sesskey', 'value' => sesskey()]);
@@ -81,7 +79,7 @@ echo html_writer::empty_tag('input', ['type' => 'hidden', 'name' => 'action', 'v
 
 echo html_writer::start_tag('select', ['name' => 'atelierid', 'class' => 'form-control d-inline-block w-auto mr-2']);
 foreach ($ateliers as $atelier) {
-    if (in_array($atelier->get('id'), $dejadans, true)) {
+    if (in_array((int) $atelier->get('id'), $dejadans, true)) {
         continue;
     }
     echo html_writer::tag('option', s($atelier->get('nomcourt')), ['value' => $atelier->get('id')]);

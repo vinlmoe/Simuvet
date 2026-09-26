@@ -11,7 +11,7 @@ use local_simhub\record\qrtoken;
 
 require_login();
 
-$context = context_system::instance();
+$context = \local_simhub\local\contexte::racine();
 require_capability('local/simhub:manageqrcodes', $context);
 
 $id = required_param('id', PARAM_INT);

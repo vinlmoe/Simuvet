@@ -14,7 +14,7 @@ use local_simhub\form\ressource_form;
 
 require_login();
 
-$context = context_system::instance();
+$context = \local_simhub\local\contexte::racine();
 require_capability('local/simhub:manageressources', $context);
 
 $atelierid = required_param('atelierid', PARAM_INT);
@@ -43,7 +43,7 @@ $title = $id ? get_string('edit') : get_string('ressource_nouvelle', 'local_simh
 \local_simhub\local\navigation::onglets('atelier', $atelierid, 'ressources');
 
 $draftitemid = file_get_submitted_draft_itemid('fichier');
-file_prepare_draft_area($draftitemid, $context->id, 'local_simhub', 'ressource', $id ?: null, $fileoptions);
+file_prepare_draft_area($draftitemid, \local_simhub\local\contexte::fichiers()->id, 'local_simhub', 'ressource', $id ?: null, $fileoptions);
 
 $form = new ressource_form();
 $data = clone $record;
@@ -73,10 +73,10 @@ if ($form->is_cancelled()) {
 
     // L'itemid de fichier est fixé à l'id de la ressource elle-même : on sauvegarde donc la
     // zone de brouillon seulement une fois cet id connu.
-    file_save_draft_area_files($formdata->fichier, $context->id, 'local_simhub', 'ressource', $record->id, $fileoptions);
+    file_save_draft_area_files($formdata->fichier, \local_simhub\local\contexte::fichiers()->id, 'local_simhub', 'ressource', $record->id, $fileoptions);
 
     $fs = get_file_storage();
-    $files = $fs->get_area_files($context->id, 'local_simhub', 'ressource', $record->id, 'filepath, filename', false);
+    $files = $fs->get_area_files(\local_simhub\local\contexte::fichiers()->id, 'local_simhub', 'ressource', $record->id, 'filepath, filename', false);
     $record->fileitemid = !empty($files) ? $record->id : 0;
     $DB->update_record(ressource::TABLE, $record);
 

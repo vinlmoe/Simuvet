@@ -15,7 +15,7 @@ use local_simhub\record\ae_bilan;
 
 require_login();
 
-$context = context_system::instance();
+$context = \local_simhub\local\contexte::racine();
 
 $atelierid = required_param('atelierid', PARAM_INT);
 $action = required_param('action', PARAM_ALPHA);

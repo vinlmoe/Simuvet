@@ -13,7 +13,7 @@ use local_simhub\record\seancecode;
 
 require_login();
 
-$context = context_system::instance();
+$context = \local_simhub\local\contexte::racine();
 require_capability('local/simhub:startsession', $context);
 
 $atelierid = required_param('atelierid', PARAM_INT);

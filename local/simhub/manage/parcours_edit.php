@@ -8,7 +8,7 @@ use local_simhub\form\parcours_form;
 
 require_login();
 
-$context = context_system::instance();
+$context = \local_simhub\local\contexte::racine();
 require_capability('local/simhub:manageparcours', $context);
 
 $id = optional_param('id', 0, PARAM_INT);

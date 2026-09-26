@@ -45,7 +45,7 @@ class atelier_filter {
      */
     public static function from_request(): atelier_filter {
         $filter = new self();
-        $filter->envcode = optional_param('envcode', get_config('local_simhub', 'envcode') ?: '', PARAM_ALPHANUMEXT);
+        $filter->envcode = '';
         $filter->courseid = optional_param('courseid', 0, PARAM_INT);
         $filter->parcoursid = optional_param('parcoursid', 0, PARAM_INT);
         $filter->anneeetude = optional_param('anneeetude', 0, PARAM_INT);

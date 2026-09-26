@@ -130,4 +130,92 @@ class parcours_helper {
         return $DB->get_records_select('user', "id $insql AND deleted = 0", $inparams, 'lastname, firstname',
             'id, ' . implode(', ', \core_user\fields::get_name_fields()));
     }
+
+    /**
+     * Ajoute ou met à jour un atelier du parcours. Pour un parcours d'UC, l'atelier est
+     * aussi rattaché au cours, pour apparaître dans « À faire pour mes UC » et le filtre UC.
+     *
+     * @param parcours $parcours
+     * @param int $atelierid
+     * @param int $ordre
+     * @param bool $obligatoire
+     * @param int|null $echeance
+     * @return void
+     */
+    public static function ajouter_atelier(parcours $parcours, int $atelierid, int $ordre, bool $obligatoire,
+            ?int $echeance): void {
+        global $DB;
+
+        \local_simhub\record\parc_atelier::ajouter($parcours->get('id'), $atelierid, $ordre, $obligatoire, $echeance);
+        $courseid = (int) $parcours->get('courseid');
+        if ($courseid && !$DB->record_exists('local_simhub_rattachement', ['atelierid' => $atelierid, 'courseid' => $courseid])) {
+            \local_simhub\record\rattachement::creer($atelierid, [
+                'courseid' => $courseid,
+                'caractere' => $obligatoire ? \local_simhub\record\rattachement::CARACTERE_OBLIGATOIRE
+                    : \local_simhub\record\rattachement::CARACTERE_RECOMMANDE,
+            ]);
+        }
+        self::signaler_modification($parcours);
+    }
+
+    /**
+     * Retire un atelier du parcours, et son rattachement à l'UC si plus aucun parcours du
+     * cours ne le contient.
+     *
+     * @param parcours $parcours
+     * @param int $atelierid
+     * @return void
+     */
+    public static function retirer_atelier(parcours $parcours, int $atelierid): void {
+        global $DB;
+
+        \local_simhub\record\parc_atelier::retirer($parcours->get('id'), $atelierid);
+        $courseid = (int) $parcours->get('courseid');
+        if ($courseid) {
+            $encore = $DB->record_exists_sql(
+                "SELECT 1
+                   FROM {local_simhub_parc_atelier} pa
+                   JOIN {local_simhub_parcours} p ON p.id = pa.parcoursid
+                  WHERE p.courseid = ? AND pa.atelierid = ?", [$courseid, $atelierid]);
+            if (!$encore) {
+                $DB->delete_records('local_simhub_rattachement', ['atelierid' => $atelierid, 'courseid' => $courseid]);
+            }
+        }
+        self::signaler_modification($parcours);
+    }
+
+    /**
+     * @param parcours $parcours
+     * @return void
+     */
+    protected static function signaler_modification(parcours $parcours): void {
+        \local_simhub\event\parcours_updated::create([
+            'objectid' => $parcours->get('id'),
+            'context' => contexte::racine(),
+        ])->trigger();
+    }
+
+    /**
+     * Décision d'un encadrant sur une séance : une validation la certifie (§7.3).
+     *
+     * @param int $sessionid
+     * @param int $validateurid
+     * @param string $statut val_encadrant::STATUT_*
+     * @param string $commentaire
+     * @return void
+     */
+    public static function valider_seance(int $sessionid, int $validateurid, string $statut, string $commentaire = ''): void {
+        \local_simhub\record\val_encadrant::valider($sessionid, $validateurid, $statut, $commentaire);
+        $session = new session($sessionid);
+        if ($statut === \local_simhub\record\val_encadrant::STATUT_VALIDE) {
+            $session->set('statut', session::STATUT_CERTIFIE);
+            $session->update();
+        }
+        \local_simhub\event\session_validated::create([
+            'objectid' => $sessionid,
+            'relateduserid' => $session->get('userid'),
+            'context' => contexte::racine(),
+            'other' => ['atelierid' => (int) $session->get('atelierid'), 'statut' => $statut],
+        ])->trigger();
+    }
 }

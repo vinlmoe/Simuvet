@@ -13,7 +13,7 @@ use local_simhub\local\liaison_importer;
 
 require_login();
 
-$context = context_system::instance();
+$context = \local_simhub\local\contexte::racine();
 require_capability('local/simhub:importexport', $context);
 
 \local_simhub\local\navigation::preparer($PAGE, new moodle_url('/local/simhub/manage/import.php'), get_string('import_ateliers', 'local_simhub'));

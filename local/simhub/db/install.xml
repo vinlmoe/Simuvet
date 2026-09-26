@@ -106,6 +106,7 @@
         <FIELD NAME="cohortid" TYPE="int" LENGTH="10" NOTNULL="false"/>
         <FIELD NAME="envcode" TYPE="char" LENGTH="20" NOTNULL="true"/>
         <FIELD NAME="badgeid" TYPE="int" LENGTH="10" NOTNULL="false" COMMENT="Badge Moodle (site) délivré à la réalisation complète du parcours, si configuré (§13)"/>
+        <FIELD NAME="cmid" TYPE="int" LENGTH="10" NOTNULL="false" COMMENT="Activité mod_simhub de l'UC propriétaire du parcours, si créé depuis un cours"/>
         <FIELD NAME="timecreated" TYPE="int" LENGTH="10" NOTNULL="true"/>
         <FIELD NAME="timemodified" TYPE="int" LENGTH="10" NOTNULL="true"/>
         <FIELD NAME="usermodified" TYPE="int" LENGTH="10" NOTNULL="true"/>
@@ -114,6 +115,7 @@
         <KEY NAME="primary" TYPE="primary" FIELDS="id"/>
         <KEY NAME="courseid_fk" TYPE="foreign" FIELDS="courseid" REFTABLE="course" REFFIELDS="id"/>
         <KEY NAME="cohortid_fk" TYPE="foreign" FIELDS="cohortid" REFTABLE="cohort" REFFIELDS="id"/>
+        <KEY NAME="cmid_fk" TYPE="foreign" FIELDS="cmid" REFTABLE="course_modules" REFFIELDS="id"/>
       </KEYS>
     </TABLE>
 

@@ -10,7 +10,7 @@ use local_simhub\persistent\parcours;
 
 require_login();
 
-$context = context_system::instance();
+$context = \local_simhub\local\contexte::racine();
 require_capability('local/simhub:view', $context);
 
 $id = required_param('id', PARAM_INT);

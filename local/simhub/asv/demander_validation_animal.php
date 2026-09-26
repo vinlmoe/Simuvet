@@ -10,7 +10,7 @@ use local_simhub\persistent\asv_acte;
 
 require_login();
 
-$context = context_system::instance();
+$context = \local_simhub\local\contexte::racine();
 require_capability('local/simhub:view', $context);
 
 $acteid = required_param('acteid', PARAM_INT);

@@ -63,9 +63,9 @@ class parcours_form extends \moodleform {
         );
         $mform->setType('badgeid', PARAM_INT);
 
-        $mform->addElement('text', 'envcode', get_string('champ_envcode', 'local_simhub'));
+        // Chaque école a son propre Moodle : le code établissement ne sert qu'à la traçabilité.
+        $mform->addElement('hidden', 'envcode');
         $mform->setType('envcode', PARAM_ALPHANUMEXT);
-        $mform->addRule('envcode', null, 'required', null, 'client');
         $mform->setDefault('envcode', get_config('local_simhub', 'envcode') ?: '');
 
         $mform->addElement('hidden', 'id');

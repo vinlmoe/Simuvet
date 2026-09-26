@@ -13,7 +13,7 @@ use local_simhub\output\student_home_page;
 
 require_login();
 
-$context = context_system::instance();
+$context = \local_simhub\local\contexte::racine();
 require_capability('local/simhub:view', $context);
 
 \local_simhub\local\navigation::preparer($PAGE, new moodle_url('/local/simhub/index.php'), get_string('pluginname', 'local_simhub'));
