@@ -1,8 +1,28 @@
 <?php
+// This file is part of Moodle - https://moodle.org/
+//
+// Moodle is free software: you can redistribute it and/or modify
+// it under the terms of the GNU General Public License as published by
+// the Free Software Foundation, either version 3 of the License, or
+// (at your option) any later version.
+//
+// Moodle is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU General Public License for more details.
+//
+// You should have received a copy of the GNU General Public License
+// along with Moodle.  If not, see <https://www.gnu.org/licenses/>.
+
+/**
+ * Validation ASV sur animal vivant, potentiellement par un validateur externe sans compte.
+ *
+ * @package    local_simhub
+ * @copyright  2026 Écoles nationales vétérinaires de France (ENVF)
+ * @license    https://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
+ */
 
 namespace local_simhub\record;
-
-defined('MOODLE_INTERNAL') || die();
 
 /**
  * Validation ASV sur animal vivant, potentiellement par un validateur externe sans compte
@@ -10,11 +30,14 @@ defined('MOODLE_INTERNAL') || die();
  * date, case de certification, signature au doigt — pas de signature électronique qualifiée.
  */
 class asv_valanimal {
-
+    /** @var string Table de la base de données. */
     const TABLE = 'local_simhub_asv_valanimal';
 
+    /** @var string Statut : en_attente. */
     const STATUT_EN_ATTENTE = 'en_attente';
+    /** @var string Statut : valide. */
     const STATUT_VALIDE = 'valide';
+    /** @var string Statut : annule. */
     const STATUT_ANNULE = 'annule';
 
     /**
@@ -38,10 +61,15 @@ class asv_valanimal {
     public static function get_demande_en_attente(int $userid, int $acteid) {
         global $DB;
 
-        $records = $DB->get_records_select(self::TABLE,
+        $records = $DB->get_records_select(
+            self::TABLE,
             'userid = :userid AND acteid = :acteid AND statut = :statut AND tokenexpire > :now',
             ['userid' => $userid, 'acteid' => $acteid, 'statut' => self::STATUT_EN_ATTENTE, 'now' => time()],
-            'tokenexpire DESC', '*', 0, 1);
+            'tokenexpire DESC',
+            '*',
+            0,
+            1
+        );
         return reset($records);
     }
 
@@ -125,13 +153,20 @@ class asv_valanimal {
      * @param string $signature Tracé de signature (SVG/PNG base64).
      * @return bool
      */
-    public static function valider(string $token, string $nom, string $prenom,
-            bool $certificationcochee, string $signature): bool {
+    public static function valider(
+        string $token,
+        string $nom,
+        string $prenom,
+        bool $certificationcochee,
+        string $signature
+    ): bool {
         global $DB;
 
         $record = self::get_par_token($token);
-        if (!$record || $record->statut !== self::STATUT_EN_ATTENTE || !$certificationcochee
-                || trim($nom) === '' || trim($prenom) === '' || !self::signature_valide($signature)) {
+        if (
+            !$record || $record->statut !== self::STATUT_EN_ATTENTE || !$certificationcochee
+                || trim($nom) === '' || trim($prenom) === '' || !self::signature_valide($signature)
+        ) {
             return false;
         }
 

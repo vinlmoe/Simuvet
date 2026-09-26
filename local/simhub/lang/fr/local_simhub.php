@@ -1,4 +1,26 @@
 <?php
+// This file is part of Moodle - https://moodle.org/
+//
+// Moodle is free software: you can redistribute it and/or modify
+// it under the terms of the GNU General Public License as published by
+// the Free Software Foundation, either version 3 of the License, or
+// (at your option) any later version.
+//
+// Moodle is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU General Public License for more details.
+//
+// You should have received a copy of the GNU General Public License
+// along with Moodle.  If not, see <https://www.gnu.org/licenses/>.
+
+/**
+ * SimHub.
+ *
+ * @package    local_simhub
+ * @copyright  2026 Écoles nationales vétérinaires de France (ENVF)
+ * @license    https://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
+ */
 
 defined('MOODLE_INTERNAL') || die();
 
@@ -92,7 +114,7 @@ $string['privacy:metadata:local_simhub_asv_valanimal:nomvalidateur'] = 'Le nom d
 $string['privacy:metadata:local_simhub_asv_valanimal:prenomvalidateur'] = 'Le prénom du validateur.';
 $string['privacy:metadata:local_simhub_asv_valanimal:signature'] = 'Le tracé de signature du validateur.';
 
-// Événements.
+// Chaînes des événements.
 $string['event_atelier_created'] = 'Atelier créé';
 $string['event_session_started'] = 'Session d\'atelier démarrée';
 $string['event_session_completed'] = 'Session d\'atelier terminée';
@@ -447,3 +469,7 @@ $string['setting_categoryid_systeme'] = 'Aucune (niveau système)';
 $string['ae_derniere_modification'] = 'Grille partagée par toutes les UC qui utilisent cet atelier. Dernière modification : {$a->auteur}, le {$a->date}.';
 $string['event_session_validated'] = 'Séance d\'atelier validée ou refusée';
 $string['event_parcours_updated'] = 'Ateliers d\'un parcours modifiés';
+$string['privacy:metadata:personnel'] = 'Références au personnel dans le référentiel partagé de l\'école (ateliers, indisponibilités, ressources, parcours, grilles, actes ASV, codes de séance). À la suppression d\'un utilisateur, les fiches sont conservées et la référence est effacée.';
+$string['privacy:metadata:personnel:referentuserid'] = 'Personne référente de l\'atelier ou de l\'indisponibilité.';
+$string['privacy:metadata:personnel:usermodified'] = 'Auteur de la dernière modification.';
+$string['privacy:metadata:personnel:createuruserid'] = 'Encadrant ayant généré le code de séance.';

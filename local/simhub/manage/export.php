@@ -1,7 +1,28 @@
 <?php
-// Exports CSV de base (§12.3) : liste des ateliers, ou suivi de progression d'un parcours.
-// Reste volontairement simple (CSV natif, pas de XLSX) : un tableur ouvre un CSV sans
-// dépendance supplémentaire, et l'export sert surtout d'échange ponctuel entre équipes.
+// This file is part of Moodle - https://moodle.org/
+//
+// Moodle is free software: you can redistribute it and/or modify
+// it under the terms of the GNU General Public License as published by
+// the Free Software Foundation, either version 3 of the License, or
+// (at your option) any later version.
+//
+// Moodle is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU General Public License for more details.
+//
+// You should have received a copy of the GNU General Public License
+// along with Moodle.  If not, see <https://www.gnu.org/licenses/>.
+
+/**
+ * Exports CSV de base (§12.3) : liste des ateliers, ou suivi de progression d'un parcours.
+ * Reste volontairement simple (CSV natif, pas de XLSX) : un tableur ouvre un CSV sans
+ * dépendance supplémentaire, et l'export sert surtout d'échange ponctuel entre équipes.
+ *
+ * @package    local_simhub
+ * @copyright  2026 Écoles nationales vétérinaires de France (ENVF)
+ * @license    https://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
+ */
 
 require(__DIR__ . '/../../../config.php');
 
@@ -62,7 +83,12 @@ if ($type === 'ateliers') {
     $parcoursid = required_param('parcoursid', PARAM_INT);
     $parcours = new parcours($parcoursid);
     if (!\local_simhub\local\droits::peut_suivre_parcours($parcours)) {
-        throw new required_capability_exception(\local_simhub\local\contexte::racine(), 'local/simhub:viewprogression', 'nopermissions', '');
+        throw new required_capability_exception(
+            \local_simhub\local\contexte::racine(),
+            'local/simhub:viewprogression',
+            'nopermissions',
+            '',
+        );
     }
 
     global $DB;

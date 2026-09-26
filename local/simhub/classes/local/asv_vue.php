@@ -1,19 +1,37 @@
 <?php
-// Affichage de l'état ASV d'un étudiant (§9.4), partagé entre sa propre vue (asv/index.php)
-// et la fiche consultée par un encadrant (asv/etudiant.php), pour que les deux montrent
-// exactement la même chose.
+// This file is part of Moodle - https://moodle.org/
+//
+// Moodle is free software: you can redistribute it and/or modify
+// it under the terms of the GNU General Public License as published by
+// the Free Software Foundation, either version 3 of the License, or
+// (at your option) any later version.
+//
+// Moodle is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU General Public License for more details.
+//
+// You should have received a copy of the GNU General Public License
+// along with Moodle.  If not, see <https://www.gnu.org/licenses/>.
+
+/**
+ * Affichage de l'état ASV d'un étudiant (§9.4), partagé entre sa propre vue (asv/index.php)
+ * et la fiche consultée par un encadrant (asv/etudiant.php), pour que les deux montrent
+ * exactement la même chose.
+ *
+ * @package    local_simhub
+ * @copyright  2026 Écoles nationales vétérinaires de France (ENVF)
+ * @license    https://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
+ */
 
 namespace local_simhub\local;
 
 use local_simhub\record\asv_valsim;
 
-defined('MOODLE_INTERNAL') || die();
-
 /**
  * Rendu HTML de l'état ASV d'un étudiant.
  */
 class asv_vue {
-
     /**
      * Tableau acte par acte : simulation, animal vivant, demande en attente, actions.
      *
@@ -67,14 +85,24 @@ class asv_vue {
             $params = ['userid' => $userid];
             if ($pilote) {
                 if ($simok && droits::peut_valider_asv($userid)) {
-                    $actions[] = \html_writer::link(new \moodle_url('/local/simhub/asv/etudiant.php',
-                        $params + ['action' => 'annulersim', 'id' => $sim->id]), $str('asv_annuler_simulation'),
-                        ['class' => 'text-danger']);
+                    $actions[] = \html_writer::link(
+                        new \moodle_url(
+                            '/local/simhub/asv/etudiant.php',
+                            $params + ['action' => 'annulersim', 'id' => $sim->id]
+                        ),
+                        $str('asv_annuler_simulation'),
+                        ['class' => 'text-danger']
+                    );
                 }
                 if ($animal && has_capability('local/simhub:manageasv', $context)) {
-                    $actions[] = \html_writer::link(new \moodle_url('/local/simhub/asv/etudiant.php',
-                        $params + ['action' => 'annuleranimal', 'id' => $animal->id]), $str('asv_annuler_animal'),
-                        ['class' => 'text-danger']);
+                    $actions[] = \html_writer::link(
+                        new \moodle_url(
+                            '/local/simhub/asv/etudiant.php',
+                            $params + ['action' => 'annuleranimal', 'id' => $animal->id]
+                        ),
+                        $str('asv_annuler_animal'),
+                        ['class' => 'text-danger']
+                    );
                 }
             } else if ($simok && !$animal) {
                 $actions[] = \html_writer::link(
@@ -114,9 +142,13 @@ class asv_vue {
                 : get_string('asv_certification_niveau', 'local_simhub', $niveau);
             $manquants = asv_certification_helper::get_actes_manquants($userid, $niveau, $envcode);
             if (empty($manquants)) {
-                $etat = '✔ ' . \html_writer::link(new \moodle_url('/local/simhub/asv/attestation_pdf.php',
-                    ['userid' => $userid, 'niveau' => $niveau, 'envcode' => $envcode]),
-                    get_string('asv_telecharger_attestation', 'local_simhub'));
+                $etat = '✔ ' . \html_writer::link(
+                    new \moodle_url(
+                        '/local/simhub/asv/attestation_pdf.php',
+                        ['userid' => $userid, 'niveau' => $niveau, 'envcode' => $envcode]
+                    ),
+                    get_string('asv_telecharger_attestation', 'local_simhub')
+                );
             } else {
                 $etat = get_string('asv_actes_restants', 'local_simhub', count($manquants));
             }

@@ -1,7 +1,28 @@
 <?php
-// Création / activation du modèle d'auto-évaluation guidée d'un atelier (§5.6, §7.2) : un
-// modèle par atelier en V1. La composition (rubriques et critères) se gère ensuite sur
-// manage/ae_rubriques.php.
+// This file is part of Moodle - https://moodle.org/
+//
+// Moodle is free software: you can redistribute it and/or modify
+// it under the terms of the GNU General Public License as published by
+// the Free Software Foundation, either version 3 of the License, or
+// (at your option) any later version.
+//
+// Moodle is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU General Public License for more details.
+//
+// You should have received a copy of the GNU General Public License
+// along with Moodle.  If not, see <https://www.gnu.org/licenses/>.
+
+/**
+ * Création / activation du modèle d'auto-évaluation guidée d'un atelier (§5.6, §7.2) : un
+ * modèle par atelier en V1. La composition (rubriques et critères) se gère ensuite sur
+ * manage/ae_rubriques.php.
+ *
+ * @package    local_simhub
+ * @copyright  2026 Écoles nationales vétérinaires de France (ENVF)
+ * @license    https://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
+ */
 
 require(__DIR__ . '/../../../config.php');
 
@@ -26,7 +47,8 @@ $etapesatelier = $gestionnaire ? [
 ] : [[s($atelier->get('nomcourt')), new moodle_url('/local/simhub/atelier.php', ['id' => $atelierid])]];
 
 $title = get_string('ae_modele', 'local_simhub');
-\local_simhub\local\navigation::preparer($PAGE, new moodle_url('/local/simhub/manage/ae_modele_edit.php', ['atelierid' => $atelierid]), $title, $etapesatelier);
+$pageurl = new moodle_url('/local/simhub/manage/ae_modele_edit.php', ['atelierid' => $atelierid]);
+\local_simhub\local\navigation::preparer($PAGE, $pageurl, $title, $etapesatelier);
 if ($gestionnaire) {
     \local_simhub\local\navigation::onglets('atelier', $atelierid, 'ae');
 }

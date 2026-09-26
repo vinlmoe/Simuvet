@@ -1,8 +1,28 @@
 <?php
+// This file is part of Moodle - https://moodle.org/
+//
+// Moodle is free software: you can redistribute it and/or modify
+// it under the terms of the GNU General Public License as published by
+// the Free Software Foundation, either version 3 of the License, or
+// (at your option) any later version.
+//
+// Moodle is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU General Public License for more details.
+//
+// You should have received a copy of the GNU General Public License
+// along with Moodle.  If not, see <https://www.gnu.org/licenses/>.
+
+/**
+ * Accueil étudiant personnalisé (§5.1) : sept sections construites au-dessus d'un même.
+ *
+ * @package    local_simhub
+ * @copyright  2026 Écoles nationales vétérinaires de France (ENVF)
+ * @license    https://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
+ */
 
 namespace local_simhub\output;
-
-defined('MOODLE_INTERNAL') || die();
 
 use local_simhub\local\atelier_filter;
 use local_simhub\persistent\atelier;
@@ -25,17 +45,28 @@ use templatable;
  * ateliers à reprendre, recommandés pour mon année, et la liste complète filtrable.
  */
 class student_home_page implements renderable, templatable {
-
     /** @var int */
     protected $userid;
     /** @var atelier_filter */
     protected $filter;
 
+    /**
+     * Constructeur.
+     *
+     * @param int $userid
+     * @param atelier_filter $filter
+     */
     public function __construct(int $userid, atelier_filter $filter) {
         $this->userid = $userid;
         $this->filter = $filter;
     }
 
+    /**
+     * Données du template.
+     *
+     * @param \renderer_base $output
+     * @return array
+     */
     public function export_for_template(\renderer_base $output): array {
         global $DB;
 
@@ -50,7 +81,8 @@ class student_home_page implements renderable, templatable {
         $tousactifs = [];
         foreach ([atelier::STATUT_ACTIF, atelier::STATUT_INDISPONIBLE] as $statut) {
             $tousactifs = array_merge($tousactifs, atelier::get_records(
-                $envcode !== '' ? ['envcode' => $envcode, 'statut' => $statut] : ['statut' => $statut]));
+                $envcode !== '' ? ['envcode' => $envcode, 'statut' => $statut] : ['statut' => $statut]
+            ));
         }
         $sessions = session::get_pour_etudiant($this->userid);
 
@@ -107,8 +139,14 @@ class student_home_page implements renderable, templatable {
             // Prochaine échéance d'un atelier requis pas encore réalisé.
             $prochaine = null;
             foreach ($parcours->get_ateliers() as $lien) {
-                if ($lien->echeance && !in_array(($statutsparid[$lien->atelierid] ?? 'pascommence'), ['realise', 'valide', 'areprendre'], true)
-                        && ($prochaine === null || $lien->echeance < $prochaine)) {
+                if (
+                    $lien->echeance && !in_array(
+                        ($statutsparid[$lien->atelierid] ?? 'pascommence'),
+                        ['realise', 'valide', 'areprendre'],
+                        true,
+                    )
+                        && ($prochaine === null || $lien->echeance < $prochaine)
+                ) {
                     $prochaine = (int) $lien->echeance;
                 }
             }
@@ -192,7 +230,10 @@ class student_home_page implements renderable, templatable {
                 'anneeetude' => $this->filter->anneeetude ?: '',
             ],
             'anneeoptions' => array_map(
-                fn($val, $label) => ['value' => $val, 'label' => $label, 'selected' => (string) $val === (string) $this->filter->anneeetude],
+                fn(
+                    $val,
+                    $label,
+                ) => ['value' => $val, 'label' => $label, 'selected' => (string) $val === (string) $this->filter->anneeetude],
                 array_keys($anneeoptions),
                 $anneeoptions
             ),
@@ -264,23 +305,34 @@ class student_home_page implements renderable, templatable {
             'estindisponible' => $atelier->statut === 'indisponible',
             'commentaireindispo' => $indisponibilite ? s($indisponibilite->commentaire) : '',
             'retourprevu' => ($indisponibilite && $indisponibilite->echeanceprevue)
-                ? get_string('indispo_retour_prevu', 'local_simhub',
-                    userdate($indisponibilite->echeanceprevue, get_string('strftimedatefullshort', 'langconfig')))
+                ? get_string(
+                    'indispo_retour_prevu',
+                    'local_simhub',
+                    userdate($indisponibilite->echeanceprevue, get_string('strftimedatefullshort', 'langconfig'))
+                )
                 : '',
             'statutperso' => $statutperso,
             'statutpersolabel' => get_string('statutperso_' . $statutperso, 'local_simhub'),
             'estcommence' => $statutperso === 'commence',
             'sessionid' => $sessionencours ? $sessionencours->get('id') : 0,
             'urlfiche' => (new \moodle_url('/local/simhub/atelier.php', ['id' => $atelier->id]))->out(false),
-            'urllocalisation' => (new \moodle_url('/local/simhub/atelier.php',
-                ['id' => $atelier->id, 'onglet' => 'localisation']))->out(false),
-            'urlressources' => (new \moodle_url('/local/simhub/atelier.php',
-                ['id' => $atelier->id, 'onglet' => 'ressources']))->out(false),
-            'urlcommencer' => (new \moodle_url('/local/simhub/session.php',
-                ['atelierid' => $atelier->id, 'action' => 'demarrer', 'sesskey' => sesskey()]))->out(false),
-            'urlterminer' => (new \moodle_url('/local/simhub/session.php',
+            'urllocalisation' => (new \moodle_url(
+                '/local/simhub/atelier.php',
+                ['id' => $atelier->id, 'onglet' => 'localisation']
+            ))->out(false),
+            'urlressources' => (new \moodle_url(
+                '/local/simhub/atelier.php',
+                ['id' => $atelier->id, 'onglet' => 'ressources']
+            ))->out(false),
+            'urlcommencer' => (new \moodle_url(
+                '/local/simhub/session.php',
+                ['atelierid' => $atelier->id, 'action' => 'demarrer', 'sesskey' => sesskey()]
+            ))->out(false),
+            'urlterminer' => (new \moodle_url(
+                '/local/simhub/session.php',
                 ['atelierid' => $atelier->id, 'action' => 'terminer',
-                 'sessionid' => $sessionencours ? $sessionencours->get('id') : 0]))->out(false),
+                'sessionid' => $sessionencours ? $sessionencours->get('id') : 0]
+            ))->out(false),
         ];
 
         return [$card, $statutperso];

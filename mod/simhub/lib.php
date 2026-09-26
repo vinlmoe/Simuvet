@@ -1,12 +1,33 @@
 <?php
-// Activité SimHub d'une UC : chaque instance porte un parcours local_simhub lié au cours.
-// La note vaut le pourcentage d'avancement de ce parcours.
+// This file is part of Moodle - https://moodle.org/
+//
+// Moodle is free software: you can redistribute it and/or modify
+// it under the terms of the GNU General Public License as published by
+// the Free Software Foundation, either version 3 of the License, or
+// (at your option) any later version.
+//
+// Moodle is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU General Public License for more details.
+//
+// You should have received a copy of the GNU General Public License
+// along with Moodle.  If not, see <https://www.gnu.org/licenses/>.
 
-defined('MOODLE_INTERNAL') || die();
+/**
+ * Activité SimHub d'une UC : chaque instance porte un parcours local_simhub lié au cours.
+ * La note vaut le pourcentage d'avancement de ce parcours.
+ *
+ * @package    mod_simhub
+ * @copyright  2026 Écoles nationales vétérinaires de France (ENVF)
+ * @license    https://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
+ */
 
 use local_simhub\persistent\parcours;
 
 /**
+ * Fonctionnalités Moodle prises en charge par l'activité.
+ *
  * @param string $feature FEATURE_*
  * @return mixed
  */
@@ -18,9 +39,8 @@ function simhub_supports($feature) {
         case FEATURE_COMPLETION_TRACKS_VIEWS:
         case FEATURE_GROUPS:
         case FEATURE_GROUPINGS:
-            return true;
         case FEATURE_BACKUP_MOODLE2:
-            return false;
+            return true;
         case FEATURE_MOD_PURPOSE:
             return MOD_PURPOSE_ASSESSMENT;
         default:
@@ -29,6 +49,8 @@ function simhub_supports($feature) {
 }
 
 /**
+ * Crée l'activité et le parcours de l'UC associé.
+ *
  * @param stdClass $simhub
  * @param mod_simhub_mod_form|null $mform
  * @return int
@@ -55,6 +77,8 @@ function simhub_add_instance($simhub, $mform = null) {
 }
 
 /**
+ * Met à jour l'activité et le nom de son parcours.
+ *
  * @param stdClass $simhub
  * @param mod_simhub_mod_form|null $mform
  * @return bool
@@ -81,6 +105,8 @@ function simhub_update_instance($simhub, $mform = null) {
 }
 
 /**
+ * Supprime l'activité, son parcours et les rattachements créés pour l'UC.
+ *
  * @param int $id
  * @return bool
  */
@@ -104,6 +130,8 @@ function simhub_delete_instance($id) {
 }
 
 /**
+ * Crée ou met à jour l'élément d'évaluation, et les notes fournies.
+ *
  * @param stdClass $simhub
  * @param array|string|null $grades
  * @return int GRADE_UPDATE_*
@@ -128,6 +156,8 @@ function simhub_grade_item_update($simhub, $grades = null) {
 }
 
 /**
+ * Supprime l'élément d'évaluation.
+ *
  * @param stdClass $simhub
  * @return int
  */
@@ -158,6 +188,8 @@ function simhub_etudiants_notes($simhub, int $userid = 0): array {
 }
 
 /**
+ * Notes : pourcentage d'avancement rapporté à la note maximale.
+ *
  * @param stdClass $simhub
  * @param int $userid 0 pour tous.
  * @return array userid => (object) ['userid', 'rawgrade']
@@ -176,6 +208,8 @@ function simhub_get_user_grades($simhub, $userid = 0) {
 }
 
 /**
+ * Recalcule les notes dans le carnet.
+ *
  * @param stdClass $simhub
  * @param int $userid 0 pour tous.
  * @param bool $nullifnone

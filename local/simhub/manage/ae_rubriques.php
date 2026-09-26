@@ -1,7 +1,28 @@
 <?php
-// Composition de la grille d'auto-évaluation guidée d'un atelier (§5.6, §7.2) : rubriques
-// (grandes étapes du geste, avec une rubrique optionnelle dédiée aux erreurs/risques) et,
-// pour chacune, ses critères observables.
+// This file is part of Moodle - https://moodle.org/
+//
+// Moodle is free software: you can redistribute it and/or modify
+// it under the terms of the GNU General Public License as published by
+// the Free Software Foundation, either version 3 of the License, or
+// (at your option) any later version.
+//
+// Moodle is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU General Public License for more details.
+//
+// You should have received a copy of the GNU General Public License
+// along with Moodle.  If not, see <https://www.gnu.org/licenses/>.
+
+/**
+ * Composition de la grille d'auto-évaluation guidée d'un atelier (§5.6, §7.2) : rubriques
+ * (grandes étapes du geste, avec une rubrique optionnelle dédiée aux erreurs/risques) et,
+ * pour chacune, ses critères observables.
+ *
+ * @package    local_simhub
+ * @copyright  2026 Écoles nationales vétérinaires de France (ENVF)
+ * @license    https://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
+ */
 
 require(__DIR__ . '/../../../config.php');
 
@@ -88,8 +109,12 @@ if ($action === 'ajouter_rubrique') {
 }
 
 $title = get_string('ae_gerer_rubriques', 'local_simhub');
-\local_simhub\local\navigation::preparer($PAGE, new moodle_url('/local/simhub/manage/ae_rubriques.php', ['atelierid' => $atelierid]), $title, array_merge($etapesatelier, [
-    [get_string('ae_modele', 'local_simhub'), new moodle_url('/local/simhub/manage/ae_modele_edit.php', ['atelierid' => $atelierid])],
+$pageurl = new moodle_url('/local/simhub/manage/ae_rubriques.php', ['atelierid' => $atelierid]);
+\local_simhub\local\navigation::preparer($PAGE, $pageurl, $title, array_merge($etapesatelier, [
+    [
+        get_string('ae_modele', 'local_simhub'),
+        new moodle_url('/local/simhub/manage/ae_modele_edit.php', ['atelierid' => $atelierid]),
+    ],
 ]));
 if ($gestionnaire) {
     \local_simhub\local\navigation::onglets('atelier', $atelierid, 'ae');
@@ -110,7 +135,9 @@ foreach ($rubriques as $rubrique) {
     echo html_writer::start_div('card mb-3');
     echo html_writer::start_div('card-header d-flex justify-content-between align-items-center');
     echo html_writer::tag('span', s($rubrique->titre)
-        . ($rubrique->estrubriquerisques ? ' ' . html_writer::tag('span', get_string('ae_badge_risques', 'local_simhub'), ['class' => 'badge badge-warning']) : ''));
+        . ($rubrique->estrubriquerisques
+            ? ' ' . html_writer::tag('span', get_string('ae_badge_risques', 'local_simhub'), ['class' => 'badge badge-warning'])
+            : ''));
 
     $delrubriqueurl = new moodle_url('/local/simhub/manage/ae_rubriques.php', [
         'atelierid' => $atelierid, 'action' => 'supprimer_rubrique', 'rubriqueid' => $rubrique->id, 'sesskey' => sesskey(),
@@ -127,7 +154,14 @@ foreach ($rubriques as $rubrique) {
             $delcritereurl = new moodle_url('/local/simhub/manage/ae_rubriques.php', [
                 'atelierid' => $atelierid, 'action' => 'supprimer_critere', 'critereid' => $critere->id, 'sesskey' => sesskey(),
             ]);
-            echo html_writer::tag('li', s($critere->libelle) . ' — ' . html_writer::link($delcritereurl, get_string('retirer', 'local_simhub'), ['class' => 'text-danger']));
+            echo html_writer::tag(
+                'li',
+                s($critere->libelle) . ' — ' . html_writer::link(
+                    $delcritereurl,
+                    get_string('retirer', 'local_simhub'),
+                    ['class' => 'text-danger'],
+                ),
+            );
         }
         echo html_writer::end_tag('ul');
     }

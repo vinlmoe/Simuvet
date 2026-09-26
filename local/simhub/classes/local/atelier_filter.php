@@ -1,8 +1,28 @@
 <?php
+// This file is part of Moodle - https://moodle.org/
+//
+// Moodle is free software: you can redistribute it and/or modify
+// it under the terms of the GNU General Public License as published by
+// the Free Software Foundation, either version 3 of the License, or
+// (at your option) any later version.
+//
+// Moodle is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU General Public License for more details.
+//
+// You should have received a copy of the GNU General Public License
+// along with Moodle.  If not, see <https://www.gnu.org/licenses/>.
+
+/**
+ * Recherche/filtrage des ateliers pour l'accueil étudiant (§5.2).
+ *
+ * @package    local_simhub
+ * @copyright  2026 Écoles nationales vétérinaires de France (ENVF)
+ * @license    https://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
+ */
 
 namespace local_simhub\local;
-
-defined('MOODLE_INTERNAL') || die();
 
 /**
  * Recherche/filtrage des ateliers pour l'accueil étudiant (§5.2).
@@ -13,7 +33,6 @@ defined('MOODLE_INTERNAL') || die();
  * moteur de recherche dédié en V1.
  */
 class atelier_filter {
-
     /** @var string */
     public $envcode = '';
     /** @var int */
@@ -36,6 +55,7 @@ class atelier_filter {
     /** Valeur de filtre : ateliers montrés aux étudiants, actifs ou momentanément indisponibles (§5.3, §6.1). */
     const STATUT_VISIBLES = 'visibles';
 
+    /** @var string Statut d'atelier filtré, STATUT_VISIBLES par défaut. */
     public $statut = self::STATUT_VISIBLES;
 
     /**
@@ -77,6 +97,8 @@ class atelier_filter {
     }
 
     /**
+     * Clause WHERE et paramètres correspondant aux filtres.
+     *
      * @return array [string $where, array $params]
      */
     private function build_where(): array {
@@ -134,6 +156,8 @@ class atelier_filter {
     }
 
     /**
+     * Condition LIKE insensible à la casse et aux accents.
+     *
      * @param string $field
      * @param string $paramname
      * @return string

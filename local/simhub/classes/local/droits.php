@@ -1,18 +1,36 @@
 <?php
-// Droits SimHub : capacité transversale (contexte::racine()) OU capacité de l'activité
-// mod_simhub d'une UC, limitée aux ateliers et aux étudiants de cette UC.
+// This file is part of Moodle - https://moodle.org/
+//
+// Moodle is free software: you can redistribute it and/or modify
+// it under the terms of the GNU General Public License as published by
+// the Free Software Foundation, either version 3 of the License, or
+// (at your option) any later version.
+//
+// Moodle is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU General Public License for more details.
+//
+// You should have received a copy of the GNU General Public License
+// along with Moodle.  If not, see <https://www.gnu.org/licenses/>.
+
+/**
+ * Droits SimHub : capacité transversale (contexte::racine()) OU capacité de l'activité
+ * mod_simhub d'une UC, limitée aux ateliers et aux étudiants de cette UC.
+ *
+ * @package    local_simhub
+ * @copyright  2026 Écoles nationales vétérinaires de France (ENVF)
+ * @license    https://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
+ */
 
 namespace local_simhub\local;
 
 use local_simhub\persistent\parcours;
 
-defined('MOODLE_INTERNAL') || die();
-
 /**
  * Contrôles d'accès combinant les droits transversaux et ceux des activités d'UC.
  */
 class droits {
-
     /**
      * Activités d'UC (parcours liés à une activité mod_simhub) contenant un atelier.
      *
@@ -28,7 +46,8 @@ class droits {
                JOIN {local_simhub_parc_atelier} pa ON pa.parcoursid = p.id
                JOIN {course_modules} cm ON cm.id = p.cmid
               WHERE pa.atelierid = ? AND p.cmid > 0 AND cm.deletioninprogress = 0",
-            [$atelierid]);
+            [$atelierid]
+        );
     }
 
     /**
@@ -43,7 +62,8 @@ class droits {
             "SELECT p.cmid, p.courseid
                FROM {local_simhub_parcours} p
                JOIN {course_modules} cm ON cm.id = p.cmid
-              WHERE p.cmid > 0 AND cm.deletioninprogress = 0");
+              WHERE p.cmid > 0 AND cm.deletioninprogress = 0"
+        );
     }
 
     /**
@@ -90,8 +110,11 @@ class droits {
      */
     public static function peut_valider_seance(int $etudiantid, int $atelierid): bool {
         return has_capability('local/simhub:validatesession', contexte::racine())
-            || self::dans_une_activite(self::activites_pour_atelier($atelierid), 'mod/simhub:validatesession',
-                $etudiantid);
+            || self::dans_une_activite(
+                self::activites_pour_atelier($atelierid),
+                'mod/simhub:validatesession',
+                $etudiantid
+            );
     }
 
     /**
@@ -129,6 +152,8 @@ class droits {
     }
 
     /**
+     * Vrai si l'utilisateur a la capacité dans l'activité d'UC du parcours.
+     *
      * @param parcours $parcours
      * @param string $cap
      * @return bool
@@ -150,10 +175,14 @@ class droits {
      */
     public static function etape_activite(parcours $parcours): array {
         $cmid = (int) $parcours->get('cmid');
-        if (!$cmid || !\context_module::instance($cmid, IGNORE_MISSING)) {
+        $cmcontext = $cmid ? \context_module::instance($cmid, IGNORE_MISSING) : false;
+        if (!$cmcontext) {
             return [];
         }
-        return [[format_string($parcours->get('nom')), new \moodle_url('/mod/simhub/view.php', ['id' => $cmid])]];
+        return [[
+            format_string($parcours->get('nom'), true, ['context' => $cmcontext]),
+            new \moodle_url('/mod/simhub/view.php', ['id' => $cmid]),
+        ]];
     }
 
     /**

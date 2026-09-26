@@ -1,15 +1,36 @@
 <?php
-// Capacités SimHub - correspondance avec les profils décrits au §11 du
-// cahier des charges :
-//   Étudiant | Enseignant/formateur | Responsable d'UC
-//   Responsable/gestionnaire de salle | Administrateur fonctionnel
-//   Validateur externe ASV (accès par jeton, hors capacités Moodle)
+// This file is part of Moodle - https://moodle.org/
+//
+// Moodle is free software: you can redistribute it and/or modify
+// it under the terms of the GNU General Public License as published by
+// the Free Software Foundation, either version 3 of the License, or
+// (at your option) any later version.
+//
+// Moodle is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU General Public License for more details.
+//
+// You should have received a copy of the GNU General Public License
+// along with Moodle.  If not, see <https://www.gnu.org/licenses/>.
+
+/**
+ * Capacités SimHub - correspondance avec les profils décrits au §11 du
+ * cahier des charges :
+ * Étudiant | Enseignant/formateur | Responsable d'UC
+ * Responsable/gestionnaire de salle | Administrateur fonctionnel
+ * Validateur externe ASV (accès par jeton, hors capacités Moodle)
+ *
+ * @package    local_simhub
+ * @copyright  2026 Écoles nationales vétérinaires de France (ENVF)
+ * @license    https://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
+ */
 
 defined('MOODLE_INTERNAL') || die();
 
 $capabilities = [
 
-    // --- Étudiant : consultation, réalisation, auto-évaluation. ---
+    // Profil étudiant : consultation, réalisation, auto-évaluation.
     // Accordées à l'utilisateur authentifié : le rôle « student » n'existe que dans les
     // cours, jamais au niveau système où SimHub vérifie ses capacités.
     'local/simhub:view' => [
@@ -40,7 +61,7 @@ $capabilities = [
         ],
     ],
 
-    // --- Enseignant / formateur : pilotage pédagogique, validations. ---
+    // Profil enseignant / formateur : pilotage pédagogique, validations.
     'local/simhub:viewprogression' => [
         'captype' => 'read',
         'contextlevel' => CONTEXT_SYSTEM,
@@ -68,7 +89,7 @@ $capabilities = [
         ],
     ],
 
-    // --- Responsable d'UC : rattachement d'ateliers, parcours. ---
+    // Profil responsable d'UC : rattachement d'ateliers, parcours.
     'local/simhub:manageparcours' => [
         'captype' => 'write',
         'contextlevel' => CONTEXT_SYSTEM,
@@ -86,7 +107,7 @@ $capabilities = [
         ],
     ],
 
-    // --- Responsable / gestionnaire de salle : fiches, statuts, QR, imports. ---
+    // Profil responsable / gestionnaire de salle : fiches, statuts, QR, imports.
     'local/simhub:manageateliers' => [
         'captype' => 'write',
         'contextlevel' => CONTEXT_SYSTEM,
@@ -123,7 +144,7 @@ $capabilities = [
         ],
     ],
 
-    // --- Module ASV. ---
+    // Module ASV.
     'local/simhub:manageasv' => [
         'captype' => 'write',
         'contextlevel' => CONTEXT_SYSTEM,
@@ -140,7 +161,7 @@ $capabilities = [
         ],
     ],
 
-    // --- Administrateur fonctionnel : référentiels, droits, supervision. ---
+    // Profil administrateur fonctionnel : référentiels, droits, supervision.
     'local/simhub:configure' => [
         'captype' => 'write',
         'contextlevel' => CONTEXT_SYSTEM,

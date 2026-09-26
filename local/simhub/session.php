@@ -1,8 +1,29 @@
 <?php
-// Démarrage / fin d'une session d'atelier par un étudiant (§7), avec auto-évaluation
-// guidée à la fin (§5.6, §7.2). Volontairement une seule page à deux étapes plutôt qu'un
-// tunnel complexe : démarrer redirige immédiatement vers la fiche, terminer affiche la
-// grille d'auto-évaluation si l'atelier en a une, sinon clôture directement la session.
+// This file is part of Moodle - https://moodle.org/
+//
+// Moodle is free software: you can redistribute it and/or modify
+// it under the terms of the GNU General Public License as published by
+// the Free Software Foundation, either version 3 of the License, or
+// (at your option) any later version.
+//
+// Moodle is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU General Public License for more details.
+//
+// You should have received a copy of the GNU General Public License
+// along with Moodle.  If not, see <https://www.gnu.org/licenses/>.
+
+/**
+ * Démarrage / fin d'une session d'atelier par un étudiant (§7), avec auto-évaluation
+ * guidée à la fin (§5.6, §7.2). Volontairement une seule page à deux étapes plutôt qu'un
+ * tunnel complexe : démarrer redirige immédiatement vers la fiche, terminer affiche la
+ * grille d'auto-évaluation si l'atelier en a une, sinon clôture directement la session.
+ *
+ * @package    local_simhub
+ * @copyright  2026 Écoles nationales vétérinaires de France (ENVF)
+ * @license    https://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
+ */
 
 require(__DIR__ . '/../../config.php');
 
@@ -23,7 +44,8 @@ $sessionid = optional_param('sessionid', 0, PARAM_INT);
 
 $atelier = new atelier($atelierid);
 
-\local_simhub\local\navigation::preparer($PAGE, new moodle_url('/local/simhub/session.php', ['atelierid' => $atelierid, 'action' => $action]), get_string('nav_seance', 'local_simhub'), [
+$pageurl = new moodle_url('/local/simhub/session.php', ['atelierid' => $atelierid, 'action' => $action]);
+\local_simhub\local\navigation::preparer($PAGE, $pageurl, get_string('nav_seance', 'local_simhub'), [
     [s($atelier->get('nomcourt')), new moodle_url('/local/simhub/atelier.php', ['id' => $atelierid])],
 ]);
 
@@ -33,8 +55,12 @@ if ($action === 'demarrer') {
 
     session::demarrer_ou_reprendre($USER->id, $atelierid, ['methodescan' => 'manuel']);
 
-    redirect(new moodle_url('/local/simhub/atelier.php', ['id' => $atelierid]),
-        get_string('session_demarree', 'local_simhub'), null, \core\output\notification::NOTIFY_SUCCESS);
+    redirect(
+        new moodle_url('/local/simhub/atelier.php', ['id' => $atelierid]),
+        get_string('session_demarree', 'local_simhub'),
+        null,
+        \core\output\notification::NOTIFY_SUCCESS
+    );
 }
 
 if ($action !== 'terminer') {

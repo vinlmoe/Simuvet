@@ -1,12 +1,32 @@
 <?php
+// This file is part of Moodle - https://moodle.org/
+//
+// Moodle is free software: you can redistribute it and/or modify
+// it under the terms of the GNU General Public License as published by
+// the Free Software Foundation, either version 3 of the License, or
+// (at your option) any later version.
+//
+// Moodle is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU General Public License for more details.
+//
+// You should have received a copy of the GNU General Public License
+// along with Moodle.  If not, see <https://www.gnu.org/licenses/>.
+
+/**
+ * Détermine qui a effectivement validé un niveau ASV complet (simulation + animal vivant.
+ *
+ * @package    local_simhub
+ * @copyright  2026 Écoles nationales vétérinaires de France (ENVF)
+ * @license    https://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
+ */
 
 namespace local_simhub\local;
 
 use local_simhub\persistent\asv_acte;
 use local_simhub\record\asv_valsim;
 use local_simhub\record\asv_valanimal;
-
-defined('MOODLE_INTERNAL') || die();
 
 /**
  * Détermine qui a effectivement validé un niveau ASV complet (simulation + animal vivant
@@ -15,7 +35,6 @@ defined('MOODLE_INTERNAL') || die();
  * (manage/asv_attestations.php) plutôt que de dupliquer cette logique aux deux endroits.
  */
 class asv_certification_helper {
-
     /**
      * Niveaux dont tous les actes doivent être validés pour certifier un niveau. La
      * certification de fin de A3 est globale (§9.4) : elle couvre tout le référentiel

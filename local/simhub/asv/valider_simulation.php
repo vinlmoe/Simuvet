@@ -1,7 +1,28 @@
 <?php
-// Validation ASV en simulation par un formateur/encadrant (§9.2). Formulaire minimal :
-// étudiant + acte + atelier associé (optionnel). L'auto-évaluation guidée (§5.6) peut être
-// une étape préparatoire, mais ne remplace jamais cette validation par un encadrant.
+// This file is part of Moodle - https://moodle.org/
+//
+// Moodle is free software: you can redistribute it and/or modify
+// it under the terms of the GNU General Public License as published by
+// the Free Software Foundation, either version 3 of the License, or
+// (at your option) any later version.
+//
+// Moodle is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU General Public License for more details.
+//
+// You should have received a copy of the GNU General Public License
+// along with Moodle.  If not, see <https://www.gnu.org/licenses/>.
+
+/**
+ * Validation ASV en simulation par un formateur/encadrant (§9.2). Formulaire minimal :
+ * étudiant + acte + atelier associé (optionnel). L'auto-évaluation guidée (§5.6) peut être
+ * une étape préparatoire, mais ne remplace jamais cette validation par un encadrant.
+ *
+ * @package    local_simhub
+ * @copyright  2026 Écoles nationales vétérinaires de France (ENVF)
+ * @license    https://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
+ */
 
 require(__DIR__ . '/../../../config.php');
 
@@ -23,7 +44,8 @@ $autorises = $transversal ? [] : array_flip(\local_simhub\local\droits::etudiant
 $atelierid = optional_param('atelierid', 0, PARAM_INT);
 $preselection = optional_param('userid', 0, PARAM_INT);
 
-\local_simhub\local\navigation::preparer($PAGE, new moodle_url('/local/simhub/asv/valider_simulation.php', $atelierid ? ['atelierid' => $atelierid] : []), get_string('asv_valider_simulation', 'local_simhub'), [
+$pageurl = new moodle_url('/local/simhub/asv/valider_simulation.php', $atelierid ? ['atelierid' => $atelierid] : []);
+\local_simhub\local\navigation::preparer($PAGE, $pageurl, get_string('asv_valider_simulation', 'local_simhub'), [
     [get_string('asv_parcours', 'local_simhub'), new moodle_url('/local/simhub/asv/index.php')],
 ]);
 if ($atelierid) {
@@ -101,8 +123,12 @@ echo html_writer::empty_tag('input', ['type' => 'hidden', 'name' => 'submit', 'v
 
 echo html_writer::start_div('form-group');
 echo html_writer::tag('label', get_string('etudiant', 'local_simhub'), ['for' => 'id_userid']);
-echo \local_simhub\local\selecteurs::etudiants('userid', $preselection, 'id_userid',
-    $transversal ? null : fn(int $uid) => isset($autorises[$uid]));
+echo \local_simhub\local\selecteurs::etudiants(
+    'userid',
+    $preselection,
+    'id_userid',
+    $transversal ? null : fn(int $uid) => isset($autorises[$uid])
+);
 echo html_writer::end_div();
 
 echo html_writer::start_div('form-group');

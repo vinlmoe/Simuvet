@@ -1,8 +1,29 @@
 <?php
-// Rattachement pédagogique d'un atelier à une UC / année d'étude / cohorte (§6), en dehors
-// de la logique de parcours (§8, géré séparément dans manage/parcours_ateliers.php).
-// C'est ce rattachement que l'accueil étudiant exploite pour la section "À faire pour mes
-// UC" (§5.1) et que le filtre par UC/année utilise côté étudiant (§5.2).
+// This file is part of Moodle - https://moodle.org/
+//
+// Moodle is free software: you can redistribute it and/or modify
+// it under the terms of the GNU General Public License as published by
+// the Free Software Foundation, either version 3 of the License, or
+// (at your option) any later version.
+//
+// Moodle is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU General Public License for more details.
+//
+// You should have received a copy of the GNU General Public License
+// along with Moodle.  If not, see <https://www.gnu.org/licenses/>.
+
+/**
+ * Rattachement pédagogique d'un atelier à une UC / année d'étude / cohorte (§6), en dehors
+ * de la logique de parcours (§8, géré séparément dans manage/parcours_ateliers.php).
+ * C'est ce rattachement que l'accueil étudiant exploite pour la section "À faire pour mes
+ * UC" (§5.1) et que le filtre par UC/année utilise côté étudiant (§5.2).
+ *
+ * @package    local_simhub
+ * @copyright  2026 Écoles nationales vétérinaires de France (ENVF)
+ * @license    https://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
+ */
 
 require(__DIR__ . '/../../../config.php');
 
@@ -49,7 +70,8 @@ if ($action === 'ajouter') {
 }
 
 $title = get_string('rattachements', 'local_simhub');
-\local_simhub\local\navigation::preparer($PAGE, new moodle_url('/local/simhub/manage/rattachements.php', ['atelierid' => $atelierid]), $title, [
+$pageurl = new moodle_url('/local/simhub/manage/rattachements.php', ['atelierid' => $atelierid]);
+\local_simhub\local\navigation::preparer($PAGE, $pageurl, $title, [
     [get_string('manage_ateliers', 'local_simhub'), new moodle_url('/local/simhub/manage/ateliers.php')],
     [s($atelier->get('nomcourt')), new moodle_url('/local/simhub/manage/atelier_edit.php', ['id' => $atelierid])],
 ]);
@@ -65,7 +87,14 @@ echo html_writer::tag('h3', get_string('rattachements_existants', 'local_simhub'
 $table = new html_table();
 $cohortoptions = cohort_helper::get_options(false);
 
-$table->head = ['UC (id cours)', get_string('filtre_annee', 'local_simhub'), get_string('champ_cohorte', 'local_simhub'), get_string('champ_statut', 'local_simhub'), 'Niveau attendu', ''];
+$table->head = [
+    'UC (id cours)',
+    get_string('filtre_annee', 'local_simhub'),
+    get_string('champ_cohorte', 'local_simhub'),
+    get_string('champ_statut', 'local_simhub'),
+    'Niveau attendu',
+    '',
+];
 foreach (rattachement::get_pour_atelier($atelierid) as $r) {
     $delurl = new moodle_url('/local/simhub/manage/rattachements.php', [
         'atelierid' => $atelierid, 'action' => 'supprimer', 'id' => $r->id, 'sesskey' => sesskey(),
@@ -125,7 +154,10 @@ echo html_writer::end_div();
 
 echo html_writer::start_div('form-group');
 echo html_writer::tag('label', get_string('niveau_attendu_optionnel', 'local_simhub'));
-echo html_writer::empty_tag('input', ['type' => 'text', 'name' => 'niveauattendu', 'class' => 'form-control d-inline-block w-auto mr-2']);
+echo html_writer::empty_tag(
+    'input',
+    ['type' => 'text', 'name' => 'niveauattendu', 'class' => 'form-control d-inline-block w-auto mr-2'],
+);
 echo html_writer::end_div();
 
 echo html_writer::tag('button', get_string('add'), ['type' => 'submit', 'class' => 'btn btn-primary']);

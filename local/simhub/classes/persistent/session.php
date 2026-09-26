@@ -1,21 +1,50 @@
 <?php
+// This file is part of Moodle - https://moodle.org/
+//
+// Moodle is free software: you can redistribute it and/or modify
+// it under the terms of the GNU General Public License as published by
+// the Free Software Foundation, either version 3 of the License, or
+// (at your option) any later version.
+//
+// Moodle is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU General Public License for more details.
+//
+// You should have received a copy of the GNU General Public License
+// along with Moodle.  If not, see <https://www.gnu.org/licenses/>.
+
+/**
+ * Session de réalisation d'un atelier par un étudiant (§7.1).
+ *
+ * @package    local_simhub
+ * @copyright  2026 Écoles nationales vétérinaires de France (ENVF)
+ * @license    https://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
+ */
 
 namespace local_simhub\persistent;
-
-defined('MOODLE_INTERNAL') || die();
 
 /**
  * Session de réalisation d'un atelier par un étudiant (§7.1).
  */
 class session extends \core\persistent {
-
+    /** @var string Table de la base de données. */
     const TABLE = 'local_simhub_session';
 
+    /** @var string Statut : commence. */
     const STATUT_COMMENCE = 'commence';
+    /** @var string Statut : realise. */
     const STATUT_REALISE = 'realise';
+    /** @var string Statut : certifie. */
     const STATUT_CERTIFIE = 'certifie';
+    /** @var string Statut : non_termine. */
     const STATUT_NON_TERMINE = 'non_termine';
 
+    /**
+     * Propriétés persistées.
+     *
+     * @return array
+     */
     protected static function define_properties() {
         return [
             'userid' => ['type' => PARAM_INT],
@@ -83,8 +112,11 @@ class session extends \core\persistent {
     public static function demarrer_ou_reprendre(int $userid, int $atelierid, array $extra = []): session {
         $atelier = new atelier($atelierid);
         if ($atelier->get('statut') !== atelier::STATUT_ACTIF) {
-            throw new \moodle_exception('atelier_non_demarrable', 'local_simhub',
-                new \moodle_url('/local/simhub/atelier.php', ['id' => $atelierid]));
+            throw new \moodle_exception(
+                'atelier_non_demarrable',
+                'local_simhub',
+                new \moodle_url('/local/simhub/atelier.php', ['id' => $atelierid])
+            );
         }
 
         foreach (self::get_pour_etudiant($userid, $atelierid) as $existante) {

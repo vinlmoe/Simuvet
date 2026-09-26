@@ -1,10 +1,31 @@
 <?php
-// Import souple (§12.1) : les tableaux de suivi existants des quatre ENV peuvent être
-// hétérogènes et imparfaits. Cette page alimente une première fois la base à partir d'un
-// CSV — ateliers, rattachements UC/année/cohorte, ou composition de parcours — à charge
-// pour le gestionnaire de corriger/enrichir ensuite via les pages de gestion dédiées.
-// Les rattachements et parcours référencent les ateliers par (envcode, numero) : importer
-// d'abord les ateliers avant d'importer le reste.
+// This file is part of Moodle - https://moodle.org/
+//
+// Moodle is free software: you can redistribute it and/or modify
+// it under the terms of the GNU General Public License as published by
+// the Free Software Foundation, either version 3 of the License, or
+// (at your option) any later version.
+//
+// Moodle is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU General Public License for more details.
+//
+// You should have received a copy of the GNU General Public License
+// along with Moodle.  If not, see <https://www.gnu.org/licenses/>.
+
+/**
+ * Import souple (§12.1) : les tableaux de suivi existants des quatre ENV peuvent être
+ * hétérogènes et imparfaits. Cette page alimente une première fois la base à partir d'un
+ * CSV — ateliers, rattachements UC/année/cohorte, ou composition de parcours — à charge
+ * pour le gestionnaire de corriger/enrichir ensuite via les pages de gestion dédiées.
+ * Les rattachements et parcours référencent les ateliers par (envcode, numero) : importer
+ * d'abord les ateliers avant d'importer le reste.
+ *
+ * @package    local_simhub
+ * @copyright  2026 Écoles nationales vétérinaires de France (ENVF)
+ * @license    https://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
+ */
 
 require(__DIR__ . '/../../../config.php');
 
@@ -16,7 +37,8 @@ require_login();
 $context = \local_simhub\local\contexte::racine();
 require_capability('local/simhub:importexport', $context);
 
-\local_simhub\local\navigation::preparer($PAGE, new moodle_url('/local/simhub/manage/import.php'), get_string('import_ateliers', 'local_simhub'));
+$pageurl = new moodle_url('/local/simhub/manage/import.php');
+\local_simhub\local\navigation::preparer($PAGE, $pageurl, get_string('import_ateliers', 'local_simhub'));
 
 $submitted = optional_param('submit', 0, PARAM_BOOL);
 $result = null;

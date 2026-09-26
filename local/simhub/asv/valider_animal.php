@@ -1,9 +1,32 @@
 <?php
-// Validation ASV sur animal vivant (§9.3) : page publique accessible par lien à jeton, sans
-// authentification Moodle, pour un vétérinaire, maître de stage ou encadrant autorisé.
-// Niveau de preuve volontairement simple (nom, prénom, date, case de certification,
-// signature au doigt) — jamais une signature électronique qualifiée (§14, hors périmètre).
+// This file is part of Moodle - https://moodle.org/
+//
+// Moodle is free software: you can redistribute it and/or modify
+// it under the terms of the GNU General Public License as published by
+// the Free Software Foundation, either version 3 of the License, or
+// (at your option) any later version.
+//
+// Moodle is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU General Public License for more details.
+//
+// You should have received a copy of the GNU General Public License
+// along with Moodle.  If not, see <https://www.gnu.org/licenses/>.
 
+/**
+ * Validation ASV sur animal vivant (§9.3) : page publique accessible par lien à jeton, sans
+ * authentification Moodle, pour un vétérinaire, maître de stage ou encadrant autorisé.
+ * Niveau de preuve volontairement simple (nom, prénom, date, case de certification,
+ * signature au doigt) — jamais une signature électronique qualifiée (§14, hors périmètre).
+ *
+ * @package    local_simhub
+ * @copyright  2026 Écoles nationales vétérinaires de France (ENVF)
+ * @license    https://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
+ */
+
+// Validateur externe sans compte Moodle : l'accès est contrôlé par jeton, pas par connexion.
+// phpcs:ignore moodle.Files.RequireLogin.Missing
 require(__DIR__ . '/../../../config.php');
 
 use local_simhub\record\asv_valanimal;
@@ -50,8 +73,12 @@ if ($submitted) {
             'relateduserid' => $demande->userid,
         ])->trigger();
 
-        redirect($PAGE->url, get_string('asv_valide_avec_succes', 'local_simhub'), null,
-            \core\output\notification::NOTIFY_SUCCESS);
+        redirect(
+            $PAGE->url,
+            get_string('asv_valide_avec_succes', 'local_simhub'),
+            null,
+            \core\output\notification::NOTIFY_SUCCESS
+        );
     }
     echo $OUTPUT->notification(get_string('asv_validation_incomplete', 'local_simhub'), \core\output\notification::NOTIFY_ERROR);
 }
@@ -88,7 +115,11 @@ echo html_writer::tag('canvas', '', [
     'style' => 'border:1px solid #ccc;touch-action:none;max-width:100%;',
 ]);
 echo html_writer::empty_tag('input', ['type' => 'hidden', 'name' => 'signature', 'id' => 'local-simhub-signature-data']);
-echo html_writer::tag('button', get_string('asv_signature_effacer', 'local_simhub'), ['type' => 'button', 'id' => 'local-simhub-signature-clear', 'class' => 'btn btn-secondary btn-sm ml-2']);
+echo html_writer::tag(
+    'button',
+    get_string('asv_signature_effacer', 'local_simhub'),
+    ['type' => 'button', 'id' => 'local-simhub-signature-clear', 'class' => 'btn btn-secondary btn-sm ml-2'],
+);
 
 echo html_writer::tag('div', html_writer::tag('button', get_string('asv_valider_acte', 'local_simhub'), [
     'type' => 'submit', 'class' => 'btn btn-primary',

@@ -1,5 +1,26 @@
 <?php
-// Création / modification d'un acte du référentiel ASV (§9).
+// This file is part of Moodle - https://moodle.org/
+//
+// Moodle is free software: you can redistribute it and/or modify
+// it under the terms of the GNU General Public License as published by
+// the Free Software Foundation, either version 3 of the License, or
+// (at your option) any later version.
+//
+// Moodle is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU General Public License for more details.
+//
+// You should have received a copy of the GNU General Public License
+// along with Moodle.  If not, see <https://www.gnu.org/licenses/>.
+
+/**
+ * Création / modification d'un acte du référentiel ASV (§9).
+ *
+ * @package    local_simhub
+ * @copyright  2026 Écoles nationales vétérinaires de France (ENVF)
+ * @license    https://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
+ */
 
 require(__DIR__ . '/../../../config.php');
 
@@ -47,11 +68,19 @@ if ($submitted) {
     $envcode = optional_param('envcode', get_config('local_simhub', 'envcode') ?: '', PARAM_ALPHANUMEXT);
     $actif = optional_param('actif', 0, PARAM_BOOL);
 
-    $doublon = $DB->get_field_select('local_simhub_asv_acte', 'id', 'envcode = :envcode AND code = :code AND id <> :id',
-        ['envcode' => $envcode, 'code' => $code, 'id' => $id]);
+    $doublon = $DB->get_field_select(
+        'local_simhub_asv_acte',
+        'id',
+        'envcode = :envcode AND code = :code AND id <> :id',
+        ['envcode' => $envcode, 'code' => $code, 'id' => $id]
+    );
     if ($doublon) {
-        redirect($PAGE->url, get_string('asv_code_existe', 'local_simhub', s($code)), null,
-            \core\output\notification::NOTIFY_ERROR);
+        redirect(
+            $PAGE->url,
+            get_string('asv_code_existe', 'local_simhub', s($code)),
+            null,
+            \core\output\notification::NOTIFY_ERROR
+        );
     }
 
     $acte->set('code', $code);
@@ -113,7 +142,11 @@ echo html_writer::end_div();
 echo html_writer::start_div('form-group');
 echo html_writer::tag('label', get_string('asv_champ_niveau', 'local_simhub'), ['for' => 'id_niveau']);
 echo html_writer::select(
-    ['A1' => get_string('asv_niveau_a1', 'local_simhub'), 'A2' => get_string('asv_niveau_a2', 'local_simhub'), 'A3' => get_string('asv_niveau_a3', 'local_simhub')],
+    [
+        'A1' => get_string('asv_niveau_a1', 'local_simhub'),
+        'A2' => get_string('asv_niveau_a2', 'local_simhub'),
+        'A3' => get_string('asv_niveau_a3', 'local_simhub'),
+    ],
     'niveau',
     $id ? $acte->get('niveau') : 'A1',
     false,

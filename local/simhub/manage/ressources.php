@@ -1,5 +1,26 @@
 <?php
-// Liste des ressources pédagogiques d'un atelier (§6.2).
+// This file is part of Moodle - https://moodle.org/
+//
+// Moodle is free software: you can redistribute it and/or modify
+// it under the terms of the GNU General Public License as published by
+// the Free Software Foundation, either version 3 of the License, or
+// (at your option) any later version.
+//
+// Moodle is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU General Public License for more details.
+//
+// You should have received a copy of the GNU General Public License
+// along with Moodle.  If not, see <https://www.gnu.org/licenses/>.
+
+/**
+ * Liste des ressources pédagogiques d'un atelier (§6.2).
+ *
+ * @package    local_simhub
+ * @copyright  2026 Écoles nationales vétérinaires de France (ENVF)
+ * @license    https://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
+ */
 
 require(__DIR__ . '/../../../config.php');
 
@@ -28,7 +49,8 @@ if ($action === 'supprimer') {
 }
 
 $title = get_string('nav_ressources', 'local_simhub');
-\local_simhub\local\navigation::preparer($PAGE, new moodle_url('/local/simhub/manage/ressources.php', ['atelierid' => $atelierid]), $title, [
+$pageurl = new moodle_url('/local/simhub/manage/ressources.php', ['atelierid' => $atelierid]);
+\local_simhub\local\navigation::preparer($PAGE, $pageurl, $title, [
     [get_string('manage_ateliers', 'local_simhub'), new moodle_url('/local/simhub/manage/ateliers.php')],
     [s($atelier->get('nomcourt')), new moodle_url('/local/simhub/manage/atelier_edit.php', ['id' => $atelierid])],
 ]);

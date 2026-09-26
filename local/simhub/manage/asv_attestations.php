@@ -1,8 +1,29 @@
 <?php
-// Génération groupée des attestations de certification ASV (§9.4) : liste tous les
-// étudiants ayant entièrement validé un niveau (simulation + animal vivant sur tous les
-// actes), avec téléchargement individuel ou en une fois (ZIP), plutôt que de devoir
-// deviner un par un qui a fini son parcours.
+// This file is part of Moodle - https://moodle.org/
+//
+// Moodle is free software: you can redistribute it and/or modify
+// it under the terms of the GNU General Public License as published by
+// the Free Software Foundation, either version 3 of the License, or
+// (at your option) any later version.
+//
+// Moodle is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU General Public License for more details.
+//
+// You should have received a copy of the GNU General Public License
+// along with Moodle.  If not, see <https://www.gnu.org/licenses/>.
+
+/**
+ * Génération groupée des attestations de certification ASV (§9.4) : liste tous les
+ * étudiants ayant entièrement validé un niveau (simulation + animal vivant sur tous les
+ * actes), avec téléchargement individuel ou en une fois (ZIP), plutôt que de devoir
+ * deviner un par un qui a fini son parcours.
+ *
+ * @package    local_simhub
+ * @copyright  2026 Écoles nationales vétérinaires de France (ENVF)
+ * @license    https://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
+ */
 
 require(__DIR__ . '/../../../config.php');
 
@@ -16,7 +37,8 @@ require_capability('local/simhub:manageasv', $context);
 $envcode = '';
 $niveau = optional_param('niveau', 'A3', PARAM_ALPHANUM);
 
-\local_simhub\local\navigation::preparer($PAGE, new moodle_url('/local/simhub/manage/asv_attestations.php', ['envcode' => $envcode, 'niveau' => $niveau]), get_string('asv_attestations_groupees', 'local_simhub'), [
+$pageurl = new moodle_url('/local/simhub/manage/asv_attestations.php', ['envcode' => $envcode, 'niveau' => $niveau]);
+\local_simhub\local\navigation::preparer($PAGE, $pageurl, get_string('asv_attestations_groupees', 'local_simhub'), [
     [get_string('asv_parcours', 'local_simhub'), new moodle_url('/local/simhub/asv/index.php')],
 ]);
 
@@ -26,7 +48,11 @@ echo \local_simhub\local\navigation::barre();
 echo html_writer::start_tag('form', ['method' => 'get', 'class' => 'form-inline mb-3']);
 echo html_writer::tag('label', get_string('asv_champ_niveau', 'local_simhub'), ['class' => 'mr-2']);
 echo html_writer::select(
-    ['A1' => get_string('asv_niveau_a1', 'local_simhub'), 'A2' => get_string('asv_niveau_a2', 'local_simhub'), 'A3' => get_string('asv_niveau_a3', 'local_simhub')],
+    [
+        'A1' => get_string('asv_niveau_a1', 'local_simhub'),
+        'A2' => get_string('asv_niveau_a2', 'local_simhub'),
+        'A3' => get_string('asv_niveau_a3', 'local_simhub'),
+    ],
     'niveau',
     $niveau,
     false,
@@ -59,8 +85,14 @@ foreach ($eligibles as $userid) {
     if (!$user) {
         continue;
     }
-    $dlurl = new moodle_url('/local/simhub/asv/attestation_pdf.php', ['userid' => $userid, 'niveau' => $niveau, 'envcode' => $envcode]);
-    $table->data[] = [s(fullname($user)), html_writer::link($dlurl, get_string('asv_telecharger', 'local_simhub'), ['class' => 'btn btn-outline-primary btn-sm'])];
+    $dlurl = new moodle_url(
+        '/local/simhub/asv/attestation_pdf.php',
+        ['userid' => $userid, 'niveau' => $niveau, 'envcode' => $envcode],
+    );
+    $table->data[] = [
+        s(fullname($user)),
+        html_writer::link($dlurl, get_string('asv_telecharger', 'local_simhub'), ['class' => 'btn btn-outline-primary btn-sm']),
+    ];
 }
 
 echo html_writer::table($table);

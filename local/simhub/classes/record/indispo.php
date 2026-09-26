@@ -1,8 +1,28 @@
 <?php
+// This file is part of Moodle - https://moodle.org/
+//
+// Moodle is free software: you can redistribute it and/or modify
+// it under the terms of the GNU General Public License as published by
+// the Free Software Foundation, either version 3 of the License, or
+// (at your option) any later version.
+//
+// Moodle is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU General Public License for more details.
+//
+// You should have received a copy of the GNU General Public License
+// along with Moodle.  If not, see <https://www.gnu.org/licenses/>.
+
+/**
+ * Historique des indisponibilités d'un atelier (§6.1).
+ *
+ * @package    local_simhub
+ * @copyright  2026 Écoles nationales vétérinaires de France (ENVF)
+ * @license    https://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
+ */
 
 namespace local_simhub\record;
-
-defined('MOODLE_INTERNAL') || die();
 
 /**
  * Historique des indisponibilités d'un atelier (§6.1).
@@ -12,7 +32,7 @@ defined('MOODLE_INTERNAL') || die();
  * core\persistent, la table n'ayant pas de timemodified/usermodified.
  */
 class indispo {
-
+    /** @var string Table de la base de données. */
     const TABLE = 'local_simhub_indispo';
 
     /**
@@ -24,8 +44,12 @@ class indispo {
      * @param int|null $echeanceprevue Timestamp, si connue.
      * @return int Id de l'enregistrement créé.
      */
-    public static function ouvrir(int $atelierid, string $commentaire, ?int $referentuserid = null,
-            ?int $echeanceprevue = null): int {
+    public static function ouvrir(
+        int $atelierid,
+        string $commentaire,
+        ?int $referentuserid = null,
+        ?int $echeanceprevue = null
+    ): int {
         global $DB;
 
         $now = time();
@@ -93,8 +117,12 @@ class indispo {
      * @param int|null $echeanceprevue
      * @return void
      */
-    public static function mettre_a_jour(int $atelierid, string $commentaire, ?int $referentuserid,
-            ?int $echeanceprevue): void {
+    public static function mettre_a_jour(
+        int $atelierid,
+        string $commentaire,
+        ?int $referentuserid,
+        ?int $echeanceprevue
+    ): void {
         global $DB;
 
         $encours = self::get_en_cours($atelierid);

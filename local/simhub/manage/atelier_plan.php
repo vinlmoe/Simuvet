@@ -1,8 +1,29 @@
 <?php
-// Positionnement du repère sur le plan de salle par un simple clic sur l'image (§5.4),
-// plutôt que la saisie manuelle des deux champs planrepx/planrepy. Approche pragmatique
-// sans librairie tierce : un clic sur l'image calcule sa position en pourcentage et
-// soumet directement le formulaire.
+// This file is part of Moodle - https://moodle.org/
+//
+// Moodle is free software: you can redistribute it and/or modify
+// it under the terms of the GNU General Public License as published by
+// the Free Software Foundation, either version 3 of the License, or
+// (at your option) any later version.
+//
+// Moodle is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU General Public License for more details.
+//
+// You should have received a copy of the GNU General Public License
+// along with Moodle.  If not, see <https://www.gnu.org/licenses/>.
+
+/**
+ * Positionnement du repère sur le plan de salle par un simple clic sur l'image (§5.4),
+ * plutôt que la saisie manuelle des deux champs planrepx/planrepy. Approche pragmatique
+ * sans librairie tierce : un clic sur l'image calcule sa position en pourcentage et
+ * soumet directement le formulaire.
+ *
+ * @package    local_simhub
+ * @copyright  2026 Écoles nationales vétérinaires de France (ENVF)
+ * @license    https://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
+ */
 
 require(__DIR__ . '/../../../config.php');
 
@@ -57,7 +78,12 @@ if (!$atelier->get('planimageitemid')) {
 
 $fs = get_file_storage();
 $planfiles = $fs->get_area_files(
-    \local_simhub\local\contexte::fichiers()->id, 'local_simhub', 'plan', $atelier->get('planimageitemid'), 'filepath, filename', false
+    \local_simhub\local\contexte::fichiers()->id,
+    'local_simhub',
+    'plan',
+    $atelier->get('planimageitemid'),
+    'filepath, filename',
+    false
 );
 $planfile = reset($planfiles);
 
@@ -72,7 +98,12 @@ if (!$planfile) {
 }
 
 $planurl = moodle_url::make_pluginfile_url(
-    \local_simhub\local\contexte::fichiers()->id, 'local_simhub', 'plan', $atelier->get('planimageitemid'), '/', $planfile->get_filename()
+    \local_simhub\local\contexte::fichiers()->id,
+    'local_simhub',
+    'plan',
+    $atelier->get('planimageitemid'),
+    '/',
+    $planfile->get_filename()
 );
 
 echo html_writer::tag('p', get_string('plan_consigne', 'local_simhub'));
@@ -85,8 +116,14 @@ echo html_writer::empty_tag('input', ['type' => 'hidden', 'name' => 'planrepx', 
 echo html_writer::empty_tag('input', ['type' => 'hidden', 'name' => 'planrepy', 'id' => 'local-simhub-planrepy']);
 echo html_writer::end_tag('form');
 
-echo html_writer::start_div('local-simhub-plan', ['id' => 'local-simhub-plan-container', 'style' => 'position:relative;display:inline-block;cursor:crosshair;']);
-echo html_writer::empty_tag('img', ['src' => $planurl->out(false), 'id' => 'local-simhub-plan-img', 'style' => 'max-width:100%;display:block;']);
+echo html_writer::start_div(
+    'local-simhub-plan',
+    ['id' => 'local-simhub-plan-container', 'style' => 'position:relative;display:inline-block;cursor:crosshair;'],
+);
+echo html_writer::empty_tag(
+    'img',
+    ['src' => $planurl->out(false), 'id' => 'local-simhub-plan-img', 'style' => 'max-width:100%;display:block;'],
+);
 if ($atelier->get('planrepx') !== null && $atelier->get('planrepy') !== null) {
     echo html_writer::span('', '', [
         'id' => 'local-simhub-plan-marker',

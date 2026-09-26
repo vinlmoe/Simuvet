@@ -1,9 +1,28 @@
 <?php
-// Fonctions de callback Moodle pour l'intégration de SimHub : navigation et service de
-// fichiers. La logique métier vit dans classes/local/, classes/persistent/ et
-// classes/record/.
+// This file is part of Moodle - https://moodle.org/
+//
+// Moodle is free software: you can redistribute it and/or modify
+// it under the terms of the GNU General Public License as published by
+// the Free Software Foundation, either version 3 of the License, or
+// (at your option) any later version.
+//
+// Moodle is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU General Public License for more details.
+//
+// You should have received a copy of the GNU General Public License
+// along with Moodle.  If not, see <https://www.gnu.org/licenses/>.
 
-defined('MOODLE_INTERNAL') || die();
+/**
+ * Fonctions de callback Moodle pour l'intégration de SimHub : navigation et service de
+ * fichiers. La logique métier vit dans classes/local/, classes/persistent/ et
+ * classes/record/.
+ *
+ * @package    local_simhub
+ * @copyright  2026 Écoles nationales vétérinaires de France (ENVF)
+ * @license    https://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
+ */
 
 /**
  * Ajoute SimHub à la navigation pour les utilisateurs disposant de la capacité
@@ -77,10 +96,12 @@ function local_simhub_pluginfile($course, $cm, $context, $filearea, $args, $forc
         $ressource = $DB->get_record('local_simhub_ressource', ['fileitemid' => $itemid]);
         // Une source éditable (§6.2) n'est jamais servie à un utilisateur qui n'a pas la
         // capacité de gérer les ressources, quel que soit son droit de consultation générale.
-        if ($ressource
+        if (
+            $ressource
                 && ($ressource->visibilite === \local_simhub\persistent\ressource::VISIBILITE_INTERNE
                     || $ressource->type === \local_simhub\persistent\ressource::TYPE_SOURCE_EDITABLE)
-                && !has_capability('local/simhub:manageressources', \local_simhub\local\contexte::racine())) {
+                && !has_capability('local/simhub:manageressources', \local_simhub\local\contexte::racine())
+        ) {
             return false;
         }
     }

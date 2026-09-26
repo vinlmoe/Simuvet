@@ -1,8 +1,28 @@
 <?php
+// This file is part of Moodle - https://moodle.org/
+//
+// Moodle is free software: you can redistribute it and/or modify
+// it under the terms of the GNU General Public License as published by
+// the Free Software Foundation, either version 3 of the License, or
+// (at your option) any later version.
+//
+// Moodle is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU General Public License for more details.
+//
+// You should have received a copy of the GNU General Public License
+// along with Moodle.  If not, see <https://www.gnu.org/licenses/>.
+
+/**
+ * Classe persistent pour la fiche atelier (§6 du cahier des charges).
+ *
+ * @package    local_simhub
+ * @copyright  2026 Écoles nationales vétérinaires de France (ENVF)
+ * @license    https://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
+ */
 
 namespace local_simhub\persistent;
-
-defined('MOODLE_INTERNAL') || die();
 
 /**
  * Classe persistent pour la fiche atelier (§6 du cahier des charges).
@@ -12,13 +32,16 @@ defined('MOODLE_INTERNAL') || die();
  * l'atelier (§7) dès sa création.
  */
 class atelier extends \core\persistent {
-
     /** Table associée. */
     const TABLE = 'local_simhub_atelier';
 
+    /** @var string Statut : actif. */
     const STATUT_ACTIF = 'actif';
+    /** @var string Statut : non_utilise. */
     const STATUT_NON_UTILISE = 'non_utilise';
+    /** @var string Statut : indisponible. */
     const STATUT_INDISPONIBLE = 'indisponible';
+    /** @var string Statut : archive. */
     const STATUT_ARCHIVE = 'archive';
 
     /**

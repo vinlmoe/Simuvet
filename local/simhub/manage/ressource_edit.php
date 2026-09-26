@@ -1,9 +1,30 @@
 <?php
-// Création / modification d'une ressource pédagogique (§6.2), avec upload de fichier via
-// l'API filestorage de Moodle. L'itemid de la zone de fichiers 'ressource' est toujours
-// l'id de l'enregistrement local_simhub_ressource lui-même (cf. lib.php::local_simhub_pluginfile
-// et persistent\ressource::fileitemid), ce qui évite d'avoir à faire correspondre deux
-// identifiants différents.
+// This file is part of Moodle - https://moodle.org/
+//
+// Moodle is free software: you can redistribute it and/or modify
+// it under the terms of the GNU General Public License as published by
+// the Free Software Foundation, either version 3 of the License, or
+// (at your option) any later version.
+//
+// Moodle is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU General Public License for more details.
+//
+// You should have received a copy of the GNU General Public License
+// along with Moodle.  If not, see <https://www.gnu.org/licenses/>.
+
+/**
+ * Création / modification d'une ressource pédagogique (§6.2), avec upload de fichier via
+ * l'API filestorage de Moodle. L'itemid de la zone de fichiers 'ressource' est toujours
+ * l'id de l'enregistrement local_simhub_ressource lui-même (cf. lib.php::local_simhub_pluginfile
+ * et persistent\ressource::fileitemid), ce qui évite d'avoir à faire correspondre deux
+ * identifiants différents.
+ *
+ * @package    local_simhub
+ * @copyright  2026 Écoles nationales vétérinaires de France (ENVF)
+ * @license    https://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
+ */
 
 require(__DIR__ . '/../../../config.php');
 require_once($CFG->libdir . '/filelib.php');
@@ -35,15 +56,26 @@ $record = $id ? $DB->get_record(ressource::TABLE, ['id' => $id, 'atelierid' => $
 ];
 
 $title = $id ? get_string('edit') : get_string('ressource_nouvelle', 'local_simhub');
-\local_simhub\local\navigation::preparer($PAGE, new moodle_url('/local/simhub/manage/ressource_edit.php', ['atelierid' => $atelierid, 'id' => $id]), $title, [
+$pageurl = new moodle_url('/local/simhub/manage/ressource_edit.php', ['atelierid' => $atelierid, 'id' => $id]);
+\local_simhub\local\navigation::preparer($PAGE, $pageurl, $title, [
     [get_string('manage_ateliers', 'local_simhub'), new moodle_url('/local/simhub/manage/ateliers.php')],
     [s($atelier->get('nomcourt')), new moodle_url('/local/simhub/manage/atelier_edit.php', ['id' => $atelierid])],
-    [get_string('bouton_ressources', 'local_simhub'), new moodle_url('/local/simhub/manage/ressources.php', ['atelierid' => $atelierid])],
+    [
+        get_string('bouton_ressources', 'local_simhub'),
+        new moodle_url('/local/simhub/manage/ressources.php', ['atelierid' => $atelierid]),
+    ],
 ]);
 \local_simhub\local\navigation::onglets('atelier', $atelierid, 'ressources');
 
 $draftitemid = file_get_submitted_draft_itemid('fichier');
-file_prepare_draft_area($draftitemid, \local_simhub\local\contexte::fichiers()->id, 'local_simhub', 'ressource', $id ?: null, $fileoptions);
+file_prepare_draft_area(
+    $draftitemid,
+    \local_simhub\local\contexte::fichiers()->id,
+    'local_simhub',
+    'ressource',
+    $id ?: null,
+    $fileoptions,
+);
 
 $form = new ressource_form();
 $data = clone $record;
@@ -73,10 +105,24 @@ if ($form->is_cancelled()) {
 
     // L'itemid de fichier est fixé à l'id de la ressource elle-même : on sauvegarde donc la
     // zone de brouillon seulement une fois cet id connu.
-    file_save_draft_area_files($formdata->fichier, \local_simhub\local\contexte::fichiers()->id, 'local_simhub', 'ressource', $record->id, $fileoptions);
+    file_save_draft_area_files(
+        $formdata->fichier,
+        \local_simhub\local\contexte::fichiers()->id,
+        'local_simhub',
+        'ressource',
+        $record->id,
+        $fileoptions,
+    );
 
     $fs = get_file_storage();
-    $files = $fs->get_area_files(\local_simhub\local\contexte::fichiers()->id, 'local_simhub', 'ressource', $record->id, 'filepath, filename', false);
+    $files = $fs->get_area_files(
+        \local_simhub\local\contexte::fichiers()->id,
+        'local_simhub',
+        'ressource',
+        $record->id,
+        'filepath, filename',
+        false,
+    );
     $record->fileitemid = !empty($files) ? $record->id : 0;
     $DB->update_record(ressource::TABLE, $record);
 

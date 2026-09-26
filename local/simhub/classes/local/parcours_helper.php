@@ -1,20 +1,38 @@
 <?php
-// Règles communes des parcours (§8) : à qui s'adresse un parcours, quels ateliers
-// comptent pour son achèvement, et avancement d'un étudiant. Une seule implémentation
-// pour l'accueil étudiant, le suivi, le tableau de bord, l'export et l'attestation.
+// This file is part of Moodle - https://moodle.org/
+//
+// Moodle is free software: you can redistribute it and/or modify
+// it under the terms of the GNU General Public License as published by
+// the Free Software Foundation, either version 3 of the License, or
+// (at your option) any later version.
+//
+// Moodle is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU General Public License for more details.
+//
+// You should have received a copy of the GNU General Public License
+// along with Moodle.  If not, see <https://www.gnu.org/licenses/>.
+
+/**
+ * Règles communes des parcours (§8) : à qui s'adresse un parcours, quels ateliers
+ * comptent pour son achèvement, et avancement d'un étudiant. Une seule implémentation
+ * pour l'accueil étudiant, le suivi, le tableau de bord, l'export et l'attestation.
+ *
+ * @package    local_simhub
+ * @copyright  2026 Écoles nationales vétérinaires de France (ENVF)
+ * @license    https://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
+ */
 
 namespace local_simhub\local;
 
 use local_simhub\persistent\parcours;
 use local_simhub\persistent\session;
 
-defined('MOODLE_INTERNAL') || die();
-
 /**
  * Règles d'affectation et d'avancement des parcours.
  */
 class parcours_helper {
-
     /**
      * Ateliers qui conditionnent l'achèvement : les ateliers marqués obligatoires s'il y
      * en a au moins un, sinon tous les ateliers du parcours (§8.1).
@@ -119,16 +137,23 @@ class parcours_helper {
         $atelierids = array_column($parcours->get_ateliers(), 'atelierid');
         if ($atelierids) {
             [$insql, $inparams] = $DB->get_in_or_equal($atelierids);
-            $userids = array_merge($userids,
-                $DB->get_fieldset_select('local_simhub_session', 'DISTINCT userid', "atelierid $insql", $inparams));
+            $userids = array_merge(
+                $userids,
+                $DB->get_fieldset_select('local_simhub_session', 'DISTINCT userid', "atelierid $insql", $inparams)
+            );
         }
         $userids = array_unique(array_map('intval', $userids));
         if (!$userids) {
             return [];
         }
         [$insql, $inparams] = $DB->get_in_or_equal($userids);
-        return $DB->get_records_select('user', "id $insql AND deleted = 0", $inparams, 'lastname, firstname',
-            'id, ' . implode(', ', \core_user\fields::get_name_fields()));
+        return $DB->get_records_select(
+            'user',
+            "id $insql AND deleted = 0",
+            $inparams,
+            'lastname, firstname',
+            'id, ' . implode(', ', \core_user\fields::get_name_fields())
+        );
     }
 
     /**
@@ -140,10 +165,17 @@ class parcours_helper {
      * @param int $ordre
      * @param bool $obligatoire
      * @param int|null $echeance
+     * @param bool $signaler Faux pendant une restauration : les notes sont recalculées à la fin.
      * @return void
      */
-    public static function ajouter_atelier(parcours $parcours, int $atelierid, int $ordre, bool $obligatoire,
-            ?int $echeance): void {
+    public static function ajouter_atelier(
+        parcours $parcours,
+        int $atelierid,
+        int $ordre,
+        bool $obligatoire,
+        ?int $echeance,
+        bool $signaler = true
+    ): void {
         global $DB;
 
         \local_simhub\record\parc_atelier::ajouter($parcours->get('id'), $atelierid, $ordre, $obligatoire, $echeance);
@@ -155,7 +187,9 @@ class parcours_helper {
                     : \local_simhub\record\rattachement::CARACTERE_RECOMMANDE,
             ]);
         }
-        self::signaler_modification($parcours);
+        if ($signaler) {
+            self::signaler_modification($parcours);
+        }
     }
 
     /**
@@ -176,7 +210,9 @@ class parcours_helper {
                 "SELECT 1
                    FROM {local_simhub_parc_atelier} pa
                    JOIN {local_simhub_parcours} p ON p.id = pa.parcoursid
-                  WHERE p.courseid = ? AND pa.atelierid = ?", [$courseid, $atelierid]);
+                  WHERE p.courseid = ? AND pa.atelierid = ?",
+                [$courseid, $atelierid]
+            );
             if (!$encore) {
                 $DB->delete_records('local_simhub_rattachement', ['atelierid' => $atelierid, 'courseid' => $courseid]);
             }
@@ -185,6 +221,8 @@ class parcours_helper {
     }
 
     /**
+     * Déclenche l'événement de modification du parcours.
+     *
      * @param parcours $parcours
      * @return void
      */

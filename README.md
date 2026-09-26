@@ -433,9 +433,37 @@ la version précédente : 31 contrôles de droits et de notes, 28 pages parcouru
 navigateur (responsable d'UC, enseignant, étudiant, gestionnaire, administrateur
 fonctionnel, administrateur), validation d'une séance depuis le cours.
 
-Limites connues : l'activité n'est pas encore sauvegardée avec le cours
-(`FEATURE_BACKUP_MOODLE2` désactivé) ; les ateliers de l'UC se recomposent après une
-restauration.
+**Sauvegarde et restauration** : l'activité suit le cours (sauvegarde, restauration,
+duplication, import). La composition du parcours est sauvegardée par numéro d'atelier et
+retrouvée dans le référentiel du site ; un atelier absent est signalé dans le journal de
+restauration. Les séances des étudiants restent dans SimHub : les notes sont recalculées
+pour les inscrits du nouveau cours à la fin de la restauration.
+
+## Conformité aux règles Moodle (septembre 2026)
+
+| Contrôle | Résultat |
+|---|---|
+| Standard de code `moodle` (moodle-cs / phpcs), les deux plugins | 0 erreur, 0 avertissement |
+| En-tête GPL et bloc `@package` / `@copyright` / `@license` | Tous les fichiers PHP et templates |
+| Schéma (`admin/cli/check_database_schema.php`), installation neuve et mise à jour | « Database structure is ok » |
+| API Privacy : test de conformité du cœur (`privacy/tests/privacy/provider_test.php`) | Passe ; `core_userlist_provider` ajouté, champs du personnel déclarés |
+| PHPUnit `local_simhub` (confidentialité) et `mod_simhub` (droits, notes, sauvegarde) | 9 tests, 38 assertions |
+| Templates Mustache : exemple de contexte rendu par Moodle | Les deux templates |
+| Événements standard d'activité (`course_module_viewed`, `..._instance_list_viewed`) | Déclenchés |
+| Requêtes compatibles toutes bases (pas de `DISTINCT` sur une colonne texte) | Corrigé dans l'observateur |
+| Débogage développeur (`DEBUG_DEVELOPER`), 28 pages parcourues | Aucun avertissement |
+
+Le détenteur du copyright indiqué (« Écoles nationales vétérinaires de France ») est à
+confirmer. Les tests se lancent avec `vendor/bin/phpunit --testsuite local_simhub_testsuite`
+et `--testsuite mod_simhub_testsuite` après `admin/tool/phpunit/cli/init.php`.
+
+Points de bonnes pratiques restant ouverts :
+- le JavaScript est intégré aux pages (QR code, signature, clic sur le plan) au lieu de
+  modules AMD (`amd/src`) ;
+- quelques formulaires sont écrits en HTML plutôt qu'avec `moodleform` (grille,
+  composition de parcours, validation ASV) ;
+- les classes Bootstrap 4 (`badge-warning`, `mr-2`...) restent acceptées par Moodle 5.0 ;
+  les équivalents Bootstrap 5 sont à ajouter là où ils manquent.
 
 ## Internationalisation
 

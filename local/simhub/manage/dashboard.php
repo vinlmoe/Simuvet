@@ -1,9 +1,30 @@
 <?php
-// Tableau de bord pédagogique par parcours/cohorte (§12.2), plus riche que la simple liste
-// de manage/parcours.php ou le tableau brut de parcours_suivi.php : une vue d'ensemble,
-// parcours par parcours, avec des indicateurs agrégés (étudiants n'ayant pas commencé,
-// commencé sans terminer, ateliers réalisés mais non validés, à reprendre, échéances
-// proches ou dépassées) plutôt qu'un simple pourcentage global.
+// This file is part of Moodle - https://moodle.org/
+//
+// Moodle is free software: you can redistribute it and/or modify
+// it under the terms of the GNU General Public License as published by
+// the Free Software Foundation, either version 3 of the License, or
+// (at your option) any later version.
+//
+// Moodle is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU General Public License for more details.
+//
+// You should have received a copy of the GNU General Public License
+// along with Moodle.  If not, see <https://www.gnu.org/licenses/>.
+
+/**
+ * Tableau de bord pédagogique par parcours/cohorte (§12.2), plus riche que la simple liste
+ * de manage/parcours.php ou le tableau brut de parcours_suivi.php : une vue d'ensemble,
+ * parcours par parcours, avec des indicateurs agrégés (étudiants n'ayant pas commencé,
+ * commencé sans terminer, ateliers réalisés mais non validés, à reprendre, échéances
+ * proches ou dépassées) plutôt qu'un simple pourcentage global.
+ *
+ * @package    local_simhub
+ * @copyright  2026 Écoles nationales vétérinaires de France (ENVF)
+ * @license    https://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
+ */
 
 require(__DIR__ . '/../../../config.php');
 
@@ -18,7 +39,8 @@ require_capability('local/simhub:viewprogression', $context);
 
 $envcode = '';
 
-\local_simhub\local\navigation::preparer($PAGE, new moodle_url('/local/simhub/manage/dashboard.php'), get_string('dashboard_parcours', 'local_simhub'));
+$pageurl = new moodle_url('/local/simhub/manage/dashboard.php');
+\local_simhub\local\navigation::preparer($PAGE, $pageurl, get_string('dashboard_parcours', 'local_simhub'));
 
 echo $OUTPUT->header();
 echo \local_simhub\local\navigation::barre();

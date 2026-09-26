@@ -1,6 +1,27 @@
 <?php
-// Fiche ASV d'un étudiant côté encadrant (§9.4) : état acte par acte, avancement vers les
-// certifications, livret, et annulation d'une validation saisie par erreur.
+// This file is part of Moodle - https://moodle.org/
+//
+// Moodle is free software: you can redistribute it and/or modify
+// it under the terms of the GNU General Public License as published by
+// the Free Software Foundation, either version 3 of the License, or
+// (at your option) any later version.
+//
+// Moodle is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU General Public License for more details.
+//
+// You should have received a copy of the GNU General Public License
+// along with Moodle.  If not, see <https://www.gnu.org/licenses/>.
+
+/**
+ * Fiche ASV d'un étudiant côté encadrant (§9.4) : état acte par acte, avancement vers les
+ * certifications, livret, et annulation d'une validation saisie par erreur.
+ *
+ * @package    local_simhub
+ * @copyright  2026 Écoles nationales vétérinaires de France (ENVF)
+ * @license    https://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
+ */
 
 require(__DIR__ . '/../../../config.php');
 
@@ -37,8 +58,12 @@ if ($action === 'annulersim' || $action === 'annuleranimal') {
         require_sesskey();
         $motif = trim(optional_param('motif', '', PARAM_TEXT));
         if ($motif === '') {
-            redirect(new moodle_url($url, ['action' => $action, 'id' => $id]),
-                get_string('asv_motif_obligatoire', 'local_simhub'), null, \core\output\notification::NOTIFY_ERROR);
+            redirect(
+                new moodle_url($url, ['action' => $action, 'id' => $id]),
+                get_string('asv_motif_obligatoire', 'local_simhub'),
+                null,
+                \core\output\notification::NOTIFY_ERROR
+            );
         }
         $motif = get_string('asv_annule_par', 'local_simhub', (object) [
             'nom' => fullname($USER), 'date' => userdate(time(), get_string('strftimedatefullshort', 'langconfig')),
@@ -66,7 +91,11 @@ if ($action === 'annulersim' || $action === 'annuleranimal') {
     echo html_writer::tag('label', get_string('asv_motif', 'local_simhub'), ['for' => 'id_motif']);
     echo html_writer::tag('textarea', '', ['name' => 'motif', 'id' => 'id_motif', 'class' => 'form-control mb-2',
         'required' => 'required', 'rows' => 2]);
-    echo html_writer::tag('button', get_string('asv_confirmer', 'local_simhub'), ['type' => 'submit', 'class' => 'btn btn-danger mr-2 me-2']);
+    echo html_writer::tag(
+        'button',
+        get_string('asv_confirmer', 'local_simhub'),
+        ['type' => 'submit', 'class' => 'btn btn-danger mr-2 me-2'],
+    );
     echo html_writer::link($url, get_string('cancel'), ['class' => 'btn btn-secondary']);
     echo html_writer::end_tag('form');
     echo $OUTPUT->footer();
@@ -77,11 +106,17 @@ echo $OUTPUT->header();
 echo \local_simhub\local\navigation::barre();
 
 echo html_writer::div(
-    html_writer::link(new moodle_url('/local/simhub/asv/livret_pdf.php', ['userid' => $userid, 'envcode' => $envcode]),
-        get_string('asv_exporter_livret', 'local_simhub'), ['class' => 'btn btn-outline-secondary btn-sm mr-2 me-2'])
+    html_writer::link(
+        new moodle_url('/local/simhub/asv/livret_pdf.php', ['userid' => $userid, 'envcode' => $envcode]),
+        get_string('asv_exporter_livret', 'local_simhub'),
+        ['class' => 'btn btn-outline-secondary btn-sm mr-2 me-2']
+    )
     . (\local_simhub\local\droits::peut_valider_asv($userid)
-        ? html_writer::link(new moodle_url('/local/simhub/asv/valider_simulation.php', ['userid' => $userid]),
-            get_string('asv_valider_simulation', 'local_simhub'), ['class' => 'btn btn-primary btn-sm'])
+        ? html_writer::link(
+            new moodle_url('/local/simhub/asv/valider_simulation.php', ['userid' => $userid]),
+            get_string('asv_valider_simulation', 'local_simhub'),
+            ['class' => 'btn btn-primary btn-sm']
+        )
         : ''),
     'mb-3'
 );

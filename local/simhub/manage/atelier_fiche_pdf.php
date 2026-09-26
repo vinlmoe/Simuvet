@@ -1,7 +1,28 @@
 <?php
-// Export PDF imprimable d'une fiche atelier (§6, §12.3) : identification, localisation,
-// statut, et liste des ressources associées (titres uniquement — les fichiers eux-mêmes
-// restent accessibles depuis la fiche numérique, ce PDF sert de pense-bête imprimable).
+// This file is part of Moodle - https://moodle.org/
+//
+// Moodle is free software: you can redistribute it and/or modify
+// it under the terms of the GNU General Public License as published by
+// the Free Software Foundation, either version 3 of the License, or
+// (at your option) any later version.
+//
+// Moodle is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU General Public License for more details.
+//
+// You should have received a copy of the GNU General Public License
+// along with Moodle.  If not, see <https://www.gnu.org/licenses/>.
+
+/**
+ * Export PDF imprimable d'une fiche atelier (§6, §12.3) : identification, localisation,
+ * statut, et liste des ressources associées (titres uniquement — les fichiers eux-mêmes
+ * restent accessibles depuis la fiche numérique, ce PDF sert de pense-bête imprimable).
+ *
+ * @package    local_simhub
+ * @copyright  2026 Écoles nationales vétérinaires de France (ENVF)
+ * @license    https://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
+ */
 
 require(__DIR__ . '/../../../config.php');
 require_once($CFG->libdir . '/pdflib.php');

@@ -1,6 +1,27 @@
 <?php
-// Parcours côté étudiant (§8) : ateliers dans l'ordre, obligatoires, échéances, statut
-// personnel et avancement (§8.1), avec l'attestation une fois le parcours terminé.
+// This file is part of Moodle - https://moodle.org/
+//
+// Moodle is free software: you can redistribute it and/or modify
+// it under the terms of the GNU General Public License as published by
+// the Free Software Foundation, either version 3 of the License, or
+// (at your option) any later version.
+//
+// Moodle is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU General Public License for more details.
+//
+// You should have received a copy of the GNU General Public License
+// along with Moodle.  If not, see <https://www.gnu.org/licenses/>.
+
+/**
+ * Parcours côté étudiant (§8) : ateliers dans l'ordre, obligatoires, échéances, statut
+ * personnel et avancement (§8.1), avec l'attestation une fois le parcours terminé.
+ *
+ * @package    local_simhub
+ * @copyright  2026 Écoles nationales vétérinaires de France (ENVF)
+ * @license    https://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
+ */
 
 require(__DIR__ . '/../../config.php');
 
@@ -16,8 +37,11 @@ require_capability('local/simhub:view', $context);
 $id = required_param('id', PARAM_INT);
 $parcours = new parcours($id);
 
-\local_simhub\local\navigation::preparer($PAGE, new moodle_url('/local/simhub/parcours.php', ['id' => $id]),
-    s($parcours->get('nom')));
+\local_simhub\local\navigation::preparer(
+    $PAGE,
+    new moodle_url('/local/simhub/parcours.php', ['id' => $id]),
+    s($parcours->get('nom'))
+);
 
 echo $OUTPUT->header();
 echo \local_simhub\local\navigation::barre();
@@ -37,7 +61,9 @@ echo html_writer::div(html_writer::div('', 'progress-bar', [
 if ($progression['total'] && $progression['pct'] >= 100) {
     echo html_writer::div(html_writer::link(
         new moodle_url('/local/simhub/manage/parcours_attestation_pdf.php', ['parcoursid' => $id]),
-        get_string('attestation_pdf', 'local_simhub'), ['class' => 'btn btn-primary']), 'mb-3');
+        get_string('attestation_pdf', 'local_simhub'),
+        ['class' => 'btn btn-primary']
+    ), 'mb-3');
 }
 
 $requis = parcours_helper::ateliers_requis($parcours);
@@ -61,11 +87,15 @@ foreach ($composition as $lien) {
         }
     }
 
-    $libelleatelier = html_writer::link(new moodle_url('/local/simhub/atelier.php', ['id' => $lien->atelierid]),
-        s($atelier->get('nomcourt')));
+    $libelleatelier = html_writer::link(
+        new moodle_url('/local/simhub/atelier.php', ['id' => $lien->atelierid]),
+        s($atelier->get('nomcourt'))
+    );
     if ($atelier->get('statut') !== atelier::STATUT_ACTIF) {
-        $libelleatelier .= ' ' . html_writer::span(get_string('statut_' . $atelier->get('statut'), 'local_simhub'),
-            'badge badge-warning bg-warning text-dark');
+        $libelleatelier .= ' ' . html_writer::span(
+            get_string('statut_' . $atelier->get('statut'), 'local_simhub'),
+            'badge badge-warning bg-warning text-dark'
+        );
     }
 
     $table->data[] = [

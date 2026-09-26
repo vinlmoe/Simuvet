@@ -1,4 +1,26 @@
 <?php
+// This file is part of Moodle - https://moodle.org/
+//
+// Moodle is free software: you can redistribute it and/or modify
+// it under the terms of the GNU General Public License as published by
+// the Free Software Foundation, either version 3 of the License, or
+// (at your option) any later version.
+//
+// Moodle is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU General Public License for more details.
+//
+// You should have received a copy of the GNU General Public License
+// along with Moodle.  If not, see <https://www.gnu.org/licenses/>.
+
+/**
+ * Formulaire de création/modification d'un parcours pédagogique (§8).
+ *
+ * @package    local_simhub
+ * @copyright  2026 Écoles nationales vétérinaires de France (ENVF)
+ * @license    https://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
+ */
 
 namespace local_simhub\form;
 
@@ -14,7 +36,11 @@ use local_simhub\local\badge_helper;
  * Formulaire de création/modification d'un parcours pédagogique (§8).
  */
 class parcours_form extends \moodleform {
-
+    /**
+     * Définition du formulaire.
+     *
+     * @return void
+     */
     protected function definition() {
         $mform = $this->_form;
 
@@ -33,7 +59,8 @@ class parcours_form extends \moodleform {
 
         global $DB;
         $cours = [0 => get_string('aucune_uc', 'local_simhub')];
-        foreach ($DB->get_records_select_menu('course', 'id <> :siteid', ['siteid' => SITEID], 'fullname', 'id, fullname') as $cid => $nom) {
+        $listecours = $DB->get_records_select_menu('course', 'id <> :siteid', ['siteid' => SITEID], 'fullname', 'id, fullname');
+        foreach ($listecours as $cid => $nom) {
             $cours[$cid] = format_string($nom);
         }
         $mform->addElement('autocomplete', 'courseid', get_string('champ_uc_optionnel', 'local_simhub'), $cours);

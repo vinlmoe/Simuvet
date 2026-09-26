@@ -1,8 +1,28 @@
 <?php
+// This file is part of Moodle - https://moodle.org/
+//
+// Moodle is free software: you can redistribute it and/or modify
+// it under the terms of the GNU General Public License as published by
+// the Free Software Foundation, either version 3 of the License, or
+// (at your option) any later version.
+//
+// Moodle is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU General Public License for more details.
+//
+// You should have received a copy of the GNU General Public License
+// along with Moodle.  If not, see <https://www.gnu.org/licenses/>.
+
+/**
+ * Import souple des rattachements pédagogiques et de la composition des parcours (§12.1),.
+ *
+ * @package    local_simhub
+ * @copyright  2026 Écoles nationales vétérinaires de France (ENVF)
+ * @license    https://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
+ */
 
 namespace local_simhub\local;
-
-defined('MOODLE_INTERNAL') || die();
 
 use local_simhub\persistent\atelier;
 use local_simhub\persistent\parcours;
@@ -17,7 +37,6 @@ use local_simhub\record\parc_atelier;
  * — importer d'abord les ateliers avec atelier_importer avant d'utiliser ceux-ci.
  */
 class liaison_importer {
-
     /**
      * Importe des rattachements atelier <-> UC/année/cohorte (§6).
      *
@@ -58,8 +77,11 @@ class liaison_importer {
             $envcode = $data['envcode'] ?: $defaultenvcode;
             $atelier = atelier::get_record(['envcode' => $envcode, 'numero' => $data['numero']]);
             if (!$atelier) {
-                $result['erreurs'][] = get_string('import_ligne_atelier_introuvable', 'local_simhub',
-                    (object) ['ligne' => $lineno + 2, 'numero' => $data['numero'], 'envcode' => $envcode]);
+                $result['erreurs'][] = get_string(
+                    'import_ligne_atelier_introuvable',
+                    'local_simhub',
+                    (object) ['ligne' => $lineno + 2, 'numero' => $data['numero'], 'envcode' => $envcode]
+                );
                 continue;
             }
 
@@ -117,8 +139,11 @@ class liaison_importer {
             $envcode = $data['envcode'] ?: $defaultenvcode;
             $atelier = atelier::get_record(['envcode' => $envcode, 'numero' => $data['numero']]);
             if (!$atelier) {
-                $result['erreurs'][] = get_string('import_ligne_atelier_introuvable', 'local_simhub',
-                    (object) ['ligne' => $lineno + 2, 'numero' => $data['numero'], 'envcode' => $envcode]);
+                $result['erreurs'][] = get_string(
+                    'import_ligne_atelier_introuvable',
+                    'local_simhub',
+                    (object) ['ligne' => $lineno + 2, 'numero' => $data['numero'], 'envcode' => $envcode]
+                );
                 continue;
             }
 
@@ -204,6 +229,8 @@ class liaison_importer {
     }
 
     /**
+     * Associe les valeurs d'une ligne CSV aux colonnes reconnues.
+     *
      * @param string $line
      * @param string $delimiter
      * @param array $colmap

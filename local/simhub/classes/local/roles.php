@@ -1,17 +1,35 @@
 <?php
-// Rôles SimHub transversaux (§11), attribuables au système ou dans la catégorie SimHub
-// (contexte::racine()). Les enseignants et responsables d'UC n'en ont pas besoin : leurs
-// droits viennent de leur rôle dans le cours de l'UC, via l'activité mod_simhub.
+// This file is part of Moodle - https://moodle.org/
+//
+// Moodle is free software: you can redistribute it and/or modify
+// it under the terms of the GNU General Public License as published by
+// the Free Software Foundation, either version 3 of the License, or
+// (at your option) any later version.
+//
+// Moodle is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU General Public License for more details.
+//
+// You should have received a copy of the GNU General Public License
+// along with Moodle.  If not, see <https://www.gnu.org/licenses/>.
+
+/**
+ * Rôles SimHub transversaux (§11), attribuables au système ou dans la catégorie SimHub
+ * (contexte::racine()). Les enseignants et responsables d'UC n'en ont pas besoin : leurs
+ * droits viennent de leur rôle dans le cours de l'UC, via l'activité mod_simhub.
+ *
+ * @package    local_simhub
+ * @copyright  2026 Écoles nationales vétérinaires de France (ENVF)
+ * @license    https://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
+ */
 
 namespace local_simhub\local;
-
-defined('MOODLE_INTERNAL') || die();
 
 /**
  * Création et mise à jour des rôles SimHub.
  */
 class roles {
-
     /**
      * Capacités accordées par rôle (nom court => capacités).
      *
@@ -68,7 +86,7 @@ class roles {
 
         $syscontext = \context_system::instance();
 
-        // À l'installation, db/install.php s'exécute avant que Moodle n'enregistre les
+        // Lors de l'installation, db/install.php s'exécute avant que Moodle n'enregistre les
         // capacités de db/access.php : assign_capability() les refuserait.
         update_capabilities('local_simhub');
 
@@ -82,7 +100,9 @@ class roles {
                 );
             }
             $niveaux = array_values(array_unique(array_merge(
-                array_values(get_role_contextlevels($roleid)), [CONTEXT_SYSTEM, CONTEXT_COURSECAT])));
+                array_values(get_role_contextlevels($roleid)),
+                [CONTEXT_SYSTEM, CONTEXT_COURSECAT]
+            )));
             set_role_contextlevels($roleid, $niveaux);
             foreach ($caps as $cap) {
                 assign_capability($cap, CAP_ALLOW, $roleid, $syscontext->id, true);
@@ -93,8 +113,10 @@ class roles {
         $adminid = $DB->get_field('role', 'id', ['shortname' => 'simhubadminfonctionnel']);
         foreach (array_keys(self::definitions()) as $shortname) {
             $cibleid = $DB->get_field('role', 'id', ['shortname' => $shortname]);
-            if ($adminid && $cibleid
-                    && !$DB->record_exists('role_allow_assign', ['roleid' => $adminid, 'allowassign' => $cibleid])) {
+            if (
+                $adminid && $cibleid
+                    && !$DB->record_exists('role_allow_assign', ['roleid' => $adminid, 'allowassign' => $cibleid])
+            ) {
                 core_role_set_assign_allowed($adminid, $cibleid);
             }
         }
