@@ -93,8 +93,9 @@ class atelier extends \core\persistent {
                 'default' => 0,
                 'null' => NULL_ALLOWED,
             ],
+            // PARAM_ALPHANUMEXT : PARAM_ALPHA refuserait le « _ » de non_utilise.
             'statut' => [
-                'type' => PARAM_ALPHA,
+                'type' => PARAM_ALPHANUMEXT,
                 'default' => self::STATUT_NON_UTILISE,
                 'choices' => [
                     self::STATUT_ACTIF,

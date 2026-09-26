@@ -269,10 +269,8 @@ $string['asv_niveau_a3'] = 'A3';
 
 // Import (§12.1).
 $string['import_ateliers'] = 'Importer des ateliers';
-$string['import_description'] = 'Importe une liste d\'ateliers depuis un fichier CSV. Les colonnes reconnues (numéro, nom, discipline, espèce, niveau, durée, statut, établissement, salle, zone, poste, localisation, commentaire) peuvent être dans n\'importe quel ordre et sous des intitulés variés (accents et casse ignorés) : les tableaux des différentes écoles n\'ont pas besoin d\'être harmonisés au préalable. Seuls le numéro et le nom sont obligatoires. Un atelier déjà existant (même établissement + même numéro) est mis à jour plutôt que dupliqué ; le reste des champs peut être corrigé ensuite dans la gestion des ateliers.';
+$string['import_description'] = 'Importe des données depuis un fichier CSV, Excel (XLSX) ou LibreOffice (ODS) ; pour un classeur, seule la première feuille est lue. Les colonnes peuvent être dans n\'importe quel ordre et sous des intitulés variés (accents et casse ignorés) : les tableaux des écoles n\'ont pas besoin d\'être harmonisés au préalable. Le détail des colonnes de chaque type est dans l\'aide du champ « Type d\'import ».';
 $string['import_fichier'] = 'Fichier CSV';
-$string['import_crees'] = '{$a} atelier(s) créé(s)';
-$string['import_mis_a_jour'] = '{$a} atelier(s) mis à jour';
 
 // Export (§12.3).
 $string['export_csv'] = 'Exporter (CSV)';
@@ -377,7 +375,7 @@ $string['parcours_ajouter_atelier'] = 'Ajouter un atelier';
 $string['ordre'] = 'Ordre';
 $string['echeance_optionnel'] = 'Échéance (optionnel)';
 $string['import_aucun_fichier'] = 'Aucun fichier reçu.';
-$string['import_ordre'] = 'Pour les rattachements ou la composition de parcours, importez d\'abord les ateliers : ces deux imports retrouvent chaque atelier par son numéro et son établissement.';
+$string['import_ordre'] = 'Importez d\'abord les fiches ateliers : les autres imports retrouvent chaque atelier par son numéro.';
 $string['import_type'] = 'Type d\'import';
 $string['import_type_rattachements'] = 'Rattachements (UC / année / cohorte)';
 $string['import_type_parcours'] = 'Composition de parcours';
@@ -409,7 +407,6 @@ $string['champ_url_ressource'] = 'Lien externe (optionnel si fichier fourni)';
 $string['champ_fichier_ressource'] = 'Fichier (optionnel si lien fourni)';
 $string['champ_ordre_affichage'] = 'Ordre d\'affichage';
 $string['ressource_lien_ou_fichier'] = 'Indiquez un lien ou un fichier.';
-$string['import_ligne_envcode'] = 'Ligne {$a} ignorée : établissement (envcode) inconnu.';
 $string['import_ligne_erreur'] = 'Ligne {$a->ligne} : {$a->erreur}';
 $string['import_ligne_atelier_introuvable'] = 'Ligne {$a->ligne} ignorée : atelier {$a->numero} ({$a->envcode}) introuvable — importez-le d\'abord.';
 
@@ -507,9 +504,6 @@ $string['champ_obligatoire'] = 'Obligatoire';
 $string['champ_echeance'] = 'Échéance';
 $string['champ_type'] = 'Type';
 $string['visibilite_etudiant'] = 'Visible par les étudiants';
-$string['import_rattachements_crees'] = '{$a} rattachement(s) créé(s)';
-$string['import_parcours_crees'] = '{$a->parcours} parcours créé(s), {$a->ateliers} atelier(s) ajouté(s) à un parcours';
-$string['import_envcode_defaut'] = 'Établissement (par défaut si absent du fichier)';
 $string['champ_cohorte_optionnel'] = 'Cohorte (optionnel, pour recommander directement à ses membres)';
 $string['stats_titre'] = 'Critères à retravailler';
 $string['stats_intro'] = 'Réponses des étudiants à la grille d\'auto-évaluation, critère par critère, les plus souvent déclarés « à reprendre » ou « à consolider » en premier (§7.1). Les lignes surlignées dépassent 50 %.';
@@ -520,3 +514,13 @@ $string['stats_critere'] = 'Critère';
 $string['stats_lien'] = 'Critères à retravailler';
 $string['filtre_annee_optionnel'] = 'Année d\'étude (optionnel)';
 $string['parcours_uc_verrouille'] = 'Ce parcours appartient à une activité SimHub d\'UC : son nom, son type et son cours se modifient depuis l\'activité.';
+$string['import_type_ateliers'] = 'Fiches ateliers';
+$string['import_type_localisation'] = 'Localisation (salle, zone, poste)';
+$string['import_type_ressources'] = 'Liens vers les ressources';
+$string['import_type_help'] = 'Ateliers : numéro et nom obligatoires ; un numéro déjà connu est mis à jour. Localisation : numéro, puis salle, zone, poste ou indication ; seules les colonnes présentes sont modifiées. Ressources : numéro, titre et adresse (URL), avec type et visibilité facultatifs ; une ressource de même titre est mise à jour. Rattachements : numéro, puis UC (identifiant ou nom abrégé du cours), année, cohorte, caractère obligatoire, niveau attendu. Parcours : nom du parcours, numéro, ordre, obligatoire (oui/non).';
+$string['import_lancer'] = 'Importer';
+$string['import_format_refuse'] = 'Format non reconnu : utilisez un fichier CSV, XLSX ou ODS.';
+$string['import_bilan_crees'] = '{$a} créé(s)';
+$string['import_bilan_majs'] = '{$a} mis à jour';
+$string['import_bilan_parcours'] = '{$a} parcours créé(s)';
+$string['import_ligne_ressource'] = 'Ligne {$a} : titre ou adresse (URL) manquant ou invalide.';

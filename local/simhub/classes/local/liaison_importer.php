@@ -27,7 +27,7 @@ namespace local_simhub\local;
 use local_simhub\persistent\atelier;
 use local_simhub\persistent\parcours;
 use local_simhub\record\rattachement;
-use local_simhub\record\parc_atelier;
+use local_simhub\persistent\ressource;
 
 /**
  * Import souple des rattachements pédagogiques et de la composition des parcours (§12.1),
@@ -67,7 +67,7 @@ class liaison_importer {
         }
 
         foreach ($lines as $lineno => $line) {
-            $data = self::map_row($line, $delimiter, $colmap);
+            $data = self::map_row($line, $delimiter, $colmap, $aliases);
 
             if (empty($data['numero'])) {
                 $result['erreurs'][] = get_string('import_ligne_numero', 'local_simhub', $lineno + 2);
@@ -75,7 +75,7 @@ class liaison_importer {
             }
 
             $envcode = $data['envcode'] ?: $defaultenvcode;
-            $atelier = atelier::get_record(['envcode' => $envcode, 'numero' => $data['numero']]);
+            $atelier = self::trouver_atelier($data['numero'], $envcode);
             if (!$atelier) {
                 $result['erreurs'][] = get_string(
                     'import_ligne_atelier_introuvable',
@@ -86,7 +86,7 @@ class liaison_importer {
             }
 
             rattachement::creer($atelier->get('id'), [
-                'courseid' => !empty($data['courseid']) ? (int) $data['courseid'] : null,
+                'courseid' => self::trouver_cours($data['courseid'] ?? ''),
                 'anneeetude' => self::parse_annee($data['anneeetude'] ?? ''),
                 'cohortid' => !empty($data['cohortid']) ? (int) $data['cohortid'] : null,
                 'caractere' => !empty($data['caractere']) && stripos($data['caractere'], 'obl') !== false
@@ -129,7 +129,7 @@ class liaison_importer {
         $parcoursids = [];
 
         foreach ($lines as $lineno => $line) {
-            $data = self::map_row($line, $delimiter, $colmap);
+            $data = self::map_row($line, $delimiter, $colmap, $aliases);
 
             if (empty($data['parcours']) || empty($data['numero'])) {
                 $result['erreurs'][] = get_string('import_ligne_parcours', 'local_simhub', $lineno + 2);
@@ -137,7 +137,7 @@ class liaison_importer {
             }
 
             $envcode = $data['envcode'] ?: $defaultenvcode;
-            $atelier = atelier::get_record(['envcode' => $envcode, 'numero' => $data['numero']]);
+            $atelier = self::trouver_atelier($data['numero'], $envcode);
             if (!$atelier) {
                 $result['erreurs'][] = get_string(
                     'import_ligne_atelier_introuvable',
@@ -147,9 +147,9 @@ class liaison_importer {
                 continue;
             }
 
-            $cachekey = $envcode . '|' . $data['parcours'];
+            $cachekey = $data['parcours'];
             if (!isset($parcoursids[$cachekey])) {
-                $existant = parcours::get_record(['envcode' => $envcode, 'nom' => $data['parcours']]);
+                $existant = parcours::get_record(['nom' => $data['parcours']]);
                 if ($existant) {
                     $parcoursids[$cachekey] = $existant->get('id');
                 } else {
@@ -164,16 +164,194 @@ class liaison_importer {
                 }
             }
 
-            parc_atelier::ajouter(
-                $parcoursids[$cachekey],
-                $atelier->get('id'),
+            parcours_helper::ajouter_atelier(
+                new parcours($parcoursids[$cachekey]),
+                (int) $atelier->get('id'),
                 !empty($data['ordre']) ? (int) $data['ordre'] : 0,
-                !empty($data['obligatoire']) && stripos((string) $data['obligatoire'], 'oui') !== false
+                self::est_vrai($data['obligatoire'] ?? ''),
+                null
             );
             $result['crees']++;
         }
 
         return $result;
+    }
+
+    /**
+     * Importe la localisation d'ateliers existants (§5.4, §12.1 « salles et zones ») : seuls
+     * les champs présents dans le fichier sont mis à jour.
+     *
+     * Colonnes reconnues : numero, salle, zone, codeposte (ou poste), indicationtextuelle
+     * (ou localisation, emplacement).
+     *
+     * @param string $content
+     * @param string $delimiter
+     * @param string $defaultenvcode
+     * @return array{majs:int,erreurs:string[]}
+     */
+    public static function importer_localisation(string $content, string $delimiter, string $defaultenvcode): array {
+        $aliases = [
+            'numero' => 'numero', 'atelier' => 'numero', 'envcode' => 'envcode', 'etablissement' => 'envcode',
+            'salle' => 'salle', 'local' => 'salle', 'zone' => 'zone', 'secteur' => 'zone',
+            'codeposte' => 'codeposte', 'poste' => 'codeposte', 'numeroposte' => 'codeposte',
+            'indicationtextuelle' => 'indicationtextuelle', 'localisation' => 'indicationtextuelle',
+            'emplacement' => 'indicationtextuelle',
+        ];
+        $result = ['majs' => 0, 'erreurs' => []];
+        [$colmap, $lines, $error] = self::parse_header($content, $delimiter, $aliases, ['numero']);
+        if ($error) {
+            $result['erreurs'][] = $error;
+            return $result;
+        }
+        foreach ($lines as $lineno => $line) {
+            $data = self::map_row($line, $delimiter, $colmap, $aliases);
+            $atelier = self::atelier_de_ligne($data, $defaultenvcode, $lineno, $result);
+            if (!$atelier) {
+                continue;
+            }
+            foreach (['salle', 'zone', 'codeposte', 'indicationtextuelle'] as $champ) {
+                if (in_array($champ, $colmap, true)) {
+                    $atelier->set($champ, $data[$champ] !== '' ? $data[$champ] : null);
+                }
+            }
+            $atelier->update();
+            $result['majs']++;
+        }
+        return $result;
+    }
+
+    /**
+     * Importe des liens vers des ressources d'ateliers existants (§12.1) : fiche méthode,
+     * vidéo, lien Moodle ou externe. Une ressource de même titre sur l'atelier est mise à jour.
+     *
+     * Colonnes reconnues : numero, titre, url (ou lien), type, visibilite (etudiant|interne),
+     * ordre.
+     *
+     * @param string $content
+     * @param string $delimiter
+     * @param string $defaultenvcode
+     * @return array{crees:int,majs:int,erreurs:string[]}
+     */
+    public static function importer_ressources(string $content, string $delimiter, string $defaultenvcode): array {
+        $aliases = [
+            'numero' => 'numero', 'atelier' => 'numero', 'envcode' => 'envcode', 'etablissement' => 'envcode',
+            'titre' => 'titre', 'nom' => 'titre', 'url' => 'url', 'lien' => 'url', 'adresse' => 'url',
+            'type' => 'type', 'visibilite' => 'visibilite', 'ordre' => 'ordre',
+        ];
+        $result = ['crees' => 0, 'majs' => 0, 'erreurs' => []];
+        [$colmap, $lines, $error] = self::parse_header($content, $delimiter, $aliases, ['numero', 'titre', 'url']);
+        if ($error) {
+            $result['erreurs'][] = $error;
+            return $result;
+        }
+        $types = ['fiche_methode', 'pdf_etudiant', 'video', 'consignes', 'criteres_reussite', 'erreurs_frequentes',
+            'liens_utiles', 'complementaire', ressource::TYPE_SOURCE_EDITABLE];
+        foreach ($lines as $lineno => $line) {
+            $data = self::map_row($line, $delimiter, $colmap, $aliases);
+            $atelier = self::atelier_de_ligne($data, $defaultenvcode, $lineno, $result);
+            if (!$atelier) {
+                continue;
+            }
+            $url = clean_param($data['url'], PARAM_URL);
+            if ($data['titre'] === '' || $url === '') {
+                $result['erreurs'][] = get_string('import_ligne_ressource', 'local_simhub', $lineno + 2);
+                continue;
+            }
+            $parforme = array_combine(array_map([atelier_importer::class, 'normalise_header'], $types), $types);
+            $type = $parforme[atelier_importer::normalise_header($data['type'] ?? '')] ?? 'liens_utiles';
+            $visibilite = stripos($data['visibilite'] ?? '', 'int') === 0 || $type === ressource::TYPE_SOURCE_EDITABLE
+                ? ressource::VISIBILITE_INTERNE : ressource::VISIBILITE_ETUDIANT;
+
+            $r = ressource::get_record(['atelierid' => $atelier->get('id'), 'titre' => $data['titre']]);
+            $nouvelle = !$r;
+            $r = $r ?: new ressource(0, (object) ['atelierid' => $atelier->get('id'), 'titre' => $data['titre']]);
+            $r->set('url', $url);
+            $r->set('type', $type);
+            $r->set('visibilite', $visibilite);
+            $r->set('ordre', (int) ($data['ordre'] ?? 0));
+            if ($nouvelle) {
+                $r->create();
+                $result['crees']++;
+            } else {
+                $r->update();
+                $result['majs']++;
+            }
+        }
+        return $result;
+    }
+
+    /**
+     * Interprète une case « obligatoire » : oui, o, x, 1, yes, obligatoire.
+     *
+     * @param string $valeur
+     * @return bool
+     */
+    private static function est_vrai(string $valeur): bool {
+        $oui = ['oui', 'o', 'x', '1', 'yes', 'y', 'obligatoire', 'vrai'];
+        return in_array(atelier_importer::normalise_header($valeur), $oui, true);
+    }
+
+    /**
+     * Atelier désigné par une ligne, ou null avec l'erreur ajoutée au résultat.
+     *
+     * @param array $data
+     * @param string $defaultenvcode
+     * @param int $lineno
+     * @param array $result
+     * @return atelier|null
+     */
+    private static function atelier_de_ligne(array $data, string $defaultenvcode, int $lineno, array &$result): ?atelier {
+        if (empty($data['numero'])) {
+            $result['erreurs'][] = get_string('import_ligne_numero', 'local_simhub', $lineno + 2);
+            return null;
+        }
+        $envcode = ($data['envcode'] ?? '') ?: $defaultenvcode;
+        $atelier = self::trouver_atelier($data['numero'], $envcode);
+        if (!$atelier) {
+            $result['erreurs'][] = get_string(
+                'import_ligne_atelier_introuvable',
+                'local_simhub',
+                (object) ['ligne' => $lineno + 2, 'numero' => $data['numero'], 'envcode' => $envcode]
+            );
+        }
+        return $atelier;
+    }
+
+    /**
+     * Atelier par son numéro. Le code établissement ne sert qu'à la traçabilité : s'il ne
+     * correspond pas, un numéro unique suffit.
+     *
+     * @param string $numero
+     * @param string $envcode
+     * @return atelier|null
+     */
+    public static function trouver_atelier(string $numero, string $envcode): ?atelier {
+        $atelier = atelier::get_record(['envcode' => $envcode, 'numero' => $numero]);
+        if ($atelier) {
+            return $atelier;
+        }
+        $candidats = atelier::get_records(['numero' => $numero]);
+        return count($candidats) === 1 ? reset($candidats) : null;
+    }
+
+    /**
+     * UC par identifiant ou nom abrégé du cours.
+     *
+     * @param string $valeur
+     * @return int|null
+     */
+    public static function trouver_cours(string $valeur): ?int {
+        global $DB;
+
+        $valeur = trim($valeur);
+        if ($valeur === '') {
+            return null;
+        }
+        if (ctype_digit($valeur) && $DB->record_exists('course', ['id' => (int) $valeur])) {
+            return (int) $valeur;
+        }
+        $id = $DB->get_field('course', 'id', ['shortname' => $valeur]);
+        return $id ? (int) $id : null;
     }
 
     /**
@@ -234,11 +412,13 @@ class liaison_importer {
      * @param string $line
      * @param string $delimiter
      * @param array $colmap
+     * @param array $aliases Colonnes connues, pour que chacune existe même absente du fichier.
      * @return array
      */
-    private static function map_row(string $line, string $delimiter, array $colmap): array {
+    private static function map_row(string $line, string $delimiter, array $colmap, array $aliases = []): array {
         $row = str_getcsv($line, $delimiter, '"', '');
-        $data = [];
+        // Toute colonne connue existe, vide si absente du fichier.
+        $data = array_fill_keys(array_values($aliases), '');
         foreach ($colmap as $index => $property) {
             $data[$property] = isset($row[$index]) ? trim($row[$index]) : '';
         }

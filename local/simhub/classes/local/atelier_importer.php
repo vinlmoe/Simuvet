@@ -46,7 +46,8 @@ class atelier_importer {
         'categorie' => 'categorie', 'category' => 'categorie', 'typeatelier' => 'categorie',
         'espece' => 'espece', 'especes' => 'espece',
         'niveau' => 'niveaudifficulte', 'niveaudedifficulte' => 'niveaudifficulte', 'difficulte' => 'niveaudifficulte',
-        'duree' => 'dureeindicative', 'dureeminutes' => 'dureeindicative', 'dureeindicative' => 'dureeindicative',
+        'duree' => 'dureeindicative', 'dureeminutes' => 'dureeindicative',
+        'dureemin' => 'dureeindicative', 'dureeindicative' => 'dureeindicative',
         'statut' => 'statut', 'etat' => 'statut',
         'envcode' => 'envcode', 'etablissement' => 'envcode', 'ecole' => 'envcode', 'env' => 'envcode',
         'salle' => 'salle', 'piece' => 'salle',
@@ -129,14 +130,8 @@ class atelier_importer {
                 continue;
             }
 
-            $envcode = $data['envcode'] ?? '';
-            if ($envcode === '') {
-                $envcode = $defaultenvcode;
-            }
-            if ($envcode === '') {
-                $result['erreurs'][] = get_string('import_ligne_envcode', 'local_simhub', $lineno + 2);
-                continue;
-            }
+            // Traçabilité seulement : le code de l'école peut rester vide.
+            $envcode = ($data['envcode'] ?? '') ?: $defaultenvcode;
 
             if (!empty($data['statut'])) {
                 $normalisedstatut = self::normalise_header($data['statut']);
@@ -147,7 +142,7 @@ class atelier_importer {
             }
 
             try {
-                $existing = atelier::get_record(['envcode' => $envcode, 'numero' => $data['numero']]);
+                $existing = liaison_importer::trouver_atelier($data['numero'], $envcode);
                 if ($existing) {
                     foreach ($data as $property => $value) {
                         if ($value !== '' && $existing->has_property($property)) {
