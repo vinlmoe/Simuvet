@@ -454,6 +454,27 @@ code établissement), et le statut `non_termine` d'une séance est désormais en
 type `PARAM_ALPHA` refusait le « _ »). Vérifié : 14 tests PHPUnit, 24 contrôles navigateur
 dont des téléchargements XLSX/ODS/CSV réels, non-régression des 28 pages précédentes.
 
+## Dernières corrections (septembre 2026)
+
+- **Achèvement d'activité** : règle « tous les ateliers requis de l'UC réalisés », utilisable
+  par l'achèvement de cours et les badges de cours.
+- **Critères à retravailler** (§7.1) : page `manage/ae_stats.php`, par atelier, depuis
+  l'activité d'UC (ses seuls étudiants) ou pour un profil transversal ; taux par atelier dans
+  la vue d'UC.
+- **Échéances dans la vue d'UC** (§8.1) : étudiants restants par atelier, échéance dépassée
+  ou proche signalée.
+- **Import** (§12.1) : XLSX et ODS en plus du CSV ; imports de la localisation (salle, zone,
+  poste) et des liens de ressources ; UC désignée par son nom abrégé.
+- **Performance** : état des ateliers calculé par lot (une requête pour tout un groupe
+  d'étudiants) pour les notes, le suivi, les exports et les tableaux de bord.
+- **Parcours d'UC protégés** : nom, type et cours non modifiables hors de l'activité ;
+  désinstallation de l'activité sans parcours orphelins.
+- **Formulaires Moodle** et **modules AMD** à la place du HTML et du JavaScript intégrés.
+- Bugs trouvés en route : modification de parcours impossible (code établissement vide
+  converti en NULL), atelier « non utilisé » impossible à enregistrer, clic sur le plan qui
+  n'enregistrait jamais le repère, import d'ateliers rejeté sans colonne « statut », code de
+  séance en minuscules refusé.
+
 ## Conformité aux règles Moodle (septembre 2026)
 
 | Contrôle | Résultat |
@@ -462,7 +483,10 @@ dont des téléchargements XLSX/ODS/CSV réels, non-régression des 28 pages pr�
 | En-tête GPL et bloc `@package` / `@copyright` / `@license` | Tous les fichiers PHP et templates |
 | Schéma (`admin/cli/check_database_schema.php`), installation neuve et mise à jour | « Database structure is ok » |
 | API Privacy : test de conformité du cœur (`privacy/tests/privacy/provider_test.php`) | Passe ; `core_userlist_provider` ajouté, champs du personnel déclarés |
-| PHPUnit `local_simhub` (confidentialité, lots 4 à 8) et `mod_simhub` (droits, notes, sauvegarde) | 14 tests, 61 assertions |
+| PHPUnit `local_simhub` (confidentialité, imports, lots 4 à 8) et `mod_simhub` (droits, notes, achèvement, sauvegarde, désinstallation) | 20 tests, 92 assertions, sur Moodle 5.0 et 4.5 |
+| Behat (`tests/behat`) : droits d'UC, avancement dans plusieurs UC, accueil étudiant et filtres | 4 scénarios, 50 étapes |
+| JavaScript en modules AMD compilés (`grunt amd`, ESLint) et `styles.css` (stylelint) | Aucune erreur |
+| Largeur téléphone (320 px) : accueil, fiche atelier, activité d'UC, ASV, parcours, auto-évaluation, signature | Aucun débordement |
 | Templates Mustache : exemple de contexte rendu par Moodle | Les deux templates |
 | Événements standard d'activité (`course_module_viewed`, `..._instance_list_viewed`) | Déclenchés |
 | Requêtes compatibles toutes bases (pas de `DISTINCT` sur une colonne texte) | Corrigé dans l'observateur |
@@ -472,13 +496,15 @@ Le détenteur du copyright indiqué (« Écoles nationales vétérinaires de Fra
 confirmer. Les tests se lancent avec `vendor/bin/phpunit --testsuite local_simhub_testsuite`
 et `--testsuite mod_simhub_testsuite` après `admin/tool/phpunit/cli/init.php`.
 
-Points de bonnes pratiques restant ouverts :
-- le JavaScript est intégré aux pages (QR code, signature, clic sur le plan) au lieu de
-  modules AMD (`amd/src`) ;
-- quelques formulaires sont écrits en HTML plutôt qu'avec `moodleform` (grille,
-  composition de parcours, validation ASV) ;
-- les classes Bootstrap 4 (`badge-warning`, `mr-2`...) restent acceptées par Moodle 5.0 ;
-  les équivalents Bootstrap 5 sont à ajouter là où ils manquent.
+Moodle 4.5 : testé en installant et en exécutant tout le code (scénario de droits, PHPUnit,
+test RGPD du cœur), mais sous PHP 8.4, faute de PHP 8.3 disponible dans l'environnement de
+test : la vérification de version de PHP de Moodle 4.5 a été levée pour ce seul essai. Un
+test sous PHP 8.1 à 8.3 reste à faire sur l'infrastructure EVE.
+
+Point de bonne pratique restant ouvert : quelques classes Bootstrap 4 (`badge-warning`,
+`mr-2`...) restent, encore acceptées par Moodle 5.0 ; les équivalents Bootstrap 5 ont été
+ajoutés sur les nouveaux écrans. Les formulaires de filtre en GET (liste ASV, tableau de
+bord, attestations) restent en HTML, comme dans le cœur de Moodle.
 
 ## Internationalisation
 
