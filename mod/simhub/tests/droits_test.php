@@ -275,4 +275,22 @@ final class droits_test extends \advanced_testcase {
             ->trigger();
         $this->assertEquals(COMPLETION_COMPLETE, $etat());
     }
+
+    /**
+     * La désinstallation supprime les parcours d'UC et leurs rattachements, pas le reste.
+     *
+     * @return void
+     */
+    public function test_desinstallation(): void {
+        global $CFG, $DB;
+        require_once($CFG->dirroot . '/mod/simhub/db/uninstall.php');
+        $transversal = new parcours(0, (object) ['nom' => 'Transversal', 'type' => 'recommande', 'envcode' => '']);
+        $transversal->create();
+
+        xmldb_simhub_uninstall();
+        $this->assertFalse($DB->record_exists_select('local_simhub_parcours', 'cmid > 0'));
+        $this->assertTrue($DB->record_exists('local_simhub_parcours', ['id' => $transversal->get('id')]));
+        $this->assertFalse($DB->record_exists('local_simhub_rattachement', ['courseid' => $this->uc['a']->id]));
+        $this->assertTrue($DB->record_exists('local_simhub_atelier', ['id' => $this->at[1]->get('id')]));
+    }
 }

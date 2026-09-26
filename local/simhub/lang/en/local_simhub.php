@@ -504,3 +504,5 @@ $string['stats_reponses'] = 'Answers';
 $string['stats_rubrique'] = 'Section';
 $string['stats_critere'] = 'Criterion';
 $string['stats_lien'] = 'Criteria to work on';
+$string['filtre_annee_optionnel'] = 'Study year (optional)';
+$string['parcours_uc_verrouille'] = 'This pathway belongs to a course unit SimHub activity: its name, type and course are edited from the activity.';

@@ -518,3 +518,5 @@ $string['stats_reponses'] = 'Réponses';
 $string['stats_rubrique'] = 'Rubrique';
 $string['stats_critere'] = 'Critère';
 $string['stats_lien'] = 'Critères à retravailler';
+$string['filtre_annee_optionnel'] = 'Année d\'étude (optionnel)';
+$string['parcours_uc_verrouille'] = 'Ce parcours appartient à une activité SimHub d\'UC : son nom, son type et son cours se modifient depuis l\'activité.';

@@ -121,7 +121,7 @@ function simhub_delete_instance($id) {
     $parcours = parcours::get_record(['id' => $simhub->parcoursid]);
     if ($parcours) {
         foreach ($parcours->get_ateliers() as $lien) {
-            \local_simhub\local\parcours_helper::retirer_atelier($parcours, (int) $lien->atelierid);
+            \local_simhub\local\parcours_helper::retirer_atelier($parcours, (int) $lien->atelierid, false);
         }
         $parcours->delete();
     }

@@ -65,7 +65,8 @@ if ($submitted) {
     $espece = optional_param('espece', '', PARAM_TEXT);
     $niveau = required_param('niveau', PARAM_ALPHANUM);
     $ucid = optional_param('ucid', 0, PARAM_INT);
-    $envcode = optional_param('envcode', get_config('local_simhub', 'envcode') ?: '', PARAM_ALPHANUMEXT);
+    // Traçabilité seulement : le code de l'école est conservé, ou pris dans les réglages.
+    $envcode = $id ? (string) $acte->get('envcode') : (get_config('local_simhub', 'envcode') ?: '');
     $actif = optional_param('actif', 0, PARAM_BOOL);
 
     $doublon = $DB->get_field_select(
@@ -117,7 +118,6 @@ $champs = [
     'code' => [get_string('asv_champ_code', 'local_simhub'), 'text', true],
     'nom' => [get_string('champ_nomcourt', 'local_simhub'), 'text', true],
     'espece' => [get_string('champ_espece', 'local_simhub'), 'text', false],
-    'envcode' => [get_string('champ_envcode', 'local_simhub'), 'text', false],
 ];
 
 foreach ($champs as $name => [$label, $type, $required]) {
@@ -125,7 +125,7 @@ foreach ($champs as $name => [$label, $type, $required]) {
     echo html_writer::tag('label', $label, ['for' => 'id_' . $name]);
     $attrs = [
         'type' => $type, 'name' => $name, 'id' => 'id_' . $name, 'class' => 'form-control d-inline-block w-auto ml-2',
-        'value' => $id ? s($acte->get($name)) : ($name === 'envcode' ? s(get_config('local_simhub', 'envcode') ?: '') : ''),
+        'value' => $id ? s($acte->get($name)) : '',
     ];
     if ($required) {
         $attrs['required'] = 'required';

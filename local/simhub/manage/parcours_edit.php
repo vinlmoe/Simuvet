@@ -44,7 +44,11 @@ if ($id) {
 
 $parcours = $id ? new parcours($id) : new parcours();
 
-$form = new parcours_form();
+$estuc = $id && (int) $parcours->get('cmid') > 0;
+$form = new parcours_form(null, ['uc' => $estuc ? [
+    'nom' => $parcours->get('nom'),
+    'cours' => $DB->get_field('course', 'fullname', ['id' => $parcours->get('courseid')]) ?: '',
+] : null]);
 $form->set_data($parcours->to_record());
 
 if ($form->is_cancelled()) {
@@ -53,11 +57,15 @@ if ($form->is_cancelled()) {
     $isnew = empty($data->id);
 
     foreach ((array) $data as $key => $value) {
-        if ($key === 'id' || $key === 'submitbutton') {
+        if (
+            $key === 'id' || $key === 'submitbutton' || $key === 'cmid'
+                || ($estuc && in_array($key, ['nom', 'type', 'courseid'], true))
+        ) {
             continue;
         }
         if ($parcours->has_property($key)) {
-            $parcours->set($key, $value === '' ? null : $value);
+            // Le code établissement n'accepte pas NULL : une valeur vide reste vide.
+            $parcours->set($key, $value === '' && $key !== 'envcode' ? null : $value);
         }
     }
 

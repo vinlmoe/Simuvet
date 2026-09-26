@@ -43,10 +43,19 @@ class parcours_form extends \moodleform {
      */
     protected function definition() {
         $mform = $this->_form;
+        // Parcours d'une activité d'UC : nom, type et cours sont ceux de l'activité, affichés
+        // sans être modifiables.
+        $uc = $this->_customdata['uc'] ?? null;
 
-        $mform->addElement('text', 'nom', get_string('filtre_parcours', 'local_simhub'), ['size' => 60]);
-        $mform->setType('nom', PARAM_TEXT);
-        $mform->addRule('nom', null, 'required', null, 'client');
+        if ($uc) {
+            $mform->addElement('static', 'infouc', '', get_string('parcours_uc_verrouille', 'local_simhub'));
+            $mform->addElement('static', 'nomuc', get_string('filtre_parcours', 'local_simhub'), s($uc['nom']));
+            $mform->addElement('static', 'coursuc', get_string('col_uc', 'local_simhub'), s($uc['cours']));
+        } else {
+            $mform->addElement('text', 'nom', get_string('filtre_parcours', 'local_simhub'), ['size' => 60]);
+            $mform->setType('nom', PARAM_TEXT);
+            $mform->addRule('nom', null, 'required', null, 'client');
+        }
 
         $mform->addElement('textarea', 'description', get_string('champ_descriptioncourte', 'local_simhub'));
         $mform->setType('description', PARAM_TEXT);
@@ -55,7 +64,9 @@ class parcours_form extends \moodleform {
         foreach (['recommande', 'obligatoire', 'lie_uc', 'lie_annee', 'certifiant', 'asv'] as $type) {
             $types[$type] = get_string('parcours_type_' . $type, 'local_simhub');
         }
-        $mform->addElement('select', 'type', get_string('type', 'local_simhub'), $types);
+        if (!$uc) {
+            $mform->addElement('select', 'type', get_string('type', 'local_simhub'), $types);
+        }
 
         global $DB;
         $cours = [0 => get_string('aucune_uc', 'local_simhub')];
@@ -63,13 +74,15 @@ class parcours_form extends \moodleform {
         foreach ($listecours as $cid => $nom) {
             $cours[$cid] = format_string($nom);
         }
-        $mform->addElement('autocomplete', 'courseid', get_string('champ_uc_optionnel', 'local_simhub'), $cours);
-        $mform->setType('courseid', PARAM_INT);
+        if (!$uc) {
+            $mform->addElement('autocomplete', 'courseid', get_string('champ_uc_optionnel', 'local_simhub'), $cours);
+            $mform->setType('courseid', PARAM_INT);
+        }
 
         $mform->addElement(
             'select',
             'anneeetude',
-            get_string('filtre_annee', 'local_simhub') . ' (optionnel)',
+            get_string('filtre_annee_optionnel', 'local_simhub'),
             annee_resolver::get_options()
         );
         $mform->setType('anneeetude', PARAM_INT);

@@ -274,9 +274,10 @@ class parcours_helper {
      *
      * @param parcours $parcours
      * @param int $atelierid
+     * @param bool $signaler Faux à la suppression de l'activité ou du plugin.
      * @return void
      */
-    public static function retirer_atelier(parcours $parcours, int $atelierid): void {
+    public static function retirer_atelier(parcours $parcours, int $atelierid, bool $signaler = true): void {
         global $DB;
 
         \local_simhub\record\parc_atelier::retirer($parcours->get('id'), $atelierid);
@@ -293,7 +294,9 @@ class parcours_helper {
                 $DB->delete_records('local_simhub_rattachement', ['atelierid' => $atelierid, 'courseid' => $courseid]);
             }
         }
-        self::signaler_modification($parcours);
+        if ($signaler) {
+            self::signaler_modification($parcours);
+        }
     }
 
     /**

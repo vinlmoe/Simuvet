@@ -1,5 +1,5 @@
 <?php
-// This file is part of Moodle - http://moodle.org/
+// This file is part of Moodle - https://moodle.org/
 //
 // Moodle is free software: you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -15,21 +15,30 @@
 // along with Moodle.  If not, see <https://www.gnu.org/licenses/>.
 
 /**
- * Métadonnées du plugin.
+ * Désinstallation de l'activité.
  *
- * @package    local_simhub
+ * @package    mod_simhub
  * @copyright  2026 Écoles nationales vétérinaires de France (ENVF)
  * @license    https://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
-defined('MOODLE_INTERNAL') || die();
+/**
+ * Supprime les parcours d'UC créés par l'activité et les rattachements qui en découlent ;
+ * les ateliers, séances et parcours transversaux de SimHub restent intacts.
+ *
+ * @return bool
+ */
+function xmldb_simhub_uninstall() {
+    global $DB;
 
-$plugin->component = 'local_simhub';
-$plugin->version   = 2026092903;      // YYYYMMDDXX.
-$plugin->requires  = 2023100900;      // Moodle 4.3+ (LTS visée, à ajuster selon la version EVE cible).
-$plugin->maturity  = MATURITY_ALPHA;  // V1 en construction.
-$plugin->release   = '0.2.0-dev';
-
-// Dépendances éventuelles (aucune obligatoire en V1 ; le module cohort
-// natif et le carnet de notes natif suffisent).
-$plugin->dependencies = [];
+    if (!$DB->get_manager()->table_exists('local_simhub_parcours')) {
+        return true;
+    }
+    foreach (\local_simhub\persistent\parcours::get_records_select('cmid > 0') as $parcours) {
+        foreach ($parcours->get_ateliers() as $lien) {
+            \local_simhub\local\parcours_helper::retirer_atelier($parcours, (int) $lien->atelierid, false);
+        }
+        $parcours->delete();
+    }
+    return true;
+}

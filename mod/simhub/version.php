@@ -25,7 +25,7 @@
 defined('MOODLE_INTERNAL') || die();
 
 $plugin->component = 'mod_simhub';
-$plugin->version   = 2026092902;
+$plugin->version   = 2026092903;
 $plugin->requires  = 2023100900;
 $plugin->maturity  = MATURITY_ALPHA;
 $plugin->release   = '0.1.0-dev';
