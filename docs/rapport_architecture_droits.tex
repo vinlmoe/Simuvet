@@ -23,7 +23,7 @@
 \setlist{nosep,leftmargin=1.5em}
 
 \title{\textbf{SimHub}\\[0.3em]\large Gestion des droits par contexte Moodle et activité de cours\\ Audit de conformité au cahier des charges V0}
-\author{Document de travail soumis à validation}
+\author{Version 2 -- décisions du 26 septembre intégrées}
 \date{26 septembre 2026}
 
 \sloppy
@@ -41,13 +41,19 @@
   \item \textbf{Proposition (option 2 retenue).} Deux niveaux de contexte existants de
   Moodle, sans créer de niveau de contexte propre :
   \begin{enumerate}
-    \item une \textbf{catégorie de cours par établissement} porte le référentiel
-    transversal (ateliers, salle, ASV) : les rôles gestionnaire de salle et administrateur
-    fonctionnel y sont attribués localement, par délégation, sans compte administrateur ;
+    \item une \textbf{catégorie de cours SimHub} (une seule : chaque école a son propre
+    Moodle) porte le référentiel transversal (ateliers, salle, ASV) : les rôles gestionnaire
+    de salle et administrateur fonctionnel y sont attribués localement, par délégation, sans
+    compte administrateur ;
     \item une \textbf{activité Moodle \code{mod\_simhub}} que le responsable d'UC ajoute
     lui-même dans son cours : les droits enseignant découlent automatiquement de
-    l'inscription au cours, comme pour un devoir ou un test.
+    l'inscription au cours, comme pour un devoir ou un test. Un enseignant n'a de pouvoir
+    que sur les UC où il est inscrit comme enseignant, et en gagne sur une autre UC dès
+    qu'il y est ajouté.
   \end{enumerate}
+  \item \textbf{L'étudiant ne choisit jamais d'UC.} Il scanne le QR code de l'atelier et le
+  réalise ; toutes les UC et tous les parcours qui contiennent cet atelier se mettent à jour
+  seuls. C'est déjà le comportement du code actuel, et l'architecture le conserve.
   \item \textbf{Conformité.} Le socle V1 est largement couvert. Écarts principaux : droits
   enseignant (ci-dessus), carnet de notes et groupes Moodle non utilisés, filtres UC /
   parcours / statut personnel non exposés à l'étudiant, champ « catégorie » absent,
@@ -83,8 +89,8 @@ défauts :
 \toprule
 \textbf{Composant} & \textbf{Contexte des droits} & \textbf{Périmètre} \\
 \midrule
-\code{local\_simhub} (existant) & Catégorie de cours de l'établissement (réglage
-\code{categoryid} par \code{envcode}) & Fiches ateliers, statuts, ressources, QR, plan,
+\code{local\_simhub} (existant) & Catégorie de cours SimHub (réglage
+\code{categoryid} unique) & Fiches ateliers, statuts, ressources, QR, plan,
 import/export, grilles d'auto-évaluation, référentiel et pilotage ASV, accueil étudiant,
 séances. \\
 \addlinespace
@@ -103,6 +109,29 @@ Le lien entre les deux existe déjà en base : \code{local\_simhub\_rattachement
 ne crée pas de nouveau référentiel : elle \emph{filtre} les données existantes sur son
 cours. Un atelier reste unique et partagé entre toutes les UC (§6 « objet central »).
 
+\subsection{Une séance d'atelier, plusieurs UC mises à jour}
+
+La séance appartient à l'étudiant et à l'atelier, pas à une UC. L'étudiant scanne le QR
+code, réalise l'atelier et s'auto-évalue, sans avoir à passer par le cours de l'UC. L'état
+d'un atelier pour un étudiant est calculé à partir de ses seules séances sur cet atelier
+(\code{parcours\_helper.php}, ligne 39), quels que soient l'UC ou le parcours enregistrés
+sur la séance. Chaque activité \code{mod\_simhub} relit donc cet état pour les ateliers de
+son UC et recalcule l'avancement et la note de ses inscrits.
+
+\begin{center}
+\begin{tabular}{l}
+QR code de l'atelier $\rightarrow$ séance (étudiant, atelier) $\rightarrow$
+\begin{tabular}[t]{@{}l@{}}UC 1 : avancement, note\\ UC 2 : avancement, note\\ parcours ASV,
+etc.\end{tabular}
+\end{tabular}
+\end{center}
+
+\noindent Les champs \code{session.courseid} et \code{session.parcoursid} restent des
+indications de contexte facultatives, sans effet sur le calcul. À préserver :
+\code{grade\_update()} doit être déclenché pour \emph{chaque} activité dont l'UC contient
+l'atelier, lorsqu'une séance se termine ou est validée (observateur de l'événement
+\code{session\_completed}).
+
 \subsection{Profils du §11 et attribution des droits}
 
 \begin{center}
@@ -119,15 +148,14 @@ lui-même l'activité (\code{moodle/course:manageactivities}). \\
 Gestionnaire de salle & Rôle SimHub attribué \emph{dans la catégorie} & L'administrateur
 fonctionnel. \\
 Administrateur fonctionnel & Rôle SimHub attribué dans la catégorie, avec
-\code{moodle/role:assign} limité à celle-ci & Un administrateur Moodle, une seule fois par
-établissement. \\
+\code{moodle/role:assign} limité à celle-ci & Un administrateur Moodle, une seule fois. \\
 Validateur externe ASV & Aucun compte & Lien ou QR code à jeton. \\
 \bottomrule
 \end{tabularx}
 \end{center}
 
 \noindent\textbf{Réponse à la question initiale :} seule la désignation de
-l'administrateur fonctionnel de chaque école passe encore par un compte administrateur
+l'administrateur fonctionnel passe encore par un compte administrateur
 Moodle. Tout le reste est délégué : les enseignants par les inscriptions aux cours, les
 gestionnaires de salle par l'administrateur fonctionnel dans sa catégorie.
 
@@ -161,7 +189,7 @@ catégorie pour les gestionnaires et l'administrateur fonctionnel (vue transvers
 \subsection{Ce que l'activité apporte en plus}
 \begin{itemize}
   \item \textbf{Carnet de notes} (§10, §3.1) : \code{grade\_update()} publie l'avancement du
-  parcours de l'UC (en \%, ou validé/non validé) dans le carnet du cours.
+  parcours de l'UC en pourcentage d'avancement (0 à 100) dans le carnet du cours.
   \item \textbf{Achèvement d'activité} : réutilisable par l'achèvement de cours et les badges
   de cours Moodle, sans code de badge spécifique.
   \item \textbf{Groupes} (§10) : le mode de groupe standard de l'activité permet à un
@@ -172,7 +200,7 @@ catégorie pour les gestionnaires et l'administrateur fonctionnel (vue transvers
 
 \subsection{Migration}
 \begin{enumerate}
-  \item Réglage \code{categoryid} par établissement ; un utilitaire
+  \item Réglage \code{categoryid} unique ; un utilitaire
   \code{local\_simhub\textbackslash local\textbackslash contexte::racine()} remplace les 51
   appels à \code{context\_system::instance()}.
   \item Les rôles SimHub deviennent attribuables au niveau catégorie
@@ -186,20 +214,31 @@ catégorie pour les gestionnaires et l'administrateur fonctionnel (vue transvers
   (\code{simhub\_add\_instance}, \code{supports}, notes), \code{view.php}, sauvegarde.
 \end{enumerate}
 
-\subsection{Points à valider}
-\begin{enumerate}
-  \item \textbf{Une catégorie par établissement} (une par \code{envcode}), ou une catégorie
-  commune aux quatre ENV ?
-  \item Un enseignant peut-il valider une séance réalisée \emph{hors} de son UC par un
-  étudiant de son cours ? (proposition : oui, si l'atelier est rattaché à son UC)
-  \item Le responsable d'UC peut-il éditer la \textbf{grille d'auto-évaluation} d'un atelier
-  rattaché à son UC ? Le §6.2 dit « enseignants ou gestionnaires autorisés » ; aujourd'hui
-  seul le gestionnaire de salle le peut. Risque : une grille partagée modifiée par une UC
-  pour toutes les autres.
-  \item Note publiée au carnet : pourcentage d'avancement, ou simple validé / non validé ?
-  \item Validation ASV en simulation : réservée aux encadrants de cours, ou aussi à des
-  formateurs désignés au niveau catégorie ?
-\end{enumerate}
+\subsection{Décisions validées}
+\begin{center}
+\begin{tabularx}{\textwidth}{>{\raggedright}p{5.2cm}X}
+\toprule
+\textbf{Question} & \textbf{Décision et conséquence} \\
+\midrule
+Découpage par établissement & Aucun : chaque école a son propre Moodle. Une seule
+catégorie SimHub. \code{envcode} ne sert plus qu'à la \textbf{traçabilité} (origine des
+données dans les exports, imports et PDF), jamais au filtrage ni aux droits. \\
+\addlinespace
+Portée des droits d'un enseignant & Uniquement les UC où il est inscrit comme enseignant.
+Il valide les séances d'un étudiant inscrit à son UC portant sur un atelier rattaché à son
+UC, où que la séance ait été lancée. Ajouté à une autre UC, il y obtient les mêmes droits. \\
+\addlinespace
+Grille d'auto-évaluation par le responsable d'UC & Oui, pour les ateliers rattachés à son
+UC. La grille étant partagée par toutes les UC, chaque modification est tracée
+(auteur, date) et visible sur la fiche atelier. \\
+\addlinespace
+Note au carnet & Pourcentage d'avancement du parcours de l'UC. \\
+\addlinespace
+Validation ASV en simulation & Les deux : les enseignants dans leur cours \emph{et} des
+formateurs désignés au niveau de la catégorie SimHub. \\
+\bottomrule
+\end{tabularx}
+\end{center}
 
 \section{Audit de conformité au cahier des charges}
 
@@ -214,8 +253,10 @@ partir du seul README. Légende : \OK, \PART, \KO.
 \bottomrule\endfoot
 4 & Moodle comme socle (rôles, cohortes, groupes, UC) & \PART & Cohortes et cours utilisés ;
 rôles détournés au niveau système ; groupes jamais utilisés. \\
-4 & Paramétrable ENVF & \OK & \code{envcode} sur ateliers, parcours, actes ASV ; logo et nom
-d'établissement. \\
+4 & Paramétrable ENVF & \OK & Chaque école a son Moodle : référentiels, logo et nom
+propres. \code{envcode} conservé pour la seule traçabilité. \\
+7 & Scan sans passer par l'UC & \OK & L'état d'un atelier ne dépend que des séances de
+l'étudiant sur cet atelier ; toutes les UC et tous les parcours en profitent. \\
 4 & Mobile d'abord & \PART & Cartes et grille verticale prévues ; pas de test sur écran de
 téléphone documenté. \\
 5.1 & Accueil personnalisé (7 sections) & \OK & Les sept sections sont présentes
@@ -288,11 +329,11 @@ instance réelle », alors que le README documente des essais sur Moodle~4.5 et~
 \toprule
 \textbf{N°} & \textbf{Lot} & \textbf{Phase} & \textbf{Dépend de} \\
 \midrule
-1 & Contexte catégorie : réglage, utilitaire de contexte, rôles attribuables en catégorie &
-V1 & Validation point 1 \\
+1 & Contexte catégorie : réglage, utilitaire de contexte, rôles attribuables en catégorie ;
+\code{envcode} retiré des filtres & V1 & -- \\
 2 & Activité \code{mod\_simhub} : ajout au cours, parcours et rattachements de l'UC, suivi des
 inscrits & V1 & Lot 1 \\
-3 & Carnet de notes et achèvement de l'activité & V1 & Lot 2, point 4 \\
+3 & Carnet de notes (\% d'avancement) et achèvement, mis à jour à chaque séance & V1 & Lot 2 \\
 4 & Filtres UC, parcours et statut personnel sur l'accueil ; champ catégorie & V1 & -- \\
 5 & Signalement des séances trop courtes (durée minimale paramétrable) & V1+ & -- \\
 6 & Export XLSX via \code{dataformat} ; exports par UC et par cohorte & V1 & -- \\
