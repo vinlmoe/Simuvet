@@ -1,0 +1,93 @@
+/* SimHub : styles chargés par Moodle sur toutes les pages. Préfixe local-simhub. */
+
+.local-simhub-nav {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    align-items: center;
+    padding: 8px 0;
+    border-bottom: 1px solid rgba(0, 0, 0, .1);
+}
+
+/* Plan de salle et repère d'atelier (§5.4). */
+.local-simhub-plan {
+    position: relative;
+    display: inline-block;
+    max-width: 100%;
+}
+.local-simhub-plan img {
+    display: block;
+    max-width: 100%;
+}
+.local-simhub-plan-editable {
+    cursor: crosshair;
+}
+.local-simhub-plan-marker {
+    position: absolute;
+    width: 16px;
+    height: 16px;
+    border-radius: 50%;
+    background: #d9534f;
+    border: 2px solid #fff;
+    transform: translate(-50%, -50%);
+    pointer-events: none;
+}
+
+/* Signature au doigt (§9.3) : la zone suit la largeur d'un téléphone. */
+.local-simhub-signature {
+    display: block;
+    width: 100%;
+    max-width: 400px;
+    height: auto;
+    border: 1px solid #ccc;
+    touch-action: none;
+    background: #fff;
+}
+
+/* QR code d'atelier (§7). */
+.local-simhub-qr-legende {
+    text-align: center;
+    font-weight: bold;
+}
+
+@media print {
+    body * {
+        visibility: hidden;
+    }
+    #local-simhub-qr-bloc,
+    #local-simhub-qr-bloc * {
+        visibility: visible;
+    }
+    #local-simhub-qr-bloc {
+        position: absolute;
+        top: 0;
+        left: 0;
+    }
+}
+
+/* Tableaux de bord (§12.2). */
+.local-simhub-tuile {
+    display: inline-block;
+    min-width: 150px;
+    padding: 12px;
+    margin: 0 8px 8px 0;
+    border-radius: 6px;
+    text-align: center;
+}
+.local-simhub-tuile-valeur {
+    font-size: 1.8rem;
+    font-weight: bold;
+}
+.local-simhub-tuile-libelle {
+    font-size: .85rem;
+}
+.local-simhub-barre {
+    background: #e9ecef;
+    border-radius: 3px;
+    margin-bottom: 2px;
+}
+.local-simhub-barre-remplie {
+    height: 6px;
+    background: #28a745;
+    border-radius: 3px;
+}

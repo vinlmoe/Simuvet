@@ -1,4 +1,26 @@
 <?php
+// This file is part of Moodle - https://moodle.org/
+//
+// Moodle is free software: you can redistribute it and/or modify
+// it under the terms of the GNU General Public License as published by
+// the Free Software Foundation, either version 3 of the License, or
+// (at your option) any later version.
+//
+// Moodle is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU General Public License for more details.
+//
+// You should have received a copy of the GNU General Public License
+// along with Moodle.  If not, see <https://www.gnu.org/licenses/>.
+
+/**
+ * Formulaire de création/modification d'une fiche atelier (§6).
+ *
+ * @package    local_simhub
+ * @copyright  2026 Écoles nationales vétérinaires de France (ENVF)
+ * @license    https://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
+ */
 
 namespace local_simhub\form;
 
@@ -15,7 +37,11 @@ use local_simhub\persistent\atelier;
  * classes\record\indispo : ce formulaire ne porte que les champs propres à la fiche.
  */
 class atelier_form extends \moodleform {
-
+    /**
+     * Définition du formulaire.
+     *
+     * @return void
+     */
     protected function definition() {
         $mform = $this->_form;
 
@@ -32,6 +58,9 @@ class atelier_form extends \moodleform {
 
         $mform->addElement('textarea', 'descriptioncourte', get_string('champ_descriptioncourte', 'local_simhub'));
         $mform->setType('descriptioncourte', PARAM_TEXT);
+
+        $mform->addElement('text', 'categorie', get_string('champ_categorie', 'local_simhub'));
+        $mform->setType('categorie', PARAM_TEXT);
 
         $mform->addElement('text', 'discipline', get_string('champ_discipline', 'local_simhub'));
         $mform->setType('discipline', PARAM_TEXT);
@@ -61,13 +90,17 @@ class atelier_form extends \moodleform {
         $mform->addElement('textarea', 'indispo_motif', get_string('indispo_motif', 'local_simhub'), ['rows' => 2]);
         $mform->setType('indispo_motif', PARAM_TEXT);
         $mform->hideIf('indispo_motif', 'statut', 'neq', atelier::STATUT_INDISPONIBLE);
-        $mform->addElement('date_selector', 'indispo_echeance', get_string('indispo_echeance', 'local_simhub'),
-            ['optional' => true]);
+        $mform->addElement(
+            'date_selector',
+            'indispo_echeance',
+            get_string('indispo_echeance', 'local_simhub'),
+            ['optional' => true]
+        );
         $mform->hideIf('indispo_echeance', 'statut', 'neq', atelier::STATUT_INDISPONIBLE);
 
-        $mform->addElement('text', 'envcode', get_string('champ_envcode', 'local_simhub'));
+        // Chaque école a son propre Moodle : le code établissement ne sert qu'à la traçabilité.
+        $mform->addElement('hidden', 'envcode');
         $mform->setType('envcode', PARAM_ALPHANUMEXT);
-        $mform->addRule('envcode', null, 'required', null, 'client');
         $mform->setDefault('envcode', get_config('local_simhub', 'envcode') ?: '');
 
         $mform->addElement('header', 'localisation', get_string('champ_salle', 'local_simhub'));
@@ -124,9 +157,11 @@ class atelier_form extends \moodleform {
         if (($data['statut'] ?? '') === atelier::STATUT_INDISPONIBLE && trim($data['indispo_motif'] ?? '') === '') {
             $errors['indispo_motif'] = get_string('indispo_motif_requis', 'local_simhub');
         }
-        $doublon = $DB->record_exists_select('local_simhub_atelier',
+        $doublon = $DB->record_exists_select(
+            'local_simhub_atelier',
             'envcode = :envcode AND numero = :numero AND id <> :id',
-            ['envcode' => $data['envcode'], 'numero' => $data['numero'], 'id' => (int) ($data['id'] ?? 0)]);
+            ['envcode' => $data['envcode'], 'numero' => $data['numero'], 'id' => (int) ($data['id'] ?? 0)]
+        );
         if ($doublon) {
             $errors['numero'] = get_string('numero_existe', 'local_simhub');
         }

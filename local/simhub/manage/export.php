@@ -1,108 +1,88 @@
 <?php
-// Exports CSV de base (§12.3) : liste des ateliers, ou suivi de progression d'un parcours.
-// Reste volontairement simple (CSV natif, pas de XLSX) : un tableur ouvre un CSV sans
-// dépendance supplémentaire, et l'export sert surtout d'échange ponctuel entre équipes.
+// This file is part of Moodle - https://moodle.org/
+//
+// Moodle is free software: you can redistribute it and/or modify
+// it under the terms of the GNU General Public License as published by
+// the Free Software Foundation, either version 3 of the License, or
+// (at your option) any later version.
+//
+// Moodle is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU General Public License for more details.
+//
+// You should have received a copy of the GNU General Public License
+// along with Moodle.  If not, see <https://www.gnu.org/licenses/>.
+
+/**
+ * Exports CSV de base (§12.3) : liste des ateliers, ou suivi de progression d'un parcours.
+ * Reste volontairement simple (CSV natif, pas de XLSX) : un tableur ouvre un CSV sans
+ * dépendance supplémentaire, et l'export sert surtout d'échange ponctuel entre équipes.
+ *
+ * @package    local_simhub
+ * @copyright  2026 Écoles nationales vétérinaires de France (ENVF)
+ * @license    https://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
+ */
 
 require(__DIR__ . '/../../../config.php');
 
+use local_simhub\local\droits;
+use local_simhub\local\exporteur;
 use local_simhub\persistent\atelier;
 use local_simhub\persistent\parcours;
-use local_simhub\persistent\session;
 
 require_login();
 
-$context = context_system::instance();
+$context = \local_simhub\local\contexte::racine();
 
 $type = required_param('type', PARAM_ALPHA);
-
-/**
- * Écrit un tableau de lignes en CSV directement vers la sortie, puis termine la requête.
- *
- * @param string $filename
- * @param array $rows Première ligne = en-têtes.
- * @return void
- */
-function local_simhub_export_csv(string $filename, array $rows): void {
-    header('Content-Type: text/csv; charset=UTF-8');
-    header('Content-Disposition: attachment; filename="' . $filename . '"');
-
-    // BOM UTF-8 : Excel (souvent utilisé par les ENV, §12.1) n'affiche correctement les
-    // accents sans ticket que si le fichier commence par cette marque.
-    echo "\xEF\xBB\xBF";
-
-    $out = fopen('php://output', 'w');
-    foreach ($rows as $row) {
-        fputcsv($out, $row, ';', '"', '');
-    }
-    fclose($out);
-    exit;
+$format = optional_param('format', 'csv', PARAM_ALPHA);
+if (!array_key_exists($format, exporteur::FORMATS)) {
+    $format = 'csv';
 }
+$refus = fn(string $cap) => new required_capability_exception($context, $cap, 'nopermissions', '');
 
 if ($type === 'ateliers') {
     require_capability('local/simhub:exportsuivi', $context);
-
-    $envcode = optional_param('envcode', get_config('local_simhub', 'envcode') ?: '', PARAM_ALPHANUMEXT);
-    $params = $envcode !== '' ? ['envcode' => $envcode] : [];
-    $ateliers = atelier::get_records($params, 'nomcourt');
-
-    $rows = [[
-        'numero', 'nomcourt', 'discipline', 'espece', 'niveaudifficulte', 'dureeindicative',
-        'statut', 'envcode', 'salle', 'zone', 'codeposte',
-    ]];
-    foreach ($ateliers as $a) {
-        $rows[] = [
-            $a->get('numero'), $a->get('nomcourt'), $a->get('discipline'), $a->get('espece'),
-            $a->get('niveaudifficulte'), $a->get('dureeindicative'), $a->get('statut'), $a->get('envcode'),
-            $a->get('salle'), $a->get('zone'), $a->get('codeposte'),
-        ];
+    $entetes = ['numero', 'nomcourt', 'categorie', 'discipline', 'espece', 'niveaudifficulte', 'dureeindicative',
+        'statut', 'envcode', 'salle', 'zone', 'codeposte'];
+    $lignes = [];
+    foreach (atelier::get_records([], 'nomcourt') as $a) {
+        $lignes[] = array_map(fn($champ) => $a->get($champ), $entetes);
     }
-
-    local_simhub_export_csv('simhub_ateliers.csv', $rows);
+    exporteur::envoyer('simhub_ateliers', $format, $entetes, $lignes);
 } else if ($type === 'parcours') {
-    require_capability('local/simhub:viewprogression', $context);
-
-    $parcoursid = required_param('parcoursid', PARAM_INT);
-    $parcours = new parcours($parcoursid);
-
-    global $DB;
-    $composition = $parcours->get_ateliers();
-    $atelierids = array_column($composition, 'atelierid');
-
-    $users = \local_simhub\local\parcours_helper::etudiants($parcours);
-
-    $head = ['etudiant'];
-    $ateliernoms = [];
-    foreach ($atelierids as $aid) {
-        $a = new atelier($aid);
-        $ateliernoms[$aid] = $a->get('nomcourt');
-        $head[] = $a->get('nomcourt');
+    $parcours = new parcours(required_param('parcoursid', PARAM_INT));
+    if (!droits::peut_suivre_parcours($parcours)) {
+        throw $refus('local/simhub:viewprogression');
     }
-    $head[] = 'avancement_pct';
-    $rows = [$head];
-
-    foreach ($users as $user) {
-        $row = [fullname($user)];
-        $realises = 0;
-        foreach ($atelierids as $aid) {
-            $sessions = session::get_pour_etudiant($user->id, $aid);
-            $latest = $sessions ? reset($sessions) : null;
-            if (!$latest) {
-                $row[] = '';
-            } else if ($latest->get('statut') === session::STATUT_CERTIFIE) {
-                $row[] = 'valide';
-                $realises++;
-            } else if ($latest->get('statut') === session::STATUT_REALISE) {
-                $row[] = 'realise';
-                $realises++;
-            } else {
-                $row[] = 'commence';
-            }
-        }
-        $row[] = \local_simhub\local\parcours_helper::progression($parcours, $user->id)['pct'];
-        $rows[] = $row;
+    $atelierids = array_map('intval', array_column($parcours->get_ateliers(), 'atelierid'));
+    $users = droits::etudiants_du_parcours($parcours);
+    $progs = \local_simhub\local\parcours_helper::progressions($parcours, array_keys($users));
+    [$entetes, $lignes] = exporteur::tableau_suivi($users, $atelierids, fn($uid) => $progs[$uid]['pct']);
+    exporteur::envoyer('simhub_parcours_' . $parcours->get('id'), $format, $entetes, $lignes);
+} else if ($type === 'uc') {
+    $courseid = required_param('courseid', PARAM_INT);
+    get_course($courseid);
+    if (!droits::peut_suivre_uc($courseid)) {
+        throw $refus('local/simhub:exportsuivi');
     }
-
-    local_simhub_export_csv('simhub_parcours_' . $parcoursid . '.csv', $rows);
+    [$entetes, $lignes] = exporteur::suivi_uc($courseid);
+    exporteur::envoyer('simhub_uc_' . $courseid, $format, $entetes, $lignes);
+} else if ($type === 'cohorte') {
+    require_capability('local/simhub:exportsuivi', $context);
+    $cohortid = required_param('cohortid', PARAM_INT);
+    $DB->get_record('cohort', ['id' => $cohortid], 'id', MUST_EXIST);
+    [$entetes, $lignes] = exporteur::suivi_cohorte($cohortid);
+    exporteur::envoyer('simhub_cohorte_' . $cohortid, $format, $entetes, $lignes);
+} else if ($type === 'etudiant') {
+    $userid = optional_param('userid', $USER->id, PARAM_INT);
+    core_user::get_user($userid, 'id', MUST_EXIST);
+    if (!droits::peut_suivre_etudiant($userid)) {
+        throw $refus('local/simhub:viewprogression');
+    }
+    [$entetes, $lignes] = exporteur::historique_etudiant($userid);
+    exporteur::envoyer('simhub_historique_' . $userid, $format, $entetes, $lignes);
 } else {
     throw new \moodle_exception('invalidaction', 'error');
 }

@@ -1,10 +1,31 @@
 <?php
-// Fiche atelier côté étudiant (§5.4 localisation, §5.5 ressources).
+// This file is part of Moodle - https://moodle.org/
 //
-// Page volontairement simple : deux blocs (localisation, ressources) affichés l'un après
-// l'autre plutôt que des onglets JS, pour rester robuste sur mobile sans dépendance
-// supplémentaire. Le paramètre "onglet" ne fait que faire défiler la page vers la bonne
-// ancre (via #localisation / #ressources).
+// Moodle is free software: you can redistribute it and/or modify
+// it under the terms of the GNU General Public License as published by
+// the Free Software Foundation, either version 3 of the License, or
+// (at your option) any later version.
+//
+// Moodle is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU General Public License for more details.
+//
+// You should have received a copy of the GNU General Public License
+// along with Moodle.  If not, see <https://www.gnu.org/licenses/>.
+
+/**
+ * Fiche atelier côté étudiant (§5.4 localisation, §5.5 ressources).
+ *
+ * Page volontairement simple : deux blocs (localisation, ressources) affichés l'un après
+ * l'autre plutôt que des onglets JS, pour rester robuste sur mobile sans dépendance
+ * supplémentaire. Le paramètre "onglet" ne fait que faire défiler la page vers la bonne
+ * ancre (via #localisation / #ressources).
+ *
+ * @package    local_simhub
+ * @copyright  2026 Écoles nationales vétérinaires de France (ENVF)
+ * @license    https://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
+ */
 
 require(__DIR__ . '/../../config.php');
 
@@ -13,7 +34,7 @@ use local_simhub\persistent\ressource;
 
 require_login();
 
-$context = context_system::instance();
+$context = \local_simhub\local\contexte::racine();
 require_capability('local/simhub:view', $context);
 
 $id = required_param('id', PARAM_INT);
@@ -21,7 +42,8 @@ $onglet = optional_param('onglet', '', PARAM_ALPHA);
 
 $atelier = new atelier($id);
 
-\local_simhub\local\navigation::preparer($PAGE, new moodle_url('/local/simhub/atelier.php', ['id' => $id]), s($atelier->get('nomcourt')));
+$pageurl = new moodle_url('/local/simhub/atelier.php', ['id' => $id]);
+\local_simhub\local\navigation::preparer($PAGE, $pageurl, s($atelier->get('nomcourt')));
 
 echo $OUTPUT->header();
 echo \local_simhub\local\navigation::barre();
@@ -38,8 +60,11 @@ if ($atelier->get('statut') !== atelier::STATUT_ACTIF) {
         $message .= ' ' . s($indispo->commentaire);
     }
     if ($indispo && $indispo->echeanceprevue) {
-        $message .= ' ' . get_string('indispo_retour_prevu', 'local_simhub',
-            userdate($indispo->echeanceprevue, get_string('strftimedatefullshort', 'langconfig')));
+        $message .= ' ' . get_string(
+            'indispo_retour_prevu',
+            'local_simhub',
+            userdate($indispo->echeanceprevue, get_string('strftimedatefullshort', 'langconfig'))
+        );
     }
     echo $OUTPUT->notification($message, \core\output\notification::NOTIFY_WARNING);
 }
@@ -101,24 +126,29 @@ if ($atelier->get('planimageitemid')) {
     // sans géolocalisation intérieure sophistiquée (hors périmètre V1, §14).
     $fs = get_file_storage();
     $planfiles = $fs->get_area_files(
-        $context->id, 'local_simhub', 'plan', $atelier->get('planimageitemid'), 'filepath, filename', false
+        \local_simhub\local\contexte::fichiers()->id,
+        'local_simhub',
+        'plan',
+        $atelier->get('planimageitemid'),
+        'filepath, filename',
+        false
     );
     $planfile = reset($planfiles);
 
     if ($planfile) {
         $planurl = moodle_url::make_pluginfile_url(
-            $context->id, 'local_simhub', 'plan', $atelier->get('planimageitemid'), '/', $planfile->get_filename()
+            \local_simhub\local\contexte::fichiers()->id,
+            'local_simhub',
+            'plan',
+            $atelier->get('planimageitemid'),
+            '/',
+            $planfile->get_filename()
         );
-        echo html_writer::start_div('local-simhub-plan', ['style' => 'position:relative;display:inline-block;']);
-        echo html_writer::empty_tag('img', ['src' => $planurl->out(false), 'style' => 'max-width:100%;']);
+        echo html_writer::start_div('local-simhub-plan');
+        echo html_writer::empty_tag('img', ['src' => $planurl->out(false), 'alt' => get_string('nav_plan', 'local_simhub')]);
         if ($atelier->get('planrepx') !== null && $atelier->get('planrepy') !== null) {
-            echo html_writer::span('', 'local-simhub-repere', [
-                'style' => sprintf(
-                    'position:absolute;left:%s%%;top:%s%%;width:14px;height:14px;border-radius:50%%;'
-                    . 'background:red;transform:translate(-50%%,-50%%);',
-                    $atelier->get('planrepx'),
-                    $atelier->get('planrepy')
-                ),
+            echo html_writer::span('', 'local-simhub-plan-marker', [
+                'style' => sprintf('left:%s%%;top:%s%%;', (float) $atelier->get('planrepx'), (float) $atelier->get('planrepy')),
             ]);
         }
         echo html_writer::end_div();
@@ -141,12 +171,22 @@ if (empty($ressources)) {
         $href = $r->get('url');
         if (!$href && $r->get('fileitemid')) {
             $resfiles = $fs->get_area_files(
-                $context->id, 'local_simhub', 'ressource', $r->get('fileitemid'), 'filepath, filename', false
+                \local_simhub\local\contexte::fichiers()->id,
+                'local_simhub',
+                'ressource',
+                $r->get('fileitemid'),
+                'filepath, filename',
+                false
             );
             $resfile = reset($resfiles);
             if ($resfile) {
                 $href = moodle_url::make_pluginfile_url(
-                    $context->id, 'local_simhub', 'ressource', $r->get('fileitemid'), '/', $resfile->get_filename()
+                    \local_simhub\local\contexte::fichiers()->id,
+                    'local_simhub',
+                    'ressource',
+                    $r->get('fileitemid'),
+                    '/',
+                    $resfile->get_filename()
                 )->out(false);
             }
         }

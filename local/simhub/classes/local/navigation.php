@@ -1,22 +1,40 @@
 <?php
-// Navigation interne de SimHub : fil d'Ariane, bouton retour, menus par domaine et onglets
-// des fiches atelier / parcours.
+// This file is part of Moodle - https://moodle.org/
 //
-// Toutes les pages du plugin passent par navigation::preparer() plutôt que d'appeler
-// directement $PAGE->set_url()/set_title()/set_heading() : cela garantit qu'aucune page
-// ne peut être atteinte sans que l'utilisateur sache où il se trouve (fil d'Ariane
-// « Accueil / SimHub / Ateliers / … ») ni comment revenir en arrière (bouton retour
-// calculé à partir du même fil, donc jamais désynchronisé du chemin réel).
+// Moodle is free software: you can redistribute it and/or modify
+// it under the terms of the GNU General Public License as published by
+// the Free Software Foundation, either version 3 of the License, or
+// (at your option) any later version.
+//
+// Moodle is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU General Public License for more details.
+//
+// You should have received a copy of the GNU General Public License
+// along with Moodle.  If not, see <https://www.gnu.org/licenses/>.
+
+/**
+ * Navigation interne de SimHub : fil d'Ariane, bouton retour, menus par domaine et onglets
+ * des fiches atelier / parcours.
+ *
+ * Toutes les pages du plugin passent par navigation::preparer() plutôt que d'appeler
+ * directement $PAGE->set_url()/set_title()/set_heading() : cela garantit qu'aucune page
+ * ne peut être atteinte sans que l'utilisateur sache où il se trouve (fil d'Ariane
+ * « Accueil / SimHub / Ateliers / … ») ni comment revenir en arrière (bouton retour
+ * calculé à partir du même fil, donc jamais désynchronisé du chemin réel).
+ *
+ * @package    local_simhub
+ * @copyright  2026 Écoles nationales vétérinaires de France (ENVF)
+ * @license    https://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
+ */
 
 namespace local_simhub\local;
-
-defined('MOODLE_INTERNAL') || die();
 
 /**
  * Helper de navigation transverse au plugin.
  */
 class navigation {
-
     /** @var array Dernier fil d'Ariane passé à preparer(), utilisé par barre(). */
     protected static $ariane = [];
 
@@ -52,8 +70,14 @@ class navigation {
     public static function sections(\context $context): array {
         $sections = [];
 
-        $ajouter = function (string $cle, string $groupe, string $libelle, string $chemin,
-                array $motifs = [], int $compteur = 0) use (&$sections) {
+        $ajouter = function (
+            string $cle,
+            string $groupe,
+            string $libelle,
+            string $chemin,
+            array $motifs = [],
+            int $compteur = 0
+        ) use (&$sections) {
             $sections[$cle] = [
                 'libelle' => $libelle,
                 'url' => new \moodle_url($chemin),
@@ -66,8 +90,13 @@ class navigation {
             return get_string($cle, 'local_simhub');
         };
 
-        $ajouter('accueil', 'accueil', $str('nav_accueil'), '/local/simhub/index.php',
-            ['/local/simhub/index.php', '/local/simhub/atelier.php', '/local/simhub/session', '/local/simhub/qr.php']);
+        $ajouter(
+            'accueil',
+            'accueil',
+            $str('nav_accueil'),
+            '/local/simhub/index.php',
+            ['/local/simhub/index.php', '/local/simhub/atelier.php', '/local/simhub/session', '/local/simhub/qr.php']
+        );
 
         if (has_capability('local/simhub:manageateliers', $context)) {
             $ajouter('ateliers', 'ateliers', $str('manage_ateliers'), '/local/simhub/manage/ateliers.php', [
@@ -80,10 +109,17 @@ class navigation {
             $ajouter('import', 'ateliers', $str('import_ateliers'), '/local/simhub/manage/import.php');
         }
 
-        if (has_capability('local/simhub:manageparcours', $context)
-                || has_capability('local/simhub:viewprogression', $context)) {
-            $ajouter('parcours', 'parcours', $str('filtre_parcours'), '/local/simhub/manage/parcours.php',
-                ['/local/simhub/manage/parcours']);
+        if (
+            has_capability('local/simhub:manageparcours', $context)
+                || has_capability('local/simhub:viewprogression', $context)
+        ) {
+            $ajouter(
+                'parcours',
+                'parcours',
+                $str('filtre_parcours'),
+                '/local/simhub/manage/parcours.php',
+                ['/local/simhub/manage/parcours']
+            );
         }
         if (has_capability('local/simhub:viewprogression', $context)) {
             $ajouter('dashboard', 'parcours', $str('dashboard_parcours'), '/local/simhub/manage/dashboard.php');
@@ -91,26 +127,52 @@ class navigation {
 
         if (has_capability('local/simhub:validatesession', $context)) {
             $ajouter('seancecode', 'seances', $str('seancecode_generer'), '/local/simhub/manage/seancecode_generer.php');
-            $ajouter('sessionsavalider', 'seances', $str('sessions_a_valider'),
-                '/local/simhub/manage/sessions_a_valider.php', [], self::nb_sessions_a_valider());
+            $ajouter(
+                'sessionsavalider',
+                'seances',
+                $str('sessions_a_valider'),
+                '/local/simhub/manage/sessions_a_valider.php',
+                [],
+                self::nb_sessions_a_valider()
+            );
         }
 
         if (has_capability('local/simhub:view', $context)) {
-            $ajouter('asv', 'asv', $str('asv_parcours'), '/local/simhub/asv/index.php',
-                ['/local/simhub/asv/index.php', '/local/simhub/asv/demander', '/local/simhub/asv/livret', '/local/simhub/asv/attestation']);
+            $ajouter(
+                'asv',
+                'asv',
+                $str('asv_parcours'),
+                '/local/simhub/asv/index.php',
+                [
+                    '/local/simhub/asv/index.php',
+                    '/local/simhub/asv/demander',
+                    '/local/simhub/asv/livret',
+                    '/local/simhub/asv/attestation',
+                ]
+            );
         }
-        if (has_capability('local/simhub:validateasvsimulation', $context)) {
+        if (droits::peut_valider_asv()) {
             $ajouter('asvvalider', 'asv', $str('asv_valider_simulation'), '/local/simhub/asv/valider_simulation.php');
         }
         if (has_capability('local/simhub:manageasv', $context)) {
-            $ajouter('asvactes', 'asv', $str('asv_gerer_actes'), '/local/simhub/manage/asv_actes.php',
-                ['/local/simhub/manage/asv_acte']);
+            $ajouter(
+                'asvactes',
+                'asv',
+                $str('asv_gerer_actes'),
+                '/local/simhub/manage/asv_actes.php',
+                ['/local/simhub/manage/asv_acte']
+            );
             $ajouter('asvattestations', 'asv', $str('asv_attestations_groupees'), '/local/simhub/manage/asv_attestations.php');
         }
 
         if (has_capability('moodle/role:assign', $context)) {
-            $ajouter('roles', 'roles', $str('nav_roles'), '/admin/roles/assign.php?contextid=' . $context->id,
-                ['/admin/roles/assign.php']);
+            $ajouter(
+                'roles',
+                'roles',
+                $str('nav_roles'),
+                '/admin/roles/assign.php?contextid=' . $context->id,
+                ['/admin/roles/assign.php']
+            );
         }
 
         return $sections;
@@ -127,7 +189,7 @@ class navigation {
         return $DB->count_records_sql(
             "SELECT COUNT(1)
                FROM {local_simhub_session} s
-              WHERE s.controlepresence = 'non_verifie'
+              WHERE (s.controlepresence = 'non_verifie' OR s.dureesuspecte = 1)
                 AND NOT EXISTS (SELECT 1 FROM {local_simhub_val_encadrant} v WHERE v.sessionid = s.id)"
         );
     }
@@ -142,10 +204,10 @@ class navigation {
      * @return array clé => ['libelle' => string, 'url' => \moodle_url]
      */
     public static function liens_atelier(int $atelierid): array {
-        $context = \context_system::instance();
+        $context = contexte::racine();
         $liens = [];
         $ajouter = function (string $cle, string $libelle, string $chemin, array $params, ?string $cap = null)
-                use (&$liens, $context) {
+ use (&$liens, $context) {
             if ($cap === null || has_capability($cap, $context)) {
                 $liens[$cle] = ['libelle' => $libelle, 'url' => new \moodle_url($chemin, $params)];
             }
@@ -155,16 +217,43 @@ class navigation {
         };
 
         $ajouter('fiche', $str('onglet_fiche'), '/local/simhub/manage/atelier_edit.php', ['id' => $atelierid]);
-        $ajouter('ressources', $str('nav_ressources'), '/local/simhub/manage/ressources.php',
-            ['atelierid' => $atelierid], 'local/simhub:manageressources');
+        $ajouter(
+            'ressources',
+            $str('nav_ressources'),
+            '/local/simhub/manage/ressources.php',
+            ['atelierid' => $atelierid],
+            'local/simhub:manageressources'
+        );
         $ajouter('ae', $str('ae_modele'), '/local/simhub/manage/ae_modele_edit.php', ['atelierid' => $atelierid]);
-        $ajouter('rattachements', $str('rattachements'), '/local/simhub/manage/rattachements.php',
-            ['atelierid' => $atelierid], 'local/simhub:managerattachement');
+        $ajouter(
+            'stats',
+            $str('stats_lien'),
+            '/local/simhub/manage/ae_stats.php',
+            ['atelierid' => $atelierid],
+            'local/simhub:viewprogression'
+        );
+        $ajouter(
+            'rattachements',
+            $str('rattachements'),
+            '/local/simhub/manage/rattachements.php',
+            ['atelierid' => $atelierid],
+            'local/simhub:managerattachement'
+        );
         $ajouter('plan', $str('nav_plan'), '/local/simhub/manage/atelier_plan.php', ['id' => $atelierid]);
-        $ajouter('qr', $str('nav_qrcode'), '/local/simhub/manage/atelier_qr.php', ['id' => $atelierid],
-            'local/simhub:manageqrcodes');
-        $ajouter('asv', $str('asv_valider_simulation'), '/local/simhub/asv/valider_simulation.php',
-            ['atelierid' => $atelierid], 'local/simhub:validateasvsimulation');
+        $ajouter(
+            'qr',
+            $str('nav_qrcode'),
+            '/local/simhub/manage/atelier_qr.php',
+            ['id' => $atelierid],
+            'local/simhub:manageqrcodes'
+        );
+        $ajouter(
+            'asv',
+            $str('asv_valider_simulation'),
+            '/local/simhub/asv/valider_simulation.php',
+            ['atelierid' => $atelierid],
+            'local/simhub:validateasvsimulation'
+        );
         $ajouter('vueetudiant', $str('onglet_vue_etudiant'), '/local/simhub/atelier.php', ['id' => $atelierid]);
         $ajouter('pdf', $str('onglet_pdf'), '/local/simhub/manage/atelier_fiche_pdf.php', ['id' => $atelierid]);
 
@@ -178,17 +267,20 @@ class navigation {
      * @return array clé => ['libelle' => string, 'url' => \moodle_url]
      */
     public static function liens_parcours(int $parcoursid): array {
-        $context = \context_system::instance();
+        $context = contexte::racine();
+        $parcours = new \local_simhub\persistent\parcours($parcoursid);
         $liens = [];
         if (has_capability('local/simhub:manageparcours', $context)) {
             $liens['fiche'] = ['libelle' => get_string('onglet_fiche', 'local_simhub'),
                 'url' => new \moodle_url('/local/simhub/manage/parcours_edit.php', ['id' => $parcoursid])];
+        }
+        if (droits::peut_gerer_parcours($parcours)) {
             $liens['ateliers'] = ['libelle' => get_string('onglet_composition', 'local_simhub'),
                 'url' => new \moodle_url('/local/simhub/manage/parcours_ateliers.php', ['parcoursid' => $parcoursid])];
         }
         $liens['suivi'] = ['libelle' => get_string('onglet_suivi', 'local_simhub'),
             'url' => new \moodle_url('/local/simhub/manage/parcours_suivi.php', ['parcoursid' => $parcoursid])];
-        if (has_capability('local/simhub:exportsuivi', $context)) {
+        if (has_capability('local/simhub:exportsuivi', $context) || droits::peut_suivre_parcours($parcours)) {
             $liens['export'] = ['libelle' => get_string('onglet_export_csv', 'local_simhub'),
                 'url' => new \moodle_url('/local/simhub/manage/export.php', ['type' => 'parcours', 'parcoursid' => $parcoursid])];
         }
@@ -245,8 +337,13 @@ class navigation {
      * @param string $pagelayout Mise en page Moodle ; 'standard' conserve le tiroir de navigation.
      * @return void
      */
-    public static function preparer(\moodle_page $page, \moodle_url $url, string $titre,
-            array $etapes = [], string $pagelayout = 'standard'): void {
+    public static function preparer(
+        \moodle_page $page,
+        \moodle_url $url,
+        string $titre,
+        array $etapes = [],
+        string $pagelayout = 'standard'
+    ): void {
         $page->set_context(\context_system::instance());
         $page->set_url($url);
         $page->set_pagelayout($pagelayout);
@@ -305,7 +402,7 @@ class navigation {
      * @return string HTML
      */
     public static function barre(): string {
-        $context = \context_system::instance();
+        $context = contexte::racine();
 
         $retour = self::url_accueil();
         if (!empty(self::$ariane)) {
@@ -318,8 +415,6 @@ class navigation {
         $out = \html_writer::start_tag('nav', [
             'class' => 'local-simhub-nav mb-3',
             'aria-label' => get_string('pluginname', 'local_simhub'),
-            'style' => 'display:flex;flex-wrap:wrap;gap:8px;align-items:center;'
-                . 'padding:8px 0;border-bottom:1px solid rgba(0,0,0,.1);',
         ]);
 
         // Le bouton retour n'a de sens que si l'on n'est pas déjà sur sa cible.

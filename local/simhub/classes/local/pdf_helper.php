@@ -1,8 +1,28 @@
 <?php
+// This file is part of Moodle - https://moodle.org/
+//
+// Moodle is free software: you can redistribute it and/or modify
+// it under the terms of the GNU General Public License as published by
+// the Free Software Foundation, either version 3 of the License, or
+// (at your option) any later version.
+//
+// Moodle is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU General Public License for more details.
+//
+// You should have received a copy of the GNU General Public License
+// along with Moodle.  If not, see <https://www.gnu.org/licenses/>.
+
+/**
+ * Aide à la construction des en-têtes de documents PDF SimHub (attestations, livret ASV,.
+ *
+ * @package    local_simhub
+ * @copyright  2026 Écoles nationales vétérinaires de France (ENVF)
+ * @license    https://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
+ */
 
 namespace local_simhub\local;
-
-defined('MOODLE_INTERNAL') || die();
 
 /**
  * Aide à la construction des en-têtes de documents PDF SimHub (attestations, livret ASV,
@@ -10,7 +30,6 @@ defined('MOODLE_INTERNAL') || die();
  * settings.php (§4 "Paramétrable ENVF") plutôt qu'un habillage générique SimHub.
  */
 class pdf_helper {
-
     /**
      * Contenu binaire du logo configuré, si présent et dans un format que TCPDF peut
      * intégrer directement (PNG/JPEG). Un logo SVG peut être téléversé (accepté par le
@@ -21,7 +40,7 @@ class pdf_helper {
      */
     public static function get_logo_content(): ?string {
         $fs = get_file_storage();
-        $context = \context_system::instance();
+        $context = contexte::fichiers();
 
         $files = $fs->get_area_files($context->id, 'local_simhub', 'logo', 0, 'filepath, filename', false);
         $file = reset($files);
@@ -124,7 +143,13 @@ class pdf_helper {
         $pdf->writeHTML($html, true, false, true, false, '');
 
         $pdf->Ln(10);
-        $pdf->Cell(0, 6, get_string('pdf_delivree_le', 'local_simhub', userdate(time(), get_string('strftimedate', 'langconfig'))), 0, 1);
+        $pdf->Cell(
+            0,
+            6,
+            get_string('pdf_delivree_le', 'local_simhub', userdate(time(), get_string('strftimedate', 'langconfig'))),
+            0,
+            1,
+        );
 
         return $pdf;
     }

@@ -1,4 +1,26 @@
 <?php
+// This file is part of Moodle - https://moodle.org/
+//
+// Moodle is free software: you can redistribute it and/or modify
+// it under the terms of the GNU General Public License as published by
+// the Free Software Foundation, either version 3 of the License, or
+// (at your option) any later version.
+//
+// Moodle is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU General Public License for more details.
+//
+// You should have received a copy of the GNU General Public License
+// along with Moodle.  If not, see <https://www.gnu.org/licenses/>.
+
+/**
+ * SimHub.
+ *
+ * @package    local_simhub
+ * @copyright  2026 Écoles nationales vétérinaires de France (ENVF)
+ * @license    https://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
+ */
 
 defined('MOODLE_INTERNAL') || die();
 
@@ -12,7 +34,7 @@ $string['nav_retour'] = 'Back';
 $string['simhub:studenthome'] = 'My workshops';
 
 $string['setting_envcode'] = 'Institution code';
-$string['setting_envcode_desc'] = 'Short code identifying the veterinary school (e.g. ENVA, ENVT, ONIRIS, VETAGROSUP).';
+$string['setting_envcode_desc'] = 'Short code of the school (e.g. ENVA, ENVT, ONIRIS, VETAGROSUP). Each school has its own Moodle, so it is only used for traceability: it is stored on created or imported workshops, pathways and ASV acts, and included in exports.';
 $string['setting_seancecodeduration'] = 'Session code validity';
 $string['setting_seancecodeduration_desc'] = 'How long a temporary session code (anti-fake-scan control) stays valid.';
 $string['setting_asvtokenexpiry'] = 'ASV external validation link validity';
@@ -234,10 +256,8 @@ $string['asv_niveau_a2'] = 'A2';
 $string['asv_niveau_a3'] = 'A3';
 
 $string['import_ateliers'] = 'Import workshops';
-$string['import_description'] = 'Imports a list of workshops from a CSV file. Recognised columns (number, name, discipline, species, level, duration, status, institution, room, zone, workstation, location, comment) can be in any order and under varied headings (accents and case ignored): the different schools\' spreadsheets do not need to be harmonised beforehand. Only the number and name are required. A workshop that already exists (same institution + same number) is updated rather than duplicated; the rest of the fields can be corrected afterwards in workshop management.';
+$string['import_description'] = 'Imports data from a CSV, Excel (XLSX) or LibreOffice (ODS) file; for a workbook, only the first sheet is read. Columns may be in any order and under various headings (accents and case ignored): school spreadsheets do not need to be harmonised first. Column details for each type are in the help of the "Import type" field.';
 $string['import_fichier'] = 'CSV file';
-$string['import_crees'] = '{$a} workshop(s) created';
-$string['import_mis_a_jour'] = '{$a} workshop(s) updated';
 
 $string['export_csv'] = 'Export (CSV)';
 
@@ -283,14 +303,14 @@ $string['numero_existe'] = 'This workshop number is already used in this institu
 // Rôles système (§11).
 $string['nav_roles'] = 'SimHub roles';
 $string['nav_groupe_roles'] = 'Roles';
-$string['role_simhubencadrant'] = 'SimHub supervisor';
-$string['role_simhubencadrant_desc'] = 'Teacher or trainer: pathway tracking, session and simulation ASV validation (§11).';
+$string['role_simhubencadrant'] = 'SimHub trainer';
+$string['role_simhubencadrant_desc'] = 'Cross-cutting trainer assigned in the SimHub category: tracking of all pathways, session and simulation ASV validation for every student. A course unit teacher does not need it (§11).';
 $string['role_simhubresponsableuc'] = 'SimHub course unit lead';
-$string['role_simhubresponsableuc_desc'] = 'Supervisor rights, plus pathway and course unit link management (§11).';
+$string['role_simhubresponsableuc_desc'] = 'Cross-cutting view of pathways and links of every course unit. A course unit lead manages their own from the SimHub activity of their course, without this role (§11).';
 $string['role_simhubgestionnairesalle'] = 'SimHub room manager';
 $string['role_simhubgestionnairesalle_desc'] = 'Room manager: workshop records, resources, statuses, QR codes, import/export (§11).';
 $string['role_simhubadminfonctionnel'] = 'SimHub functional administrator';
-$string['role_simhubadminfonctionnel_desc'] = 'All SimHub rights, including the ASV framework and configuration (§11).';
+$string['role_simhubadminfonctionnel_desc'] = 'All SimHub rights, including the ASV framework and configuration, and assignment of the other SimHub roles in the SimHub category (§11).';
 
 // Textes auparavant codés en dur dans les pages.
 $string['ae_autobilan'] = 'Self-review';
@@ -341,7 +361,7 @@ $string['parcours_ajouter_atelier'] = 'Add a workshop';
 $string['ordre'] = 'Order';
 $string['echeance_optionnel'] = 'Deadline (optional)';
 $string['import_aucun_fichier'] = 'No file received.';
-$string['import_ordre'] = 'For links or pathway composition, import the workshops first: both imports find each workshop by its number and institution.';
+$string['import_ordre'] = 'Import workshop records first: the other imports find each workshop by its number.';
 $string['import_type'] = 'Import type';
 $string['import_type_rattachements'] = 'Links (course unit / year / cohort)';
 $string['import_type_parcours'] = 'Pathway composition';
@@ -373,7 +393,6 @@ $string['champ_url_ressource'] = 'External link (optional if a file is provided)
 $string['champ_fichier_ressource'] = 'File (optional if a link is provided)';
 $string['champ_ordre_affichage'] = 'Display order';
 $string['ressource_lien_ou_fichier'] = 'Provide a link or a file.';
-$string['import_ligne_envcode'] = 'Line {$a} skipped: unknown institution (envcode).';
 $string['import_ligne_erreur'] = 'Line {$a->ligne}: {$a->erreur}';
 $string['import_ligne_atelier_introuvable'] = 'Line {$a->ligne} skipped: workshop {$a->numero} ({$a->envcode}) not found — import it first.';
 
@@ -427,3 +446,67 @@ $string['indispo_cloturee'] = 'Closed';
 $string['indispo_en_cours'] = 'Ongoing';
 $string['indispo_retour_prevu'] = 'Expected back on {$a}.';
 $string['privacy:metadata:local_simhub_asv_valsim:commentaire'] = 'Supervisor remark or reason for cancelling the validation';
+$string['setting_categoryid'] = 'SimHub category';
+$string['setting_categoryid_desc'] = 'Course category where cross-cutting SimHub roles are assigned (room manager, functional administrator, ASV trainer). The functional administrator assigns these roles there, without an administrator account. Teachers do not need them: their rights come from the SimHub activity of their course unit. Roles already assigned at system level remain valid.';
+$string['setting_categoryid_systeme'] = 'None (system level)';
+$string['ae_derniere_modification'] = 'Grid shared by every course unit using this workshop. Last change: {$a->auteur}, on {$a->date}.';
+$string['event_session_validated'] = 'Workshop session validated or refused';
+$string['event_parcours_updated'] = 'Pathway workshops changed';
+$string['privacy:metadata:personnel'] = 'References to staff in the school\'s shared framework (workshops, unavailabilities, resources, pathways, grids, ASV acts, session codes). When a user is deleted, records are kept and the reference is removed.';
+$string['privacy:metadata:personnel:referentuserid'] = 'Person in charge of the workshop or unavailability.';
+$string['privacy:metadata:personnel:usermodified'] = 'Author of the last change.';
+$string['privacy:metadata:personnel:createuruserid'] = 'Supervisor who generated the session code.';
+$string['champ_categorie'] = 'Category';
+$string['filtre_statut'] = 'Availability';
+$string['filtre_statut_visibles'] = 'Active and unavailable';
+$string['filtre_statut_actif'] = 'Active only';
+$string['filtre_statut_indisponible'] = 'Unavailable only';
+$string['carte_uc'] = 'Course units:';
+$string['session_statut_commence'] = 'Started';
+$string['session_statut_realise'] = 'Completed';
+$string['session_statut_certifie'] = 'Validated';
+$string['session_statut_non_termine'] = 'To redo';
+$string['session_val_valide'] = 'Validated by a supervisor';
+$string['session_val_refuse'] = 'Refused by a supervisor';
+$string['session_demarree_le'] = 'Started on';
+$string['session_motif'] = 'To check';
+$string['session_motif_nonverifie'] = 'presence not verified';
+$string['session_motif_duree'] = 'unusually short ({$a->duree} min for {$a->indicative} min expected)';
+$string['setting_reseauxsalle'] = 'Simulation room network';
+$string['setting_reseauxsalle_desc'] = 'IP ranges of the room, one per line (e.g. 192.168.10.0/24, 10.2.3.4-50, 172.16.). When the anti-fake-scan control is enabled, a student connected from this network starts the session without a code (§7.3). Empty: no network recognition.';
+$string['setting_dureeminpct'] = 'Minimum session length (% of expected duration)';
+$string['setting_dureeminpct_desc'] = 'A session finished in less than this percentage of the workshop\'s expected duration is flagged to supervisors (§7.1), without being blocked. For example 30: a 20-minute workshop finished in under 6 minutes is flagged. 0: no flag.';
+$string['export_avancement'] = 'Progress (%)';
+$string['export_fin'] = 'Finished on';
+$string['export_validation'] = 'Validation';
+$string['export_format_csv'] = 'CSV';
+$string['export_format_xlsx'] = 'Excel (XLSX)';
+$string['export_format_ods'] = 'LibreOffice (ODS)';
+$string['export_telecharger'] = 'Download:';
+$string['export_cohorte'] = 'Cohort tracking';
+$string['col_uc'] = 'Course unit';
+$string['champ_niveauattendu'] = 'Expected level';
+$string['champ_obligatoire'] = 'Mandatory';
+$string['champ_echeance'] = 'Due date';
+$string['champ_type'] = 'Type';
+$string['visibilite_etudiant'] = 'Visible to students';
+$string['champ_cohorte_optionnel'] = 'Cohort (optional, to recommend directly to its members)';
+$string['stats_titre'] = 'Criteria to work on';
+$string['stats_intro'] = 'Student answers to the self-assessment grid, criterion by criterion, most often marked "to redo" or "to consolidate" first (§7.1). Highlighted rows exceed 50 %.';
+$string['stats_aucune'] = 'No self-assessment recorded for this workshop.';
+$string['stats_reponses'] = 'Answers';
+$string['stats_rubrique'] = 'Section';
+$string['stats_critere'] = 'Criterion';
+$string['stats_lien'] = 'Criteria to work on';
+$string['filtre_annee_optionnel'] = 'Study year (optional)';
+$string['parcours_uc_verrouille'] = 'This pathway belongs to a course unit SimHub activity: its name, type and course are edited from the activity.';
+$string['import_type_ateliers'] = 'Workshop records';
+$string['import_type_localisation'] = 'Location (room, zone, station)';
+$string['import_type_ressources'] = 'Resource links';
+$string['import_type_help'] = 'Workshops: number and name required; a known number is updated. Location: number, then room, zone, station or hint; only the columns present are changed. Resources: number, title and address (URL), with optional type and visibility; a resource with the same title is updated. Links: number, then course unit (course id or short name), year, cohort, mandatory, expected level. Pathways: pathway name, number, order, mandatory (yes/no).';
+$string['import_lancer'] = 'Import';
+$string['import_format_refuse'] = 'Unrecognised format: use a CSV, XLSX or ODS file.';
+$string['import_bilan_crees'] = '{$a} created';
+$string['import_bilan_majs'] = '{$a} updated';
+$string['import_bilan_parcours'] = '{$a} pathway(s) created';
+$string['import_ligne_ressource'] = 'Line {$a}: missing or invalid title or address (URL).';

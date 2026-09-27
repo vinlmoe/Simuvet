@@ -1,9 +1,30 @@
 <?php
-// Export PDF du livret de compétences ASV (§9.4) : récapitule, pour l'étudiant connecté
-// (ou un étudiant choisi par un pilote ASV), les actes du référentiel et leur état de
-// validation en simulation / sur animal vivant, avec date et nom du validateur — la
-// version numérique du livret papier "acte, espèce, validation simulation, validation
-// animal vivant, date et signature" (§9.1).
+// This file is part of Moodle - https://moodle.org/
+//
+// Moodle is free software: you can redistribute it and/or modify
+// it under the terms of the GNU General Public License as published by
+// the Free Software Foundation, either version 3 of the License, or
+// (at your option) any later version.
+//
+// Moodle is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU General Public License for more details.
+//
+// You should have received a copy of the GNU General Public License
+// along with Moodle.  If not, see <https://www.gnu.org/licenses/>.
+
+/**
+ * Export PDF du livret de compétences ASV (§9.4) : récapitule, pour l'étudiant connecté
+ * (ou un étudiant choisi par un pilote ASV), les actes du référentiel et leur état de
+ * validation en simulation / sur animal vivant, avec date et nom du validateur — la
+ * version numérique du livret papier "acte, espèce, validation simulation, validation
+ * animal vivant, date et signature" (§9.1).
+ *
+ * @package    local_simhub
+ * @copyright  2026 Écoles nationales vétérinaires de France (ENVF)
+ * @license    https://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
+ */
 
 require(__DIR__ . '/../../../config.php');
 require_once($CFG->libdir . '/pdflib.php');
@@ -15,15 +36,15 @@ use local_simhub\local\pdf_helper;
 
 require_login();
 
-$context = context_system::instance();
+$context = \local_simhub\local\contexte::racine();
 require_capability('local/simhub:view', $context);
 
 $userid = optional_param('userid', $USER->id, PARAM_INT);
-if ($userid != $USER->id && !has_capability('local/simhub:validateasvsimulation', $context)) {
+if ($userid != $USER->id && !\local_simhub\local\droits::peut_valider_asv($userid)) {
     require_capability('local/simhub:manageasv', $context);
 }
 
-$envcode = optional_param('envcode', get_config('local_simhub', 'envcode') ?: '', PARAM_ALPHANUMEXT);
+$envcode = '';
 
 $user = \core_user::get_user($userid, '*', MUST_EXIST);
 $actes = asv_acte::get_referentiel($envcode);
@@ -57,7 +78,10 @@ $pdf->Ln(4);
 
 $html = '<table border="1" cellpadding="4">';
 $html .= '<tr style="font-weight:bold;">'
-    . '<th width="30%">' . get_string('asv_acte', 'local_simhub') . '</th><th width="10%">' . get_string('asv_champ_niveau', 'local_simhub') . '</th>'
+    . '<th width="30%">' . get_string(
+        'asv_acte',
+        'local_simhub',
+    ) . '</th><th width="10%">' . get_string('asv_champ_niveau', 'local_simhub') . '</th>'
     . '<th width="15%">' . get_string('champ_espece', 'local_simhub') . '</th>'
     . '<th width="22%">' . get_string('asv_col_validation_simulation', 'local_simhub') . '</th>'
     . '<th width="23%">' . get_string('asv_col_validation_animal', 'local_simhub') . '</th></tr>';

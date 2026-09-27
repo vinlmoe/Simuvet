@@ -1,8 +1,28 @@
 <?php
+// This file is part of Moodle - https://moodle.org/
+//
+// Moodle is free software: you can redistribute it and/or modify
+// it under the terms of the GNU General Public License as published by
+// the Free Software Foundation, either version 3 of the License, or
+// (at your option) any later version.
+//
+// Moodle is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU General Public License for more details.
+//
+// You should have received a copy of the GNU General Public License
+// along with Moodle.  If not, see <https://www.gnu.org/licenses/>.
+
+/**
+ * Import souple de fiches ateliers depuis un fichier CSV hétérogène (§12.1).
+ *
+ * @package    local_simhub
+ * @copyright  2026 Écoles nationales vétérinaires de France (ENVF)
+ * @license    https://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
+ */
 
 namespace local_simhub\local;
-
-defined('MOODLE_INTERNAL') || die();
 
 use local_simhub\persistent\atelier;
 
@@ -16,7 +36,6 @@ use local_simhub\persistent\atelier;
  * (§12.1 "correction et enrichissement après import"), notamment via manage/ateliers.php.
  */
 class atelier_importer {
-
     /** Alias de colonnes reconnus, normalisés (minuscule, sans accent ni espace) => propriété atelier. */
     const ALIASES = [
         'numero' => 'numero', 'num' => 'numero', 'id' => 'numero', 'reference' => 'numero',
@@ -24,15 +43,18 @@ class atelier_importer {
         'nomlong' => 'nomlong', 'nomcomplet' => 'nomlong', 'description' => 'nomlong',
         'descriptioncourte' => 'descriptioncourte', 'resume' => 'descriptioncourte',
         'discipline' => 'discipline', 'matiere' => 'discipline', 'domaine' => 'discipline',
+        'categorie' => 'categorie', 'category' => 'categorie', 'typeatelier' => 'categorie',
         'espece' => 'espece', 'especes' => 'espece',
         'niveau' => 'niveaudifficulte', 'niveaudedifficulte' => 'niveaudifficulte', 'difficulte' => 'niveaudifficulte',
-        'duree' => 'dureeindicative', 'dureeminutes' => 'dureeindicative', 'dureeindicative' => 'dureeindicative',
+        'duree' => 'dureeindicative', 'dureeminutes' => 'dureeindicative',
+        'dureemin' => 'dureeindicative', 'dureeindicative' => 'dureeindicative',
         'statut' => 'statut', 'etat' => 'statut',
         'envcode' => 'envcode', 'etablissement' => 'envcode', 'ecole' => 'envcode', 'env' => 'envcode',
         'salle' => 'salle', 'piece' => 'salle',
         'zone' => 'zone', 'secteur' => 'zone',
         'codeposte' => 'codeposte', 'poste' => 'codeposte', 'numeroposte' => 'codeposte',
-        'indicationtextuelle' => 'indicationtextuelle', 'localisation' => 'indicationtextuelle', 'emplacement' => 'indicationtextuelle',
+        'indicationtextuelle' => 'indicationtextuelle', 'localisation' => 'indicationtextuelle',
+        'emplacement' => 'indicationtextuelle',
         'commentaire' => 'commentaireadmin', 'commentaireadmin' => 'commentaireadmin', 'note' => 'commentaireadmin',
     ];
 
@@ -108,14 +130,8 @@ class atelier_importer {
                 continue;
             }
 
-            $envcode = $data['envcode'] ?? '';
-            if ($envcode === '') {
-                $envcode = $defaultenvcode;
-            }
-            if ($envcode === '') {
-                $result['erreurs'][] = get_string('import_ligne_envcode', 'local_simhub', $lineno + 2);
-                continue;
-            }
+            // Traçabilité seulement : le code de l'école peut rester vide.
+            $envcode = ($data['envcode'] ?? '') ?: $defaultenvcode;
 
             if (!empty($data['statut'])) {
                 $normalisedstatut = self::normalise_header($data['statut']);
@@ -126,7 +142,7 @@ class atelier_importer {
             }
 
             try {
-                $existing = atelier::get_record(['envcode' => $envcode, 'numero' => $data['numero']]);
+                $existing = liaison_importer::trouver_atelier($data['numero'], $envcode);
                 if ($existing) {
                     foreach ($data as $property => $value) {
                         if ($value !== '' && $existing->has_property($property)) {
@@ -145,8 +161,11 @@ class atelier_importer {
                     $result['crees']++;
                 }
             } catch (\Exception $e) {
-                $result['erreurs'][] = get_string('import_ligne_erreur', 'local_simhub',
-                    (object) ['ligne' => $lineno + 2, 'erreur' => $e->getMessage()]);
+                $result['erreurs'][] = get_string(
+                    'import_ligne_erreur',
+                    'local_simhub',
+                    (object) ['ligne' => $lineno + 2, 'erreur' => $e->getMessage()]
+                );
             }
         }
 

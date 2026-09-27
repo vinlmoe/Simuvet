@@ -1,21 +1,50 @@
 <?php
+// This file is part of Moodle - https://moodle.org/
+//
+// Moodle is free software: you can redistribute it and/or modify
+// it under the terms of the GNU General Public License as published by
+// the Free Software Foundation, either version 3 of the License, or
+// (at your option) any later version.
+//
+// Moodle is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU General Public License for more details.
+//
+// You should have received a copy of the GNU General Public License
+// along with Moodle.  If not, see <https://www.gnu.org/licenses/>.
+
+/**
+ * Session de réalisation d'un atelier par un étudiant (§7.1).
+ *
+ * @package    local_simhub
+ * @copyright  2026 Écoles nationales vétérinaires de France (ENVF)
+ * @license    https://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
+ */
 
 namespace local_simhub\persistent;
-
-defined('MOODLE_INTERNAL') || die();
 
 /**
  * Session de réalisation d'un atelier par un étudiant (§7.1).
  */
 class session extends \core\persistent {
-
+    /** @var string Table de la base de données. */
     const TABLE = 'local_simhub_session';
 
+    /** @var string Statut : commence. */
     const STATUT_COMMENCE = 'commence';
+    /** @var string Statut : realise. */
     const STATUT_REALISE = 'realise';
+    /** @var string Statut : certifie. */
     const STATUT_CERTIFIE = 'certifie';
+    /** @var string Statut : non_termine. */
     const STATUT_NON_TERMINE = 'non_termine';
 
+    /**
+     * Propriétés persistées.
+     *
+     * @return array
+     */
     protected static function define_properties() {
         return [
             'userid' => ['type' => PARAM_INT],
@@ -24,8 +53,9 @@ class session extends \core\persistent {
             'courseid' => ['type' => PARAM_INT, 'default' => 0, 'null' => NULL_ALLOWED],
             'timestart' => ['type' => PARAM_INT],
             'timeend' => ['type' => PARAM_INT, 'default' => 0, 'null' => NULL_ALLOWED],
+            // PARAM_ALPHANUMEXT : PARAM_ALPHA refuserait le « _ » de non_termine.
             'statut' => [
-                'type' => PARAM_ALPHA,
+                'type' => PARAM_ALPHANUMEXT,
                 'default' => self::STATUT_COMMENCE,
                 'choices' => [
                     self::STATUT_COMMENCE,
@@ -45,6 +75,10 @@ class session extends \core\persistent {
                 'default' => '',
                 'null' => NULL_ALLOWED,
                 'choices' => ['', 'reseau_local', 'code_seance', 'validation_encadrant', 'non_verifie'],
+            ],
+            'dureesuspecte' => [
+                'type' => PARAM_INT,
+                'default' => 0,
             ],
         ];
     }
@@ -83,8 +117,11 @@ class session extends \core\persistent {
     public static function demarrer_ou_reprendre(int $userid, int $atelierid, array $extra = []): session {
         $atelier = new atelier($atelierid);
         if ($atelier->get('statut') !== atelier::STATUT_ACTIF) {
-            throw new \moodle_exception('atelier_non_demarrable', 'local_simhub',
-                new \moodle_url('/local/simhub/atelier.php', ['id' => $atelierid]));
+            throw new \moodle_exception(
+                'atelier_non_demarrable',
+                'local_simhub',
+                new \moodle_url('/local/simhub/atelier.php', ['id' => $atelierid])
+            );
         }
 
         foreach (self::get_pour_etudiant($userid, $atelierid) as $existante) {
@@ -108,6 +145,7 @@ class session extends \core\persistent {
      */
     public function terminer(): void {
         $this->set('timeend', time());
+        $this->set('dureesuspecte', self::est_trop_courte($this->get('atelierid'), time() - $this->get('timestart')) ? 1 : 0);
         $this->set('statut', self::STATUT_REALISE);
         $this->update();
     }
@@ -124,6 +162,24 @@ class session extends \core\persistent {
         if ($atelierid !== null) {
             $params['atelierid'] = $atelierid;
         }
-        return self::get_records($params, 'timestart', 'DESC');
+        return self::get_records($params, 'timestart DESC, id', 'DESC');
+    }
+
+    /**
+     * Vrai si une séance de cette durée est anormalement courte (§7.1) : moins que le
+     * pourcentage paramétré de la durée indicative de l'atelier. Sans réglage ou sans durée
+     * indicative, aucune séance n'est signalée.
+     *
+     * @param int $atelierid
+     * @param int $duree Durée de la séance, en secondes.
+     * @return bool
+     */
+    public static function est_trop_courte(int $atelierid, int $duree): bool {
+        $pct = (int) get_config('local_simhub', 'dureeminpct');
+        if ($pct <= 0) {
+            return false;
+        }
+        $indicative = (int) (new atelier($atelierid))->get('dureeindicative');
+        return $indicative > 0 && $duree < $indicative * MINSECS * $pct / 100;
     }
 }

@@ -1,4 +1,20 @@
 {{!
+    This file is part of Moodle - https://moodle.org/
+
+    Moodle is free software: you can redistribute it and/or modify
+    it under the terms of the GNU General Public License as published by
+    the Free Software Foundation, either version 3 of the License, or
+    (at your option) any later version.
+
+    Moodle is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+    GNU General Public License for more details.
+
+    You should have received a copy of the GNU General Public License
+    along with Moodle.  If not, see <https://www.gnu.org/licenses/>.
+}}
+{{!
     @template local_simhub/student_home
 
     Accueil étudiant personnalisé (§5.1) : sept sections construites sur le même modèle de
@@ -15,6 +31,171 @@
     * areprendre, hasareprendre
     * recommandesgroupe, hasrecommandesgroupe
     * ateliers, hasateliers, nomessage, formurl, filtre
+
+    Example context (json):
+    {
+        "strings": {
+            "filtreannee": "filtreannee",
+            "filtreappliquer": "filtreappliquer",
+            "filtrediscipline": "filtrediscipline",
+            "filtreduree": "filtreduree",
+            "filtreespece": "filtreespece",
+            "filtremotcle": "filtremotcle",
+            "filtreniveau": "filtreniveau",
+            "filtrereinitialiser": "filtrereinitialiser",
+            "prochaineecheance": "prochaineecheance",
+            "sectionareprendre": "sectionareprendre",
+            "sectionasv": "sectionasv",
+            "sectioncommences": "sectioncommences",
+            "sectionmesuc": "sectionmesuc",
+            "sectionparcours": "sectionparcours",
+            "sectionrecommandes": "sectionrecommandes",
+            "sectiontous": "sectiontous",
+            "voirasv": "voirasv",
+            "boutonlocalisation": "Voir où il est",
+            "boutonressources": "Voir les ressources",
+            "boutoncommencer": "Commencer",
+            "boutonterminer": "Terminer l'atelier et s'auto-évaluer"
+        },
+        "hasmesuc": true,
+        "mesuc": [
+            {
+                "numero": "CH-012",
+                "nomcourt": "Suture cutanée",
+                "discipline": "Chirurgie",
+                "espece": "Chien",
+                "dureeindicative": 20,
+                "statutpersolabel": "Pas commencé",
+                "estindisponible": false,
+                "commentaireindispo": "",
+                "retourprevu": "",
+                "estcommence": false,
+                "urllocalisation": "#",
+                "urlressources": "#",
+                "urlcommencer": "#",
+                "urlterminer": "#",
+                "strings": {
+                    "filtreannee": "filtreannee",
+                    "filtreappliquer": "filtreappliquer",
+                    "filtrediscipline": "filtrediscipline",
+                    "filtreduree": "filtreduree",
+                    "filtreespece": "filtreespece",
+                    "filtremotcle": "filtremotcle",
+                    "filtreniveau": "filtreniveau",
+                    "filtrereinitialiser": "filtrereinitialiser",
+                    "prochaineecheance": "prochaineecheance",
+                    "sectionareprendre": "sectionareprendre",
+                    "sectionasv": "sectionasv",
+                    "sectioncommences": "sectioncommences",
+                    "sectionmesuc": "sectionmesuc",
+                    "sectionparcours": "sectionparcours",
+                    "sectionrecommandes": "sectionrecommandes",
+                    "sectiontous": "sectiontous",
+                    "voirasv": "voirasv",
+                    "boutonlocalisation": "Voir où il est",
+                    "boutonressources": "Voir les ressources",
+                    "boutoncommencer": "Commencer",
+                    "boutonterminer": "Terminer l'atelier et s'auto-évaluer"
+                }
+            }
+        ],
+        "hasparcoursencours": true,
+        "parcoursencours": [
+            {
+                "url": "#",
+                "nom": "Chirurgie A2",
+                "pct": 40,
+                "echeance": "15/12/2026",
+                "enretard": false
+            }
+        ],
+        "hasasv": true,
+        "asvtotal": 12,
+        "asvvalides": 3,
+        "urlasv": "#",
+        "hascommences": false,
+        "commences": [],
+        "hasareprendre": false,
+        "areprendre": [],
+        "hasrecommandesgroupe": false,
+        "recommandesgroupe": [],
+        "hasateliers": true,
+        "ateliers": [
+            {
+                "numero": "CH-012",
+                "nomcourt": "Suture cutanée",
+                "discipline": "Chirurgie",
+                "espece": "Chien",
+                "dureeindicative": 20,
+                "statutpersolabel": "Pas commencé",
+                "estindisponible": false,
+                "commentaireindispo": "",
+                "retourprevu": "",
+                "estcommence": false,
+                "urllocalisation": "#",
+                "urlressources": "#",
+                "urlcommencer": "#",
+                "urlterminer": "#",
+                "strings": {
+                    "filtreannee": "filtreannee",
+                    "filtreappliquer": "filtreappliquer",
+                    "filtrediscipline": "filtrediscipline",
+                    "filtreduree": "filtreduree",
+                    "filtreespece": "filtreespece",
+                    "filtremotcle": "filtremotcle",
+                    "filtreniveau": "filtreniveau",
+                    "filtrereinitialiser": "filtrereinitialiser",
+                    "prochaineecheance": "prochaineecheance",
+                    "sectionareprendre": "sectionareprendre",
+                    "sectionasv": "sectionasv",
+                    "sectioncommences": "sectioncommences",
+                    "sectionmesuc": "sectionmesuc",
+                    "sectionparcours": "sectionparcours",
+                    "sectionrecommandes": "sectionrecommandes",
+                    "sectiontous": "sectiontous",
+                    "voirasv": "voirasv",
+                    "boutonlocalisation": "Voir où il est",
+                    "boutonressources": "Voir les ressources",
+                    "boutoncommencer": "Commencer",
+                    "boutonterminer": "Terminer l'atelier et s'auto-évaluer"
+                }
+            }
+        ],
+        "nomessage": "Aucun atelier.",
+        "formurl": "#",
+        "filtre": {
+            "motcle": "",
+            "dureemax": ""
+        },
+        "disciplines": [
+            {
+                "value": "Chirurgie",
+                "label": "Chirurgie",
+                "selected": true
+            }
+        ],
+        "especes": [
+            {
+                "value": "Chien",
+                "label": "Chien",
+                "selected": false
+            }
+        ],
+        "niveaux": [
+            {
+                "value": "facile",
+                "label": "Facile",
+                "selected": false
+            }
+        ],
+        "anneeoptions": [
+            {
+                "value": 2,
+                "label": "A2",
+                "selected": false
+            }
+        ]
+    }
 }}
 <div class="local-simhub-studenthome">
 
@@ -96,6 +277,41 @@
         <div class="form-group mr-2 mb-2">
             <input type="number" name="dureemax" class="form-control" placeholder="{{strings.filtreduree}}"
                    value="{{filtre.dureemax}}" min="0">
+        </div>
+        {{#ucoptions.0}}
+        <div class="form-group mr-2 mb-2">
+            <select name="courseid" class="form-control" aria-label="{{strings.filtreuc}}">
+                <option value="">{{strings.filtreuc}}</option>
+                {{#ucoptions}}
+                <option value="{{value}}"{{#selected}} selected{{/selected}}>{{label}}</option>
+                {{/ucoptions}}
+            </select>
+        </div>
+        {{/ucoptions.0}}
+        {{#parcoursoptions.0}}
+        <div class="form-group mr-2 mb-2">
+            <select name="parcoursid" class="form-control" aria-label="{{strings.filtreparcours}}">
+                <option value="">{{strings.filtreparcours}}</option>
+                {{#parcoursoptions}}
+                <option value="{{value}}"{{#selected}} selected{{/selected}}>{{label}}</option>
+                {{/parcoursoptions}}
+            </select>
+        </div>
+        {{/parcoursoptions.0}}
+        <div class="form-group mr-2 mb-2">
+            <select name="statutperso" class="form-control" aria-label="{{strings.filtrestatutperso}}">
+                <option value="">{{strings.filtrestatutperso}}</option>
+                {{#statutpersooptions}}
+                <option value="{{value}}"{{#selected}} selected{{/selected}}>{{label}}</option>
+                {{/statutpersooptions}}
+            </select>
+        </div>
+        <div class="form-group mr-2 mb-2">
+            <select name="statut" class="form-control" aria-label="{{strings.filtrestatut}}">
+                {{#statutoptions}}
+                <option value="{{value}}"{{#selected}} selected{{/selected}}>{{label}}</option>
+                {{/statutoptions}}
+            </select>
         </div>
         <div class="form-group mr-2 mb-2">
             <select name="anneeetude" class="form-control">

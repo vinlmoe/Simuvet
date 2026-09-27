@@ -1,7 +1,28 @@
 <?php
-// Page de réglages "Administration fonctionnelle" (§11, profil
-// Administrateur fonctionnel). Regroupe les paramètres transverses,
-// paramétrables par établissement (principe "Paramétrable ENVF", §4).
+// This file is part of Moodle - https://moodle.org/
+//
+// Moodle is free software: you can redistribute it and/or modify
+// it under the terms of the GNU General Public License as published by
+// the Free Software Foundation, either version 3 of the License, or
+// (at your option) any later version.
+//
+// Moodle is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU General Public License for more details.
+//
+// You should have received a copy of the GNU General Public License
+// along with Moodle.  If not, see <https://www.gnu.org/licenses/>.
+
+/**
+ * Page de réglages "Administration fonctionnelle" (§11, profil
+ * Administrateur fonctionnel). Regroupe les paramètres transverses,
+ * propres à l'école : chaque école a son propre Moodle (§4).
+ *
+ * @package    local_simhub
+ * @copyright  2026 Écoles nationales vétérinaires de France (ENVF)
+ * @license    https://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
+ */
 
 defined('MOODLE_INTERNAL') || die();
 
@@ -15,6 +36,16 @@ if ($hassiteconfig) {
         get_string('setting_envcode_desc', 'local_simhub'),
         '',
         PARAM_ALPHANUMEXT
+    ));
+
+    $categories = [0 => get_string('setting_categoryid_systeme', 'local_simhub')]
+        + core_course_category::make_categories_list();
+    $settings->add(new admin_setting_configselect(
+        'local_simhub/categoryid',
+        get_string('setting_categoryid', 'local_simhub'),
+        get_string('setting_categoryid_desc', 'local_simhub'),
+        0,
+        $categories
     ));
 
     $settings->add(new admin_setting_configduration(
@@ -36,6 +67,22 @@ if ($hassiteconfig) {
         get_string('setting_controlepresenceactif', 'local_simhub'),
         get_string('setting_controlepresenceactif_desc', 'local_simhub'),
         0
+    ));
+
+    $settings->add(new admin_setting_configtextarea(
+        'local_simhub/reseauxsalle',
+        get_string('setting_reseauxsalle', 'local_simhub'),
+        get_string('setting_reseauxsalle_desc', 'local_simhub'),
+        '',
+        PARAM_RAW_TRIMMED
+    ));
+
+    $settings->add(new admin_setting_configtext(
+        'local_simhub/dureeminpct',
+        get_string('setting_dureeminpct', 'local_simhub'),
+        get_string('setting_dureeminpct_desc', 'local_simhub'),
+        0,
+        PARAM_INT
     ));
 
     $settings->add(new admin_setting_configtext(
@@ -71,9 +118,6 @@ if ($hassiteconfig) {
         ));
     }
 
-    // TODO : ajouter ici les référentiels paramétrables par école
-    // (disciplines, espèces, salles/zones) plutôt qu'en dur dans le
-    // code, conformément au principe "Paramétrable ENVF" (§4). Une UI
-    // de gestion de référentiels (classes/local/referentiel_manager.php)
-    // est prévue mais non développée dans ce squelette.
+    // Une évolution est prévue : référentiels paramétrables par école (disciplines, espèces,
+    // salles/zones) plutôt que saisis librement (§4 « Paramétrable ENVF »).
 }

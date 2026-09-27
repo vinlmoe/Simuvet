@@ -1,4 +1,26 @@
 <?php
+// This file is part of Moodle - https://moodle.org/
+//
+// Moodle is free software: you can redistribute it and/or modify
+// it under the terms of the GNU General Public License as published by
+// the Free Software Foundation, either version 3 of the License, or
+// (at your option) any later version.
+//
+// Moodle is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU General Public License for more details.
+//
+// You should have received a copy of the GNU General Public License
+// along with Moodle.  If not, see <https://www.gnu.org/licenses/>.
+
+/**
+ * SimHub.
+ *
+ * @package    local_simhub
+ * @copyright  2026 Écoles nationales vétérinaires de France (ENVF)
+ * @license    https://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
+ */
 
 defined('MOODLE_INTERNAL') || die();
 
@@ -13,7 +35,7 @@ $string['simhub:studenthome'] = 'Mon espace ateliers';
 
 // Réglages.
 $string['setting_envcode'] = 'Code établissement';
-$string['setting_envcode_desc'] = 'Code court identifiant l\'école (ex. ENVA, ENVT, ONIRIS, VETAGROSUP). Utilisé pour distinguer les référentiels par établissement.';
+$string['setting_envcode_desc'] = 'Code court de l\'école (ex. ENVA, ENVT, ONIRIS, VETAGROSUP). Chaque école ayant son propre Moodle, il sert uniquement à la traçabilité : il est enregistré sur les ateliers, parcours et actes ASV créés ou importés, et figure dans les exports.';
 $string['setting_seancecodeduration'] = 'Durée de validité d\'un code de séance';
 $string['setting_seancecodeduration_desc'] = 'Durée pendant laquelle un code de séance temporaire (§7.3, contrôle anti-faux-scan) reste valable.';
 $string['setting_asvtokenexpiry'] = 'Durée de validité d\'un lien de validation ASV externe';
@@ -92,7 +114,7 @@ $string['privacy:metadata:local_simhub_asv_valanimal:nomvalidateur'] = 'Le nom d
 $string['privacy:metadata:local_simhub_asv_valanimal:prenomvalidateur'] = 'Le prénom du validateur.';
 $string['privacy:metadata:local_simhub_asv_valanimal:signature'] = 'Le tracé de signature du validateur.';
 
-// Événements.
+// Chaînes des événements.
 $string['event_atelier_created'] = 'Atelier créé';
 $string['event_session_started'] = 'Session d\'atelier démarrée';
 $string['event_session_completed'] = 'Session d\'atelier terminée';
@@ -247,10 +269,8 @@ $string['asv_niveau_a3'] = 'A3';
 
 // Import (§12.1).
 $string['import_ateliers'] = 'Importer des ateliers';
-$string['import_description'] = 'Importe une liste d\'ateliers depuis un fichier CSV. Les colonnes reconnues (numéro, nom, discipline, espèce, niveau, durée, statut, établissement, salle, zone, poste, localisation, commentaire) peuvent être dans n\'importe quel ordre et sous des intitulés variés (accents et casse ignorés) : les tableaux des différentes écoles n\'ont pas besoin d\'être harmonisés au préalable. Seuls le numéro et le nom sont obligatoires. Un atelier déjà existant (même établissement + même numéro) est mis à jour plutôt que dupliqué ; le reste des champs peut être corrigé ensuite dans la gestion des ateliers.';
+$string['import_description'] = 'Importe des données depuis un fichier CSV, Excel (XLSX) ou LibreOffice (ODS) ; pour un classeur, seule la première feuille est lue. Les colonnes peuvent être dans n\'importe quel ordre et sous des intitulés variés (accents et casse ignorés) : les tableaux des écoles n\'ont pas besoin d\'être harmonisés au préalable. Le détail des colonnes de chaque type est dans l\'aide du champ « Type d\'import ».';
 $string['import_fichier'] = 'Fichier CSV';
-$string['import_crees'] = '{$a} atelier(s) créé(s)';
-$string['import_mis_a_jour'] = '{$a} atelier(s) mis à jour';
 
 // Export (§12.3).
 $string['export_csv'] = 'Exporter (CSV)';
@@ -297,14 +317,14 @@ $string['numero_existe'] = 'Ce numéro d\'atelier est déjà utilisé dans cet �
 // Rôles système (§11).
 $string['nav_roles'] = 'Rôles SimHub';
 $string['nav_groupe_roles'] = 'Rôles';
-$string['role_simhubencadrant'] = 'Encadrant SimHub';
-$string['role_simhubencadrant_desc'] = 'Enseignant ou formateur : suivi des parcours, validation des séances et des actes ASV en simulation (§11).';
+$string['role_simhubencadrant'] = 'Formateur SimHub';
+$string['role_simhubencadrant_desc'] = 'Formateur transversal désigné dans la catégorie SimHub : suivi de tous les parcours, validation des séances et des actes ASV en simulation pour tous les étudiants. Un enseignant d\'UC n\'en a pas besoin (§11).';
 $string['role_simhubresponsableuc'] = 'Responsable d\'UC SimHub';
-$string['role_simhubresponsableuc_desc'] = 'Droits d\'encadrant, plus la gestion des parcours et des rattachements aux UC (§11).';
+$string['role_simhubresponsableuc_desc'] = 'Vue transversale des parcours et rattachements de toutes les UC. Un responsable d\'UC gère la sienne depuis l\'activité SimHub de son cours, sans ce rôle (§11).';
 $string['role_simhubgestionnairesalle'] = 'Gestionnaire de salle SimHub';
 $string['role_simhubgestionnairesalle_desc'] = 'Responsable de salle : fiches ateliers, ressources, statuts, QR codes, import/export (§11).';
 $string['role_simhubadminfonctionnel'] = 'Administrateur fonctionnel SimHub';
-$string['role_simhubadminfonctionnel_desc'] = 'Tous les droits SimHub, y compris le référentiel ASV et le paramétrage (§11).';
+$string['role_simhubadminfonctionnel_desc'] = 'Tous les droits SimHub, y compris le référentiel ASV et le paramétrage, et l\'attribution des autres rôles SimHub dans la catégorie SimHub (§11).';
 
 // Textes auparavant codés en dur dans les pages.
 $string['ae_autobilan'] = 'Auto-bilan';
@@ -355,7 +375,7 @@ $string['parcours_ajouter_atelier'] = 'Ajouter un atelier';
 $string['ordre'] = 'Ordre';
 $string['echeance_optionnel'] = 'Échéance (optionnel)';
 $string['import_aucun_fichier'] = 'Aucun fichier reçu.';
-$string['import_ordre'] = 'Pour les rattachements ou la composition de parcours, importez d\'abord les ateliers : ces deux imports retrouvent chaque atelier par son numéro et son établissement.';
+$string['import_ordre'] = 'Importez d\'abord les fiches ateliers : les autres imports retrouvent chaque atelier par son numéro.';
 $string['import_type'] = 'Type d\'import';
 $string['import_type_rattachements'] = 'Rattachements (UC / année / cohorte)';
 $string['import_type_parcours'] = 'Composition de parcours';
@@ -387,7 +407,6 @@ $string['champ_url_ressource'] = 'Lien externe (optionnel si fichier fourni)';
 $string['champ_fichier_ressource'] = 'Fichier (optionnel si lien fourni)';
 $string['champ_ordre_affichage'] = 'Ordre d\'affichage';
 $string['ressource_lien_ou_fichier'] = 'Indiquez un lien ou un fichier.';
-$string['import_ligne_envcode'] = 'Ligne {$a} ignorée : établissement (envcode) inconnu.';
 $string['import_ligne_erreur'] = 'Ligne {$a->ligne} : {$a->erreur}';
 $string['import_ligne_atelier_introuvable'] = 'Ligne {$a->ligne} ignorée : atelier {$a->numero} ({$a->envcode}) introuvable — importez-le d\'abord.';
 
@@ -441,3 +460,67 @@ $string['indispo_cloturee'] = 'Clôturée';
 $string['indispo_en_cours'] = 'En cours';
 $string['indispo_retour_prevu'] = 'Retour prévu le {$a}.';
 $string['privacy:metadata:local_simhub_asv_valsim:commentaire'] = 'Observation de l\'encadrant ou motif d\'annulation de la validation';
+$string['setting_categoryid'] = 'Catégorie SimHub';
+$string['setting_categoryid_desc'] = 'Catégorie de cours où sont attribués les rôles SimHub transversaux (gestionnaire de salle, administrateur fonctionnel, formateur ASV). L\'administrateur fonctionnel y attribue lui-même ces rôles, sans compte administrateur. Les enseignants n\'en ont pas besoin : leurs droits viennent de l\'activité SimHub de leur UC. Les rôles déjà attribués au niveau système restent valables.';
+$string['setting_categoryid_systeme'] = 'Aucune (niveau système)';
+$string['ae_derniere_modification'] = 'Grille partagée par toutes les UC qui utilisent cet atelier. Dernière modification : {$a->auteur}, le {$a->date}.';
+$string['event_session_validated'] = 'Séance d\'atelier validée ou refusée';
+$string['event_parcours_updated'] = 'Ateliers d\'un parcours modifiés';
+$string['privacy:metadata:personnel'] = 'Références au personnel dans le référentiel partagé de l\'école (ateliers, indisponibilités, ressources, parcours, grilles, actes ASV, codes de séance). À la suppression d\'un utilisateur, les fiches sont conservées et la référence est effacée.';
+$string['privacy:metadata:personnel:referentuserid'] = 'Personne référente de l\'atelier ou de l\'indisponibilité.';
+$string['privacy:metadata:personnel:usermodified'] = 'Auteur de la dernière modification.';
+$string['privacy:metadata:personnel:createuruserid'] = 'Encadrant ayant généré le code de séance.';
+$string['champ_categorie'] = 'Catégorie';
+$string['filtre_statut'] = 'Disponibilité';
+$string['filtre_statut_visibles'] = 'Actifs et indisponibles';
+$string['filtre_statut_actif'] = 'Actifs seulement';
+$string['filtre_statut_indisponible'] = 'Indisponibles seulement';
+$string['carte_uc'] = 'UC :';
+$string['session_statut_commence'] = 'Commencée';
+$string['session_statut_realise'] = 'Réalisée';
+$string['session_statut_certifie'] = 'Validée';
+$string['session_statut_non_termine'] = 'À refaire';
+$string['session_val_valide'] = 'Validée par un encadrant';
+$string['session_val_refuse'] = 'Refusée par un encadrant';
+$string['session_demarree_le'] = 'Démarrée le';
+$string['session_motif'] = 'À vérifier';
+$string['session_motif_nonverifie'] = 'présence non vérifiée';
+$string['session_motif_duree'] = 'durée anormalement courte ({$a->duree} min pour {$a->indicative} min indicatives)';
+$string['setting_reseauxsalle'] = 'Réseau de la salle de simulation';
+$string['setting_reseauxsalle_desc'] = 'Plages d\'adresses IP de la salle, une par ligne (ex. 192.168.10.0/24, 10.2.3.4-50, 172.16.). Quand le contrôle anti-faux-scan est actif, un étudiant connecté depuis ce réseau démarre sa séance sans code (§7.3). Vide : pas de reconnaissance réseau.';
+$string['setting_dureeminpct'] = 'Durée minimale d\'une séance (% de la durée indicative)';
+$string['setting_dureeminpct_desc'] = 'Une séance terminée en moins de ce pourcentage de la durée indicative de l\'atelier est signalée à l\'encadrant (§7.1), sans être bloquée. Par exemple 30 : un atelier de 20 minutes terminé en moins de 6 minutes est signalé. 0 : aucun signalement.';
+$string['export_avancement'] = 'Avancement (%)';
+$string['export_fin'] = 'Terminée le';
+$string['export_validation'] = 'Validation';
+$string['export_format_csv'] = 'CSV';
+$string['export_format_xlsx'] = 'Excel (XLSX)';
+$string['export_format_ods'] = 'LibreOffice (ODS)';
+$string['export_telecharger'] = 'Télécharger :';
+$string['export_cohorte'] = 'Suivi d\'une cohorte';
+$string['col_uc'] = 'UC';
+$string['champ_niveauattendu'] = 'Niveau attendu';
+$string['champ_obligatoire'] = 'Obligatoire';
+$string['champ_echeance'] = 'Échéance';
+$string['champ_type'] = 'Type';
+$string['visibilite_etudiant'] = 'Visible par les étudiants';
+$string['champ_cohorte_optionnel'] = 'Cohorte (optionnel, pour recommander directement à ses membres)';
+$string['stats_titre'] = 'Critères à retravailler';
+$string['stats_intro'] = 'Réponses des étudiants à la grille d\'auto-évaluation, critère par critère, les plus souvent déclarés « à reprendre » ou « à consolider » en premier (§7.1). Les lignes surlignées dépassent 50 %.';
+$string['stats_aucune'] = 'Aucune auto-évaluation enregistrée pour cet atelier.';
+$string['stats_reponses'] = 'Réponses';
+$string['stats_rubrique'] = 'Rubrique';
+$string['stats_critere'] = 'Critère';
+$string['stats_lien'] = 'Critères à retravailler';
+$string['filtre_annee_optionnel'] = 'Année d\'étude (optionnel)';
+$string['parcours_uc_verrouille'] = 'Ce parcours appartient à une activité SimHub d\'UC : son nom, son type et son cours se modifient depuis l\'activité.';
+$string['import_type_ateliers'] = 'Fiches ateliers';
+$string['import_type_localisation'] = 'Localisation (salle, zone, poste)';
+$string['import_type_ressources'] = 'Liens vers les ressources';
+$string['import_type_help'] = 'Ateliers : numéro et nom obligatoires ; un numéro déjà connu est mis à jour. Localisation : numéro, puis salle, zone, poste ou indication ; seules les colonnes présentes sont modifiées. Ressources : numéro, titre et adresse (URL), avec type et visibilité facultatifs ; une ressource de même titre est mise à jour. Rattachements : numéro, puis UC (identifiant ou nom abrégé du cours), année, cohorte, caractère obligatoire, niveau attendu. Parcours : nom du parcours, numéro, ordre, obligatoire (oui/non).';
+$string['import_lancer'] = 'Importer';
+$string['import_format_refuse'] = 'Format non reconnu : utilisez un fichier CSV, XLSX ou ODS.';
+$string['import_bilan_crees'] = '{$a} créé(s)';
+$string['import_bilan_majs'] = '{$a} mis à jour';
+$string['import_bilan_parcours'] = '{$a} parcours créé(s)';
+$string['import_ligne_ressource'] = 'Ligne {$a} : titre ou adresse (URL) manquant ou invalide.';

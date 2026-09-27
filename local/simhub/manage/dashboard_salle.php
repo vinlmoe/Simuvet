@@ -1,8 +1,29 @@
 <?php
-// Tableau de bord "responsable de salle" (§12.2) : ateliers actifs, en maintenance, sans
-// ressource, sans rattachement UC, peu utilisés — au-delà de la simple liste de
-// manage/ateliers.php, pour repérer d'un coup d'œil ce qui mérite une action (compléter
-// une fiche, relancer une maintenance, retirer un atelier qui ne sert jamais).
+// This file is part of Moodle - https://moodle.org/
+//
+// Moodle is free software: you can redistribute it and/or modify
+// it under the terms of the GNU General Public License as published by
+// the Free Software Foundation, either version 3 of the License, or
+// (at your option) any later version.
+//
+// Moodle is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU General Public License for more details.
+//
+// You should have received a copy of the GNU General Public License
+// along with Moodle.  If not, see <https://www.gnu.org/licenses/>.
+
+/**
+ * Tableau de bord "responsable de salle" (§12.2) : ateliers actifs, en maintenance, sans
+ * ressource, sans rattachement UC, peu utilisés — au-delà de la simple liste de
+ * manage/ateliers.php, pour repérer d'un coup d'œil ce qui mérite une action (compléter
+ * une fiche, relancer une maintenance, retirer un atelier qui ne sert jamais).
+ *
+ * @package    local_simhub
+ * @copyright  2026 Écoles nationales vétérinaires de France (ENVF)
+ * @license    https://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
+ */
 
 require(__DIR__ . '/../../../config.php');
 
@@ -11,7 +32,7 @@ use local_simhub\record\indispo;
 
 require_login();
 
-$context = context_system::instance();
+$context = \local_simhub\local\contexte::racine();
 require_capability('local/simhub:manageateliers', $context);
 
 $envcode = optional_param('envcode', get_config('local_simhub', 'envcode') ?: '', PARAM_ALPHANUMEXT);
@@ -21,7 +42,8 @@ $envcode = optional_param('envcode', get_config('local_simhub', 'envcode') ?: ''
 // une fois de premières données réelles disponibles (§15).
 $seuilpeuutilise = 3;
 
-\local_simhub\local\navigation::preparer($PAGE, new moodle_url('/local/simhub/manage/dashboard_salle.php'), get_string('dashboard_salle', 'local_simhub'));
+$pageurl = new moodle_url('/local/simhub/manage/dashboard_salle.php');
+\local_simhub\local\navigation::preparer($PAGE, $pageurl, get_string('dashboard_salle', 'local_simhub'));
 
 echo $OUTPUT->header();
 echo \local_simhub\local\navigation::barre();
@@ -92,21 +114,43 @@ foreach ($ateliers as $atelier) {
  */
 function local_simhub_dashboard_tuile(string $label, int $valeur, string $couleur = 'bg-light'): string {
     return html_writer::div(
-        html_writer::tag('div', $valeur, ['style' => 'font-size:1.8rem;font-weight:bold;'])
-        . html_writer::tag('div', $label, ['style' => 'font-size:0.85rem;']),
-        $couleur,
-        ['style' => 'display:inline-block;min-width:150px;padding:12px;margin:0 8px 8px 0;border-radius:6px;text-align:center;']
+        html_writer::div($valeur, 'local-simhub-tuile-valeur') . html_writer::div($label, 'local-simhub-tuile-libelle'),
+        'local-simhub-tuile ' . $couleur
     );
 }
 
 echo html_writer::start_div('mb-4');
-echo local_simhub_dashboard_tuile(get_string('statut_actif', 'local_simhub'), count($parstatut[atelier::STATUT_ACTIF]), 'bg-success text-white');
-echo local_simhub_dashboard_tuile(get_string('statut_indisponible', 'local_simhub'), count($parstatut[atelier::STATUT_INDISPONIBLE]), 'bg-warning');
-echo local_simhub_dashboard_tuile(get_string('statut_non_utilise', 'local_simhub'), count($parstatut[atelier::STATUT_NON_UTILISE]), 'bg-light');
-echo local_simhub_dashboard_tuile(get_string('statut_archive', 'local_simhub'), count($parstatut[atelier::STATUT_ARCHIVE]), 'bg-light');
-echo local_simhub_dashboard_tuile(get_string('dashboard_sansressource', 'local_simhub'), count($sansressource), 'bg-info text-white');
+echo local_simhub_dashboard_tuile(
+    get_string('statut_actif', 'local_simhub'),
+    count($parstatut[atelier::STATUT_ACTIF]),
+    'bg-success text-white',
+);
+echo local_simhub_dashboard_tuile(
+    get_string('statut_indisponible', 'local_simhub'),
+    count($parstatut[atelier::STATUT_INDISPONIBLE]),
+    'bg-warning',
+);
+echo local_simhub_dashboard_tuile(
+    get_string('statut_non_utilise', 'local_simhub'),
+    count($parstatut[atelier::STATUT_NON_UTILISE]),
+    'bg-light',
+);
+echo local_simhub_dashboard_tuile(
+    get_string('statut_archive', 'local_simhub'),
+    count($parstatut[atelier::STATUT_ARCHIVE]),
+    'bg-light',
+);
+echo local_simhub_dashboard_tuile(
+    get_string('dashboard_sansressource', 'local_simhub'),
+    count($sansressource),
+    'bg-info text-white',
+);
 echo local_simhub_dashboard_tuile(get_string('dashboard_sansuc', 'local_simhub'), count($sansuc), 'bg-info text-white');
-echo local_simhub_dashboard_tuile(get_string('dashboard_peuutilise', 'local_simhub'), count($peuutilises), 'bg-secondary text-white');
+echo local_simhub_dashboard_tuile(
+    get_string('dashboard_peuutilise', 'local_simhub'),
+    count($peuutilises),
+    'bg-secondary text-white',
+);
 echo html_writer::end_div();
 
 /**
@@ -124,7 +168,10 @@ function local_simhub_dashboard_section(string $titre, array $liste): void {
     echo html_writer::start_tag('ul');
     foreach ($liste as $atelier) {
         $editurl = new moodle_url('/local/simhub/manage/atelier_edit.php', ['id' => $atelier->get('id')]);
-        echo html_writer::tag('li', html_writer::link($editurl, '#' . s($atelier->get('numero')) . ' — ' . s($atelier->get('nomcourt'))));
+        echo html_writer::tag(
+            'li',
+            html_writer::link($editurl, '#' . s($atelier->get('numero')) . ' — ' . s($atelier->get('nomcourt'))),
+        );
     }
     echo html_writer::end_tag('ul');
 }

@@ -1,6 +1,27 @@
 <?php
-// Fiche ASV d'un étudiant côté encadrant (§9.4) : état acte par acte, avancement vers les
-// certifications, livret, et annulation d'une validation saisie par erreur.
+// This file is part of Moodle - https://moodle.org/
+//
+// Moodle is free software: you can redistribute it and/or modify
+// it under the terms of the GNU General Public License as published by
+// the Free Software Foundation, either version 3 of the License, or
+// (at your option) any later version.
+//
+// Moodle is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU General Public License for more details.
+//
+// You should have received a copy of the GNU General Public License
+// along with Moodle.  If not, see <https://www.gnu.org/licenses/>.
+
+/**
+ * Fiche ASV d'un étudiant côté encadrant (§9.4) : état acte par acte, avancement vers les
+ * certifications, livret, et annulation d'une validation saisie par erreur.
+ *
+ * @package    local_simhub
+ * @copyright  2026 Écoles nationales vétérinaires de France (ENVF)
+ * @license    https://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
+ */
 
 require(__DIR__ . '/../../../config.php');
 
@@ -10,14 +31,13 @@ use local_simhub\record\asv_valanimal;
 
 require_login();
 
-$context = context_system::instance();
-if (!has_capability('local/simhub:validateasvsimulation', $context)) {
+$context = \local_simhub\local\contexte::racine();
+$userid = required_param('userid', PARAM_INT);
+if (!\local_simhub\local\droits::peut_valider_asv($userid)) {
     require_capability('local/simhub:manageasv', $context);
 }
-
-$userid = required_param('userid', PARAM_INT);
 $action = optional_param('action', '', PARAM_ALPHA);
-$envcode = optional_param('envcode', get_config('local_simhub', 'envcode') ?: '', PARAM_ALPHANUMEXT);
+$envcode = '';
 
 $user = \core_user::get_user($userid, '*', MUST_EXIST);
 $url = new moodle_url('/local/simhub/asv/etudiant.php', ['userid' => $userid]);
@@ -29,19 +49,25 @@ $url = new moodle_url('/local/simhub/asv/etudiant.php', ['userid' => $userid]);
 if ($action === 'annulersim' || $action === 'annuleranimal') {
     $id = required_param('id', PARAM_INT);
     $table = $action === 'annulersim' ? asv_valsim::TABLE : asv_valanimal::TABLE;
-    require_capability($action === 'annulersim' ? 'local/simhub:validateasvsimulation' : 'local/simhub:manageasv', $context);
+    if ($action !== 'annulersim' || !\local_simhub\local\droits::peut_valider_asv($userid)) {
+        require_capability('local/simhub:manageasv', $context);
+    }
     $validation = $DB->get_record($table, ['id' => $id, 'userid' => $userid, 'statut' => 'valide'], '*', MUST_EXIST);
 
-    if (optional_param('confirmer', 0, PARAM_BOOL)) {
-        require_sesskey();
-        $motif = trim(optional_param('motif', '', PARAM_TEXT));
-        if ($motif === '') {
-            redirect(new moodle_url($url, ['action' => $action, 'id' => $id]),
-                get_string('asv_motif_obligatoire', 'local_simhub'), null, \core\output\notification::NOTIFY_ERROR);
-        }
+    $form = new \local_simhub\form\formulaire(new moodle_url($url, ['action' => $action, 'id' => $id]), [
+        'champs' => [
+            ['textarea', 'motif', get_string('asv_motif', 'local_simhub'), ['requis' => true,
+                'attributs' => ['rows' => 2, 'cols' => 50]]],
+        ],
+        'bouton' => get_string('asv_confirmer', 'local_simhub'),
+        'annuler' => true,
+    ]);
+    if ($form->is_cancelled()) {
+        redirect($url);
+    } else if (($data = $form->get_data()) && trim($data->motif) !== '') {
         $motif = get_string('asv_annule_par', 'local_simhub', (object) [
             'nom' => fullname($USER), 'date' => userdate(time(), get_string('strftimedatefullshort', 'langconfig')),
-            'motif' => $motif,
+            'motif' => trim($data->motif),
         ]);
         if ($action === 'annulersim') {
             asv_valsim::annuler($id, $motif);
@@ -58,16 +84,7 @@ if ($action === 'annulersim' || $action === 'annuleranimal') {
         'acte' => s($acte->get('nom')), 'etudiant' => s(fullname($user)),
     ]), \core\output\notification::NOTIFY_WARNING);
 
-    echo html_writer::start_tag('form', ['method' => 'post', 'action' => $url->out(false)]);
-    foreach (['sesskey' => sesskey(), 'action' => $action, 'id' => $id, 'confirmer' => 1] as $name => $value) {
-        echo html_writer::empty_tag('input', ['type' => 'hidden', 'name' => $name, 'value' => $value]);
-    }
-    echo html_writer::tag('label', get_string('asv_motif', 'local_simhub'), ['for' => 'id_motif']);
-    echo html_writer::tag('textarea', '', ['name' => 'motif', 'id' => 'id_motif', 'class' => 'form-control mb-2',
-        'required' => 'required', 'rows' => 2]);
-    echo html_writer::tag('button', get_string('asv_confirmer', 'local_simhub'), ['type' => 'submit', 'class' => 'btn btn-danger mr-2 me-2']);
-    echo html_writer::link($url, get_string('cancel'), ['class' => 'btn btn-secondary']);
-    echo html_writer::end_tag('form');
+    $form->display();
     echo $OUTPUT->footer();
     exit;
 }
@@ -76,11 +93,17 @@ echo $OUTPUT->header();
 echo \local_simhub\local\navigation::barre();
 
 echo html_writer::div(
-    html_writer::link(new moodle_url('/local/simhub/asv/livret_pdf.php', ['userid' => $userid, 'envcode' => $envcode]),
-        get_string('asv_exporter_livret', 'local_simhub'), ['class' => 'btn btn-outline-secondary btn-sm mr-2 me-2'])
-    . (has_capability('local/simhub:validateasvsimulation', $context)
-        ? html_writer::link(new moodle_url('/local/simhub/asv/valider_simulation.php', ['userid' => $userid]),
-            get_string('asv_valider_simulation', 'local_simhub'), ['class' => 'btn btn-primary btn-sm'])
+    html_writer::link(
+        new moodle_url('/local/simhub/asv/livret_pdf.php', ['userid' => $userid, 'envcode' => $envcode]),
+        get_string('asv_exporter_livret', 'local_simhub'),
+        ['class' => 'btn btn-outline-secondary btn-sm mr-2 me-2']
+    )
+    . (\local_simhub\local\droits::peut_valider_asv($userid)
+        ? html_writer::link(
+            new moodle_url('/local/simhub/asv/valider_simulation.php', ['userid' => $userid]),
+            get_string('asv_valider_simulation', 'local_simhub'),
+            ['class' => 'btn btn-primary btn-sm']
+        )
         : ''),
     'mb-3'
 );

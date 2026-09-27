@@ -13,24 +13,23 @@ ASV (validation simulation + animal vivant). Certains points restent
 volontairement simplifiés ou en attente des retours des responsables
 de salle (§15) — voir "Ce qui reste à faire" ci-dessous.
 
-## Pourquoi un plugin `local` et pas un bloc ou une activité
+## Deux plugins : `local_simhub` et l'activité `mod_simhub`
 
-Le cahier des charges (§10) laisse ce choix au prestataire. Un plugin
-`local` a été retenu ici car SimHub :
-- n'est pas rattaché à un cours ou une activité Moodle en particulier
-  (les ateliers sont transverses à toutes les UC) ;
-- a besoin de ses propres tables et pages, avec un contexte système ;
-- doit rester un point d'entrée central, tout en consommant les rôles,
-  cohortes, UC et carnet de notes Moodle par API plutôt qu'en devenant
-  lui-même une activité de cours.
+Le cahier des charges (§10) laisse le choix de la forme au prestataire. SimHub en combine
+deux :
+- **`local/simhub`** porte tout ce qui est transversal à l'école : fiches ateliers, salle,
+  ressources, QR codes, séances, grilles d'auto-évaluation, module ASV, accueil étudiant.
+- **`mod/simhub`** est une activité que le **responsable d'UC ajoute lui-même dans le cours
+  de son UC**. Elle porte le parcours d'ateliers de l'UC, le suivi de ses étudiants, la
+  validation de leurs séances et la note (pourcentage d'avancement) dans le carnet du cours.
 
-Ce choix est un point de départ raisonnable, pas un arbitrage définitif
-— à confirmer une fois les contraintes de l'infrastructure EVE connues.
+Ainsi, **un enseignant n'a de droits que sur les UC où il est inscrit comme enseignant**, et
+en obtient sur une autre UC dès qu'il y est ajouté : aucun rôle système à attribuer.
 
-**Important : le plugin doit vivre dans `local/simhub/`** dans une
-installation Moodle (le composant `local_simhub` est résolu par
-Moodle à partir de ce chemin). Ce dépôt place directement ce dossier
-à la racine.
+**Important : les plugins doivent vivre dans `local/simhub/` et `mod/simhub/`** d'une
+installation Moodle (les composants sont résolus à partir de ces chemins). Ce dépôt reproduit
+directement cette arborescence. Copier les dossiers plutôt que de créer des liens
+symboliques : `require(__DIR__ . '/../../config.php')` suit le chemin réel du fichier.
 
 ## Arborescence
 
@@ -387,24 +386,125 @@ Bugs réels corrigés à cette occasion :
   ASV déjà utilisé dans l'établissement provoquait « Erreur d'écriture vers la base
   de données ». Les deux sont désormais signalés dans le formulaire.
 
-## Rôles système SimHub (§11)
+## Droits par UC et catégorie SimHub (§10, §11)
 
-Pour la même raison que ci-dessus, un rôle d'enseignant attribué dans un cours ne donne
-aucun droit SimHub. Le plugin crée donc lui-même, à l'installation comme à la mise à
-jour (`classes/local/roles.php`), quatre rôles attribuables **uniquement au niveau
-système** :
+Décisions validées le 26 septembre 2026 (rapport `docs/rapport_architecture_droits.pdf`).
 
-| Rôle | Profil §11 | Droits |
+**Chaque école a son propre Moodle.** Le code établissement (`envcode`) ne sert plus qu'à la
+traçabilité : il est enregistré sur les ateliers, parcours et actes ASV, figure dans les
+exports, mais ne filtre plus aucune liste et n'est plus saisi dans les formulaires.
+
+**Deux contextes de droits** (`classes/local/contexte.php`, `classes/local/droits.php`) :
+
+| Profil | Où sont ses droits | Qui les donne |
 |---|---|---|
-| Encadrant SimHub | Enseignant / formateur | suivi des parcours, validation des séances, export du suivi, validation ASV en simulation |
-| Responsable d'UC SimHub | Responsable d'UC | droits d'encadrant + parcours et rattachements |
-| Gestionnaire de salle SimHub | Responsable de salle | fiches ateliers, ressources, statuts, QR codes, import/export, rattachements, séances |
-| Administrateur fonctionnel SimHub | Administrateur fonctionnel | tous les droits SimHub, dont le référentiel ASV et le paramétrage |
+| Étudiant | Utilisateur authentifié + inscription au cours | Automatique |
+| Enseignant | Rôle `teacher` dans le cours de l'UC (activité `mod_simhub`) | Inscription au cours |
+| Responsable d'UC | Rôle `editingteacher` dans le cours de l'UC | Inscription au cours ; il ajoute l'activité |
+| Gestionnaire de salle, formateur ASV | Rôle SimHub dans la **catégorie SimHub** | L'administrateur fonctionnel |
+| Administrateur fonctionnel | Rôle SimHub dans la catégorie SimHub | Un administrateur Moodle, une fois |
 
-Il reste à les attribuer aux personnes concernées : un raccourci **Rôles SimHub** dans la
-barre de navigation (visible des administrateurs) ouvre directement *Attribuer des rôles
-système*. Rejouer la création est sans danger : un rôle existant est complété, jamais
-recréé, et les ajustements faits à la main par l'établissement sont conservés.
+- **Catégorie SimHub** : réglage `local_simhub/categoryid`. Les capacités transversales y
+  sont vérifiées (`contexte::racine()`) ; sans réglage, c'est le niveau système, comme
+  avant. Un rôle déjà attribué au système reste valable (le système est parent de la
+  catégorie). Les fichiers restent stockés au contexte système (`contexte::fichiers()`).
+- **Délégation** : l'administrateur fonctionnel reçoit `moodle/role:assign` et ne peut
+  attribuer que les rôles SimHub, dans la catégorie (raccourci « Rôles SimHub »).
+- **Enseignant d'UC** : il suit uniquement les inscrits de son cours, valide les séances d'un
+  étudiant de son UC sur un atelier de son UC (où que la séance ait été lancée), et valide
+  les actes ASV en simulation de ses étudiants.
+- **Responsable d'UC** : choisit les ateliers de son UC (un rattachement au cours est créé ou
+  retiré automatiquement) et modifie leur grille d'auto-évaluation. La grille étant partagée
+  par toutes les UC, la page affiche l'auteur et la date de la dernière modification.
+- **Validation ASV en simulation** : enseignants de l'UC *et* formateurs désignés dans la
+  catégorie (rôle « Formateur SimHub »).
+
+**Une séance, plusieurs UC.** L'étudiant scanne le QR code de l'atelier sans choisir d'UC.
+L'état d'un atelier ne dépend que de ses séances sur cet atelier ; à chaque séance terminée
+ou validée (événements `session_completed`, `session_validated`), l'observateur de
+`mod_simhub` recalcule la note de l'étudiant dans **toutes** les UC qui contiennent l'atelier.
+Modifier la composition d'un parcours (`parcours_updated`) recalcule toute l'UC.
+
+**Note** : pourcentage d'avancement (ateliers obligatoires s'il y en a, sinon tous),
+rapporté à la note maximale de l'activité. Les groupes du cours filtrent le suivi.
+
+Vérifié sur Moodle 5.0 (PHP 8.4, PostgreSQL), en installation neuve et en mise à jour depuis
+la version précédente : 31 contrôles de droits et de notes, 28 pages parcourues par
+navigateur (responsable d'UC, enseignant, étudiant, gestionnaire, administrateur
+fonctionnel, administrateur), validation d'une séance depuis le cours.
+
+**Sauvegarde et restauration** : l'activité suit le cours (sauvegarde, restauration,
+duplication, import). La composition du parcours est sauvegardée par numéro d'atelier et
+retrouvée dans le référentiel du site ; un atelier absent est signalé dans le journal de
+restauration. Les séances des étudiants restent dans SimHub : les notes sont recalculées
+pour les inscrits du nouveau cours à la fin de la restauration.
+
+## Lots 4 à 8 du rapport (septembre 2026)
+
+| Lot | Réalisé | Section |
+|---|---|---|
+| 4 | Filtres de l'accueil étudiant : **UC**, **parcours**, **statut personnel** (pas commencé, commencé, réalisé, validé, à reprendre) et **disponibilité** (actifs et indisponibles, ou l'un des deux ; jamais les archivés). Champ **catégorie** sur la fiche atelier (formulaire, import, export) et la carte. La carte affiche aussi les **UC associées et le niveau attendu**. | §5.2, §5.3 |
+| 5 | **Séance trop courte** : réglage `dureeminpct` (% de la durée indicative, 0 = désactivé). La séance reste réalisée (non bloquant) mais rejoint la file « Séances à valider » avec son motif. Un **refus** d'encadrant remet désormais l'atelier « à reprendre » au lieu de le laisser compter comme réalisé. | §7.1, §7.3 |
+| 6 | Exports **CSV** (séparateur « ; », BOM pour Excel), **XLSX** et **ODS** via l'API `dataformat` de Moodle (`classes/local/exporteur.php`). Nouveaux exports **par UC** (activité SimHub), **par cohorte** (tableau de bord) et **par étudiant** (historique des séances, pour l'étudiant lui-même ou ses enseignants). | §12.3 |
+| 7 | **Groupes** : le suivi détaillé d'un parcours d'UC suit le mode de groupe de l'activité, comme sa page de suivi. | §10, §8.1 |
+| 8 | **Réseau de la salle** : réglage `reseauxsalle` (plages IP au format Moodle). Contrôle anti-faux-scan actif et étudiant sur ce réseau : la séance démarre sans code, marquée `reseau_local`. Hors réseau, le code de séance reste demandé, toujours contournable par validation encadrant. | §7.3 |
+
+Au passage : la section « Parcours ASV » de l'accueil étudiant réapparaît (elle dépendait du
+code établissement), et le statut `non_termine` d'une séance est désormais enregistrable (le
+type `PARAM_ALPHA` refusait le « _ »). Vérifié : 14 tests PHPUnit, 24 contrôles navigateur
+dont des téléchargements XLSX/ODS/CSV réels, non-régression des 28 pages précédentes.
+
+## Dernières corrections (septembre 2026)
+
+- **Achèvement d'activité** : règle « tous les ateliers requis de l'UC réalisés », utilisable
+  par l'achèvement de cours et les badges de cours.
+- **Critères à retravailler** (§7.1) : page `manage/ae_stats.php`, par atelier, depuis
+  l'activité d'UC (ses seuls étudiants) ou pour un profil transversal ; taux par atelier dans
+  la vue d'UC.
+- **Échéances dans la vue d'UC** (§8.1) : étudiants restants par atelier, échéance dépassée
+  ou proche signalée.
+- **Import** (§12.1) : XLSX et ODS en plus du CSV ; imports de la localisation (salle, zone,
+  poste) et des liens de ressources ; UC désignée par son nom abrégé.
+- **Performance** : état des ateliers calculé par lot (une requête pour tout un groupe
+  d'étudiants) pour les notes, le suivi, les exports et les tableaux de bord.
+- **Parcours d'UC protégés** : nom, type et cours non modifiables hors de l'activité ;
+  désinstallation de l'activité sans parcours orphelins.
+- **Formulaires Moodle** et **modules AMD** à la place du HTML et du JavaScript intégrés.
+- Bugs trouvés en route : modification de parcours impossible (code établissement vide
+  converti en NULL), atelier « non utilisé » impossible à enregistrer, clic sur le plan qui
+  n'enregistrait jamais le repère, import d'ateliers rejeté sans colonne « statut », code de
+  séance en minuscules refusé.
+
+## Conformité aux règles Moodle (septembre 2026)
+
+| Contrôle | Résultat |
+|---|---|
+| Standard de code `moodle` (moodle-cs / phpcs), les deux plugins | 0 erreur, 0 avertissement |
+| En-tête GPL et bloc `@package` / `@copyright` / `@license` | Tous les fichiers PHP et templates |
+| Schéma (`admin/cli/check_database_schema.php`), installation neuve et mise à jour | « Database structure is ok » |
+| API Privacy : test de conformité du cœur (`privacy/tests/privacy/provider_test.php`) | Passe ; `core_userlist_provider` ajouté, champs du personnel déclarés |
+| PHPUnit `local_simhub` (confidentialité, imports, lots 4 à 8) et `mod_simhub` (droits, notes, achèvement, sauvegarde, désinstallation) | 20 tests, 92 assertions, sur Moodle 5.0 et 4.5 |
+| Behat (`tests/behat`) : droits d'UC, avancement dans plusieurs UC, accueil étudiant et filtres | 4 scénarios, 50 étapes |
+| JavaScript en modules AMD compilés (`grunt amd`, ESLint) et `styles.css` (stylelint) | Aucune erreur |
+| Largeur téléphone (320 px) : accueil, fiche atelier, activité d'UC, ASV, parcours, auto-évaluation, signature | Aucun débordement |
+| Templates Mustache : exemple de contexte rendu par Moodle | Les deux templates |
+| Événements standard d'activité (`course_module_viewed`, `..._instance_list_viewed`) | Déclenchés |
+| Requêtes compatibles toutes bases (pas de `DISTINCT` sur une colonne texte) | Corrigé dans l'observateur |
+| Débogage développeur (`DEBUG_DEVELOPER`), 28 pages parcourues | Aucun avertissement |
+
+Le détenteur du copyright indiqué (« Écoles nationales vétérinaires de France ») est à
+confirmer. Les tests se lancent avec `vendor/bin/phpunit --testsuite local_simhub_testsuite`
+et `--testsuite mod_simhub_testsuite` après `admin/tool/phpunit/cli/init.php`.
+
+Moodle 4.5 : testé en installant et en exécutant tout le code (scénario de droits, PHPUnit,
+test RGPD du cœur), mais sous PHP 8.4, faute de PHP 8.3 disponible dans l'environnement de
+test : la vérification de version de PHP de Moodle 4.5 a été levée pour ce seul essai. Un
+test sous PHP 8.1 à 8.3 reste à faire sur l'infrastructure EVE.
+
+Point de bonne pratique restant ouvert : quelques classes Bootstrap 4 (`badge-warning`,
+`mr-2`...) restent, encore acceptées par Moodle 5.0 ; les équivalents Bootstrap 5 ont été
+ajoutés sur les nouveaux écrans. Les formulaires de filtre en GET (liste ASV, tableau de
+bord, attestations) restent en HTML, comme dans le cœur de Moodle.
 
 ## Internationalisation
 
@@ -615,7 +715,6 @@ dans l'interface ne l'indique).
 **Import/export (§12)**
 - [ ] Import XLSX natif (l'import actuel n'accepte que le CSV ; un
       export Excel non converti doit d'abord être enregistré en CSV).
-- [ ] Export XLSX (seul CSV et PDF sont couverts pour l'instant).
 
 **Ergonomie et robustesse**
 - [ ] Web services / API externe (`classes/external/`) pour un futur
@@ -626,11 +725,10 @@ dans l'interface ne l'indique).
       étudiants restent de la gestion Moodle standard, hors périmètre
       de ce plugin.
 
-**V1+ souhaitable (§13)**
-- [ ] Reconnaissance réseau local pour le contrôle anti-faux-scan
-      (§7.3) : seuls le code de séance et la validation encadrant sont
-      implémentés pour l'instant ; le contrôle par plage IP de salle
-      demanderait de connaître l'infrastructure réseau réelle des ENV.
+**À paramétrer par chaque école**
+- [ ] Plages d'adresses du réseau de la salle (`local_simhub/reseauxsalle`) et seuil de
+      séance trop courte (`local_simhub/dureeminpct`), selon l'infrastructure Wi-Fi et les
+      pratiques locales.
 
 **Hors périmètre V1** (rappel §14, pour éviter la dérive de périmètre)
 Ticketing complet, mode OSCE, signature électronique qualifiée,

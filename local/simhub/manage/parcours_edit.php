@@ -1,5 +1,26 @@
 <?php
-// Création / modification d'un parcours pédagogique (§8).
+// This file is part of Moodle - https://moodle.org/
+//
+// Moodle is free software: you can redistribute it and/or modify
+// it under the terms of the GNU General Public License as published by
+// the Free Software Foundation, either version 3 of the License, or
+// (at your option) any later version.
+//
+// Moodle is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU General Public License for more details.
+//
+// You should have received a copy of the GNU General Public License
+// along with Moodle.  If not, see <https://www.gnu.org/licenses/>.
+
+/**
+ * Création / modification d'un parcours pédagogique (§8).
+ *
+ * @package    local_simhub
+ * @copyright  2026 Écoles nationales vétérinaires de France (ENVF)
+ * @license    https://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
+ */
 
 require(__DIR__ . '/../../../config.php');
 
@@ -8,7 +29,7 @@ use local_simhub\form\parcours_form;
 
 require_login();
 
-$context = context_system::instance();
+$context = \local_simhub\local\contexte::racine();
 require_capability('local/simhub:manageparcours', $context);
 
 $id = optional_param('id', 0, PARAM_INT);
@@ -23,7 +44,11 @@ if ($id) {
 
 $parcours = $id ? new parcours($id) : new parcours();
 
-$form = new parcours_form();
+$estuc = $id && (int) $parcours->get('cmid') > 0;
+$form = new parcours_form(null, ['uc' => $estuc ? [
+    'nom' => $parcours->get('nom'),
+    'cours' => $DB->get_field('course', 'fullname', ['id' => $parcours->get('courseid')]) ?: '',
+] : null]);
 $form->set_data($parcours->to_record());
 
 if ($form->is_cancelled()) {
@@ -32,11 +57,15 @@ if ($form->is_cancelled()) {
     $isnew = empty($data->id);
 
     foreach ((array) $data as $key => $value) {
-        if ($key === 'id' || $key === 'submitbutton') {
+        if (
+            $key === 'id' || $key === 'submitbutton' || $key === 'cmid'
+                || ($estuc && in_array($key, ['nom', 'type', 'courseid'], true))
+        ) {
             continue;
         }
         if ($parcours->has_property($key)) {
-            $parcours->set($key, $value === '' ? null : $value);
+            // Le code établissement n'accepte pas NULL : une valeur vide reste vide.
+            $parcours->set($key, $value === '' && $key !== 'envcode' ? null : $value);
         }
     }
 

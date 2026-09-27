@@ -1,7 +1,28 @@
 <?php
-// Attestation de fin de parcours (§8, §12.3) : générée uniquement si l'étudiant a réalisé
-// ou validé la totalité des ateliers du parcours (avancement à 100%, §8.1) — sinon la page
-// affiche l'avancement actuel plutôt qu'un document à moitié rempli.
+// This file is part of Moodle - https://moodle.org/
+//
+// Moodle is free software: you can redistribute it and/or modify
+// it under the terms of the GNU General Public License as published by
+// the Free Software Foundation, either version 3 of the License, or
+// (at your option) any later version.
+//
+// Moodle is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU General Public License for more details.
+//
+// You should have received a copy of the GNU General Public License
+// along with Moodle.  If not, see <https://www.gnu.org/licenses/>.
+
+/**
+ * Attestation de fin de parcours (§8, §12.3) : générée uniquement si l'étudiant a réalisé
+ * ou validé la totalité des ateliers du parcours (avancement à 100%, §8.1) — sinon la page
+ * affiche l'avancement actuel plutôt qu'un document à moitié rempli.
+ *
+ * @package    local_simhub
+ * @copyright  2026 Écoles nationales vétérinaires de France (ENVF)
+ * @license    https://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
+ */
 
 require(__DIR__ . '/../../../config.php');
 require_once($CFG->libdir . '/pdflib.php');
@@ -14,18 +35,27 @@ use local_simhub\local\badge_helper;
 
 require_login();
 
-$context = context_system::instance();
+$context = \local_simhub\local\contexte::racine();
 
 $parcoursid = required_param('parcoursid', PARAM_INT);
 $userid = optional_param('userid', $USER->id, PARAM_INT);
 
+$parcours = new parcours($parcoursid);
 if ($userid != $USER->id) {
-    require_capability('local/simhub:viewprogression', $context);
+    if (
+        !array_key_exists($userid, \local_simhub\local\droits::etudiants_du_parcours($parcours))
+            || !\local_simhub\local\droits::peut_suivre_parcours($parcours)
+    ) {
+        throw new required_capability_exception(
+            \local_simhub\local\contexte::racine(),
+            'local/simhub:viewprogression',
+            'nopermissions',
+            '',
+        );
+    }
 } else {
     require_capability('local/simhub:view', $context);
 }
-
-$parcours = new parcours($parcoursid);
 $user = \core_user::get_user($userid, '*', MUST_EXIST);
 
 $composition = $parcours->get_ateliers();
@@ -36,22 +66,29 @@ foreach ($atelierids as $aid) {
     $noms[$aid] = (new atelier($aid))->get('nomcourt');
 }
 // L'attestation liste les ateliers effectivement réalisés parmi ceux du parcours.
-$atelierids = array_values(array_filter($atelierids,
-    fn($aid) => in_array(\local_simhub\local\parcours_helper::statut_atelier($userid, (int) $aid), ['realise', 'valide'], true)));
+$atelierids = array_values(array_filter(
+    $atelierids,
+    fn($aid) => in_array(\local_simhub\local\parcours_helper::statut_atelier($userid, (int) $aid), ['realise', 'valide'], true)
+));
 
 ['realises' => $realises, 'total' => $total, 'pct' => $pct] = \local_simhub\local\parcours_helper::progression($parcours, $userid);
 
 if ($total === 0 || $pct < 100) {
     $PAGE->set_context($context);
-    $PAGE->set_url(new moodle_url('/local/simhub/manage/parcours_attestation_pdf.php', ['parcoursid' => $parcoursid, 'userid' => $userid]));
+    $PAGE->set_url(new moodle_url(
+        '/local/simhub/manage/parcours_attestation_pdf.php',
+        ['parcoursid' => $parcoursid, 'userid' => $userid]
+    ));
     $PAGE->set_pagelayout('standard');
     $PAGE->set_title(s($parcours->get('nom')));
     $PAGE->set_heading(s($parcours->get('nom')));
 
     echo $OUTPUT->header();
     echo $OUTPUT->notification(
-        get_string('attestation_incomplete', 'local_simhub', (object) ['nom' => fullname($user), 'pct' => $pct, 'parcours' => s($parcours->get('nom')),
-            'realises' => $realises, 'total' => $total]),
+        get_string('attestation_incomplete', 'local_simhub', (object) [
+            'nom' => fullname($user), 'pct' => $pct, 'parcours' => s($parcours->get('nom')),
+            'realises' => $realises, 'total' => $total,
+        ]),
         \core\output\notification::NOTIFY_WARNING
     );
     echo $OUTPUT->continue_button(new moodle_url('/local/simhub/manage/parcours_suivi.php', ['parcoursid' => $parcoursid]));
@@ -89,7 +126,10 @@ $pdf->writeHTML(
     ''
 );
 
-$html = '<table border="1" cellpadding="4"><tr style="font-weight:bold;"><th>' . get_string('atelier', 'local_simhub') . '</th></tr>';
+$html = '<table border="1" cellpadding="4"><tr style="font-weight:bold;"><th>' . get_string(
+    'atelier',
+    'local_simhub',
+) . '</th></tr>';
 foreach ($atelierids as $aid) {
     $html .= '<tr><td>' . s($noms[$aid]) . '</td></tr>';
 }

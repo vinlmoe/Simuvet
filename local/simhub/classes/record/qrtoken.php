@@ -1,8 +1,28 @@
 <?php
+// This file is part of Moodle - https://moodle.org/
+//
+// Moodle is free software: you can redistribute it and/or modify
+// it under the terms of the GNU General Public License as published by
+// the Free Software Foundation, either version 3 of the License, or
+// (at your option) any later version.
+//
+// Moodle is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU General Public License for more details.
+//
+// You should have received a copy of the GNU General Public License
+// along with Moodle.  If not, see <https://www.gnu.org/licenses/>.
+
+/**
+ * Jeton QR code associé à un atelier (§7) : relie l'objet physique à sa fiche numérique.
+ *
+ * @package    local_simhub
+ * @copyright  2026 Écoles nationales vétérinaires de France (ENVF)
+ * @license    https://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
+ */
 
 namespace local_simhub\record;
-
-defined('MOODLE_INTERNAL') || die();
 
 /**
  * Jeton QR code associé à un atelier (§7) : relie l'objet physique à sa fiche numérique.
@@ -12,7 +32,7 @@ defined('MOODLE_INTERNAL') || die();
  * une nouvelle, pour respecter cette contrainte.
  */
 class qrtoken {
-
+    /** @var string Table de la base de données. */
     const TABLE = 'local_simhub_qrtoken';
 
     /**

@@ -1,6 +1,27 @@
 <?php
-// Création / modification d'une fiche atelier (§6), avec gestion du statut
-// "indisponible" (§6.1) : ouverture/clôture d'une entrée dans local_simhub_indispo.
+// This file is part of Moodle - https://moodle.org/
+//
+// Moodle is free software: you can redistribute it and/or modify
+// it under the terms of the GNU General Public License as published by
+// the Free Software Foundation, either version 3 of the License, or
+// (at your option) any later version.
+//
+// Moodle is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU General Public License for more details.
+//
+// You should have received a copy of the GNU General Public License
+// along with Moodle.  If not, see <https://www.gnu.org/licenses/>.
+
+/**
+ * Création / modification d'une fiche atelier (§6), avec gestion du statut
+ * "indisponible" (§6.1) : ouverture/clôture d'une entrée dans local_simhub_indispo.
+ *
+ * @package    local_simhub
+ * @copyright  2026 Écoles nationales vétérinaires de France (ENVF)
+ * @license    https://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
+ */
 
 require(__DIR__ . '/../../../config.php');
 require_once($CFG->libdir . '/filelib.php');
@@ -11,7 +32,7 @@ use local_simhub\record\indispo;
 
 require_login();
 
-$context = context_system::instance();
+$context = \local_simhub\local\contexte::racine();
 require_capability('local/simhub:manageateliers', $context);
 
 $id = optional_param('id', 0, PARAM_INT);
@@ -29,7 +50,14 @@ $oldstatut = $atelier->get('id') ? $atelier->get('statut') : null;
 
 $planoptions = ['subdirs' => 0, 'maxfiles' => 1, 'accepted_types' => ['.png', '.jpg', '.jpeg']];
 $plandraftid = file_get_submitted_draft_itemid('planimage');
-file_prepare_draft_area($plandraftid, $context->id, 'local_simhub', 'plan', $id ?: null, $planoptions);
+file_prepare_draft_area(
+    $plandraftid,
+    \local_simhub\local\contexte::fichiers()->id,
+    'local_simhub',
+    'plan',
+    $id ?: null,
+    $planoptions,
+);
 
 $form = new atelier_form();
 $formdata = $atelier->to_record();
@@ -68,9 +96,23 @@ if ($form->is_cancelled()) {
 
     // L'itemid de la zone de fichiers 'plan' est l'id de l'atelier lui-même (§5.4), une fois
     // celui-ci connu (création comprise).
-    file_save_draft_area_files($data->planimage, $context->id, 'local_simhub', 'plan', $atelier->get('id'), $planoptions);
+    file_save_draft_area_files(
+        $data->planimage,
+        \local_simhub\local\contexte::fichiers()->id,
+        'local_simhub',
+        'plan',
+        $atelier->get('id'),
+        $planoptions,
+    );
     $fs = get_file_storage();
-    $planfiles = $fs->get_area_files($context->id, 'local_simhub', 'plan', $atelier->get('id'), 'filepath, filename', false);
+    $planfiles = $fs->get_area_files(
+        \local_simhub\local\contexte::fichiers()->id,
+        'local_simhub',
+        'plan',
+        $atelier->get('id'),
+        'filepath, filename',
+        false,
+    );
     $atelier->set('planimageitemid', !empty($planfiles) ? $atelier->get('id') : 0);
     $atelier->update();
 
