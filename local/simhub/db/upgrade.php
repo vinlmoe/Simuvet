@@ -134,5 +134,24 @@ function xmldb_local_simhub_upgrade($oldversion) {
         upgrade_plugin_savepoint(true, 2026092902, 'local', 'simhub');
     }
 
+    if ($oldversion < 2026092905) {
+        $table = new xmldb_table('local_simhub_asv_valanimal');
+        $field = new xmldb_field('emailvalidateur', XMLDB_TYPE_CHAR, '255', null, null, null, null, 'signature');
+        if (!$dbman->field_exists($table, $field)) {
+            $dbman->add_field($table, $field);
+        }
+        // Les liens des demandes en attente ont été affichés à l'étudiant, qui pourrait s'en
+        // servir pour se valider lui-même : ils sont expirés, l'étudiant renvoie la demande
+        // à l'adresse de son validateur.
+        $DB->set_field_select(
+            'local_simhub_asv_valanimal',
+            'tokenexpire',
+            time() - 1,
+            'statut = :statut AND emailvalidateur IS NULL',
+            ['statut' => 'en_attente']
+        );
+        upgrade_plugin_savepoint(true, 2026092905, 'local', 'simhub');
+    }
+
     return true;
 }

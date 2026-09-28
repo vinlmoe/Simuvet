@@ -75,7 +75,10 @@ $choixactes = [];
 foreach ($actes as $acte) {
     $choixactes[$acte['id']] = $acte['nom'] . ' (' . $acte['niveau'] . ')';
 }
-$choixetudiants = \local_simhub\local\selecteurs::options_etudiants($transversal ? null : fn(int $uid) => isset($autorises[$uid]));
+// Jamais de validation de soi-même, même pour un encadrant également inscrit comme étudiant.
+$choixetudiants = \local_simhub\local\selecteurs::options_etudiants(
+    fn(int $uid) => $uid != $USER->id && ($transversal || isset($autorises[$uid]))
+);
 $form = new \local_simhub\form\formulaire($PAGE->url, [
     'champs' => array_merge(
         [['autocomplete', 'userid', get_string('etudiant', 'local_simhub'), [
@@ -109,6 +112,9 @@ if ($data = $form->get_data()) {
     $acteid = (int) $data->acteid;
     if (!isset($choixactes[$acteid])) {
         throw new moodle_exception('invalidrecord', 'error', '', 'local_simhub_asv_acte');
+    }
+    if ($userid == $USER->id) {
+        throw new moodle_exception('asv_autovalidation_interdite', 'local_simhub');
     }
     core_user::require_active_user(core_user::get_user($userid, '*', MUST_EXIST));
     if (!\local_simhub\local\droits::peut_valider_asv($userid)) {

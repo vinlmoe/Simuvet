@@ -69,7 +69,7 @@ local/simhub/
 ├── asv/
 │   ├── index.php                 Pilotage du parcours ASV (§9.4)
 │   ├── valider_simulation.php    Validation ASV en simulation par un encadrant (§9.2)
-│   ├── demander_validation_animal.php  Génération du lien de validation animal vivant (§9.3)
+│   ├── demander_validation_animal.php  Envoi du lien de validation animal vivant au validateur (§9.3)
 │   ├── valider_animal.php        Page publique à jeton, sans compte Moodle (§9.3)
 │   ├── livret_pdf.php            Export PDF du livret de compétences ASV (§9.4)
 │   └── attestation_pdf.php       Attestation PDF de certification globale par niveau (§9.4)
@@ -210,8 +210,8 @@ le schéma :
   l'indisponibilité selon le changement de statut (§6.1).
 - **Module ASV** (`asv/`) : vue de progression étudiante ou de
   pilotage (§9.4), validation en simulation par un encadrant (§9.2),
-  génération d'un lien de validation animal vivant et page publique à
-  jeton avec signature au doigt (`<canvas>` vanilla JS, §9.3).
+  envoi par e-mail d'un lien de validation animal vivant au validateur et
+  page publique à jeton avec signature au doigt (`<canvas>` vanilla JS, §9.3).
 - **QR code et contrôle anti-faux-scan** (`qr.php`, `session_code.php`,
   `manage/seancecode_generer.php`, `manage/sessions_a_valider.php`, §7.3) :
   si `local_simhub/controlepresenceactif` est désactivé, le scan
@@ -574,6 +574,41 @@ règle.
 Au passage : les identifiants renvoyés par PostgreSQL (chaînes) sont normalisés avant
 comparaison dans le calcul de certification, et les appels CSV précisent leur caractère
 d'échappement (avertissement de dépréciation sous PHP 8.4).
+
+## Pas d'auto-validation ASV (septembre 2026)
+
+Jusqu'ici, l'étudiant générait lui-même le lien de validation sur animal vivant et le
+voyait en clair : rien ne l'empêchait de l'ouvrir, d'y saisir le nom d'un vétérinaire et
+de signer à sa place. Deux protections sont ajoutées.
+
+1. **Refus de l'auto-validation.** La page publique `asv/valider_animal.php` n'affiche
+   pas le formulaire, et le serveur refuse l'enregistrement
+   (`asv_valanimal::valider()`), quand la session Moodle ouverte est celle de l'étudiant
+   concerné. De même, un encadrant ne peut pas valider sa propre simulation : il
+   n'apparaît pas dans la liste des étudiants de `asv/valider_simulation.php` et
+   `asv_valsim::valider()` refuse un validateur égal à l'étudiant.
+2. **Lien envoyé directement au validateur.** Sur `asv/demander_validation_animal.php`,
+   l'étudiant saisit l'adresse e-mail du vétérinaire, maître de stage ou encadrant ; le
+   lien lui est envoyé par e-mail et **n'est jamais affiché à l'étudiant**. Sa propre
+   adresse est refusée. L'étudiant peut renvoyer l'e-mail ou envoyer la demande à une
+   autre adresse, ce qui expire le lien précédent (une seule demande active par acte).
+   L'adresse du validateur est conservée (`emailvalidateur`) et affichée dans la vue ASV,
+   la fiche étudiant et le livret PDF, ce qui permet un contrôle a posteriori.
+
+À la mise à jour (2026092905), les demandes en attente créées avant ce changement sont
+expirées, puisque leur lien a été montré à l'étudiant : celui-ci doit renvoyer sa
+demande à l'adresse de son validateur.
+
+Limite assumée : un étudiant qui indique une adresse qu'il contrôle (une seconde
+messagerie personnelle) et valide depuis un navigateur déconnecté n'est pas détecté
+automatiquement ; l'adresse figure alors dans le livret, où l'encadrant peut la
+repérer et annuler la validation.
+
+Vérifié sur Moodle 5.0 / PHP 8.4 / PostgreSQL : tests PHPUnit
+(`tests/asv_valanimal_test.php`), mise à jour depuis la version précédente, et scénario
+navigateur (demande, adresse de l'étudiant refusée, aucun lien affiché, refus de
+l'auto-validation, validation par un validateur externe, renvoi et changement
+d'adresse, livret PDF).
 
 ## Navigation par domaines et onglets
 

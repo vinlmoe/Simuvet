@@ -41,8 +41,12 @@ $PAGE->set_title(get_string('asv_formulaire_validateur_titre', 'local_simhub'));
 $PAGE->set_heading(get_string('asv_formulaire_validateur_titre', 'local_simhub'));
 
 $demande = asv_valanimal::get_par_token($token);
+// Un étudiant ne se valide jamais lui-même, même s'il a obtenu le lien (§9.3). Le contrôle
+// ne porte que sur une session Moodle ouverte : le validateur externe n'en a pas.
+$connecte = isloggedin() && !isguestuser() ? (int) $USER->id : 0;
+$autovalidation = $demande && $connecte && $connecte == $demande->userid;
 $form = null;
-if ($demande && $demande->statut !== asv_valanimal::STATUT_VALIDE) {
+if ($demande && $demande->statut !== asv_valanimal::STATUT_VALIDE && !$autovalidation) {
     $form = new \local_simhub\form\valanimal_form(
         $PAGE->url,
         ['token' => $token],
@@ -51,7 +55,15 @@ if ($demande && $demande->statut !== asv_valanimal::STATUT_VALIDE) {
         ['id' => 'local-simhub-valanimal-form']
     );
     $data = $form->get_data();
-    if ($data && asv_valanimal::valider($token, $data->nom, $data->prenom, !empty($data->certification), $data->signature)) {
+    $valide = $data && asv_valanimal::valider(
+        $token,
+        $data->nom,
+        $data->prenom,
+        !empty($data->certification),
+        $data->signature,
+        $connecte
+    );
+    if ($valide) {
         \local_simhub\event\asv_valide_animal::create([
             'objectid' => $demande->id,
             'context' => context_system::instance(),
@@ -70,6 +82,12 @@ echo $OUTPUT->header();
 
 if (!$demande) {
     echo $OUTPUT->notification(get_string('asv_lien_invalide', 'local_simhub'), \core\output\notification::NOTIFY_ERROR);
+    echo $OUTPUT->footer();
+    exit;
+}
+
+if ($autovalidation) {
+    echo $OUTPUT->notification(get_string('asv_autovalidation_interdite', 'local_simhub'), \core\output\notification::NOTIFY_ERROR);
     echo $OUTPUT->footer();
     exit;
 }

@@ -50,6 +50,9 @@ class asv_valsim {
     public static function valider(int $userid, int $acteid, int $validateuruserid, array $extra = []): int {
         global $DB;
 
+        if ($userid == $validateuruserid) {
+            throw new \moodle_exception('asv_autovalidation_interdite', 'local_simhub');
+        }
         $now = time();
         $record = (object) array_merge([
             'userid' => $userid,

@@ -74,9 +74,11 @@ class asv_vue {
 
             if ($animal) {
                 $animaltexte = '✔ ' . userdate($animal->datevalidation, $format) . ' — '
-                    . s($animal->prenomvalidateur . ' ' . $animal->nomvalidateur);
+                    . s($animal->prenomvalidateur . ' ' . $animal->nomvalidateur)
+                    . ($animal->emailvalidateur ? \html_writer::div(s($animal->emailvalidateur), 'small text-muted') : '');
             } else if ($attente) {
-                $animaltexte = $str('asv_en_attente_jusquau', userdate($attente->tokenexpire, $format));
+                $animaltexte = $str('asv_en_attente_jusquau', userdate($attente->tokenexpire, $format))
+                    . ($attente->emailvalidateur ? \html_writer::div(s($attente->emailvalidateur), 'small text-muted') : '');
             } else {
                 $animaltexte = '—';
             }
