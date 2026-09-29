@@ -33,7 +33,9 @@ require_once($CFG->libdir . '/formslib.php');
  *
  * Données attendues (customdata) :
  *  - champs : liste de [type, nom, libellé, options] ; options : type (PARAM_*), requis,
- *    defaut, choix (select, autocomplete, radio), attributs, aide (identifiant de chaîne) ;
+ *    defaut, choix (select, autocomplete, radio, cases), attributs, aide (identifiant de chaîne),
+ *    filtre (cases) ; le type « cases » est une liste de cases à cocher avec « tout
+ *    sélectionner / tout désélectionner », renvoyée en tableau valeur => 0|1 ;
  *  - caches : nom => valeur entière, transmis en champs cachés ;
  *  - bouton : libellé du bouton d'envoi, ou boutons : nom => libellé pour plusieurs ;
  *  - id : identifiant unique quand la page affiche plusieurs formulaires.
@@ -71,6 +73,9 @@ class formulaire extends \moodleform {
                     $groupe[] = $mform->createElement('radio', $nom, '', $texte, $valeur);
                 }
                 $mform->addGroup($groupe, $nom . '_groupe', $libelle, \html_writer::empty_tag('br'), false);
+            } else if ($type === 'cases') {
+                $this->ajouter_cases($nom, $libelle, $opts);
+                continue;
             } else if ($type === 'header') {
                 $mform->addElement('header', $nom, $libelle);
                 $mform->setExpanded($nom, true);
@@ -111,5 +116,32 @@ class formulaire extends \moodleform {
         } else {
             $this->add_action_buttons(!empty($cd['annuler']), $cd['bouton'] ?? get_string('savechanges'));
         }
+    }
+
+    /**
+     * Liste de cases à cocher avec sélection groupée (module AMD local_simhub/selection).
+     *
+     * @param string $nom
+     * @param string $libelle
+     * @param array $opts choix (valeur => libellé), defaut (valeurs cochées), filtre (bool).
+     * @return void
+     */
+    protected function ajouter_cases(string $nom, string $libelle, array $opts): void {
+        $mform = $this->_form;
+        $mform->addElement('html', \html_writer::start_div(\local_simhub\local\selection::CONTENEUR));
+        $mform->addElement('static', $nom . '_outils', $libelle,
+            \local_simhub\local\selection::barre([], !empty($opts['filtre'])));
+        $groupe = [];
+        foreach ($opts['choix'] as $valeur => $texte) {
+            $groupe[] = $mform->createElement('advcheckbox', $nom . '[' . $valeur . ']', '', $texte,
+                ['data-selection-item' => 1], [0, 1]);
+        }
+        $mform->addGroup($groupe, $nom . '_groupe', '', '', false);
+        $mform->addElement('html', \html_writer::end_div());
+        $mform->setType($nom, PARAM_INT);
+        foreach ($opts['defaut'] ?? [] as $valeur) {
+            $mform->setDefault($nom . '[' . $valeur . ']', 1);
+        }
+        \local_simhub\local\selection::requerir_js();
     }
 }

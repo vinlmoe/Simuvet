@@ -16,7 +16,8 @@
 
 /**
  * Validation ASV en simulation par un formateur/encadrant (§9.2). Formulaire minimal :
- * étudiant + acte + atelier associé (optionnel). L'auto-évaluation guidée (§5.6) peut être
+ * étudiants + acte + atelier associé (optionnel). Plusieurs étudiants peuvent être cochés
+ * pour enregistrer la même décision en une fois (validation en masse d'un groupe). L'auto-évaluation guidée (§5.6) peut être
  * une étape préparatoire, mais ne remplace jamais cette validation par un encadrant.
  *
  * @package    local_simhub
@@ -43,8 +44,12 @@ $autorises = $transversal ? [] : array_flip(\local_simhub\local\droits::etudiant
 
 $atelierid = optional_param('atelierid', 0, PARAM_INT);
 $preselection = optional_param('userid', 0, PARAM_INT);
+// Depuis l'activité d'une UC : liste restreinte aux inscrits du cours.
+$courseid = optional_param('courseid', 0, PARAM_INT);
 
-$pageurl = new moodle_url('/local/simhub/asv/valider_simulation.php', $atelierid ? ['atelierid' => $atelierid] : []);
+$pageurl = new moodle_url('/local/simhub/asv/valider_simulation.php', array_filter([
+    'atelierid' => $atelierid, 'courseid' => $courseid,
+]));
 \local_simhub\local\navigation::preparer($PAGE, $pageurl, get_string('asv_valider_simulation', 'local_simhub'), [
     [get_string('asv_parcours', 'local_simhub'), new moodle_url('/local/simhub/asv/index.php')],
 ]);
@@ -75,11 +80,24 @@ $choixactes = [];
 foreach ($actes as $acte) {
     $choixactes[$acte['id']] = $acte['nom'] . ' (' . $acte['niveau'] . ')';
 }
-$choixetudiants = \local_simhub\local\selecteurs::options_etudiants($transversal ? null : fn(int $uid) => isset($autorises[$uid]));
+$inscrits = $courseid ? array_flip(array_map('intval', array_keys(get_enrolled_users(
+    context_course::instance($courseid),
+    '',
+    0,
+    'u.id',
+    null,
+    0,
+    0,
+    true
+)))) : null;
+$choixetudiants = \local_simhub\local\selecteurs::options_etudiants(
+    fn(int $uid) => ($transversal || isset($autorises[$uid])) && ($inscrits === null || isset($inscrits[$uid]))
+);
+unset($choixetudiants['']);
 $form = new \local_simhub\form\formulaire($PAGE->url, [
     'champs' => array_merge(
-        [['autocomplete', 'userid', get_string('etudiant', 'local_simhub'), [
-            'choix' => $choixetudiants, 'type' => PARAM_INT, 'requis' => true, 'defaut' => $preselection ?: '',
+        [['cases', 'userids', get_string('asv_etudiants', 'local_simhub'), [
+            'choix' => $choixetudiants, 'defaut' => $preselection ? [$preselection] : [], 'filtre' => true,
         ]]],
         $atelierid && empty($actesatelier)
             ? [['static', 'aucunacte', '', ['texte' => get_string('asv_aucun_acte_lie', 'local_simhub')]]] : [],
@@ -104,15 +122,22 @@ $form = new \local_simhub\form\formulaire($PAGE->url, [
     'bouton' => get_string('asv_enregistrer_decision', 'local_simhub'),
 ]);
 
+$erreur = false;
 if ($data = $form->get_data()) {
-    $userid = (int) $data->userid;
+    $userids = array_values(array_intersect(
+        array_map('intval', array_keys(array_filter((array) ($data->userids ?? [])))),
+        array_map('intval', array_keys($choixetudiants))
+    ));
     $acteid = (int) $data->acteid;
     if (!isset($choixactes[$acteid])) {
         throw new moodle_exception('invalidrecord', 'error', '', 'local_simhub_asv_acte');
     }
-    core_user::require_active_user(core_user::get_user($userid, '*', MUST_EXIST));
-    if (!\local_simhub\local\droits::peut_valider_asv($userid)) {
-        throw new required_capability_exception($context, 'local/simhub:validateasvsimulation', 'nopermissions', '');
+    // Contrôle de chaque étudiant avant toute écriture : une sélection est enregistrée en entier ou pas du tout.
+    foreach ($userids as $userid) {
+        core_user::require_active_user(core_user::get_user($userid, '*', MUST_EXIST));
+        if (!\local_simhub\local\droits::peut_valider_asv($userid)) {
+            throw new required_capability_exception($context, 'local/simhub:validateasvsimulation', 'nopermissions', '');
+        }
     }
 
     $extra = [];
@@ -126,26 +151,41 @@ if ($data = $form->get_data()) {
         $extra['commentaire'] = $commentaire;
     }
 
-    $id = asv_valsim::valider($userid, $acteid, $USER->id, $extra);
-    if ($extra['statut'] === asv_valsim::STATUT_VALIDE) {
-        \local_simhub\event\asv_valide_simulation::create([
-            'objectid' => $id,
-            'context' => $context,
-            'relateduserid' => $userid,
-        ])->trigger();
+    foreach ($userids as $userid) {
+        $id = asv_valsim::valider($userid, $acteid, $USER->id, $extra);
+        if ($extra['statut'] === asv_valsim::STATUT_VALIDE) {
+            \local_simhub\event\asv_valide_simulation::create([
+                'objectid' => $id,
+                'context' => $context,
+                'relateduserid' => $userid,
+            ])->trigger();
+        }
     }
 
-    redirect(
-        new moodle_url('/local/simhub/asv/etudiant.php', ['userid' => $userid]),
-        get_string('asv_decision_enregistree', 'local_simhub'),
-        null,
-        \core\output\notification::NOTIFY_SUCCESS
-    );
+    if (count($userids) === 1) {
+        redirect(
+            new moodle_url('/local/simhub/asv/etudiant.php', ['userid' => $userids[0]]),
+            get_string('asv_decision_enregistree', 'local_simhub'),
+            null,
+            \core\output\notification::NOTIFY_SUCCESS
+        );
+    } else if ($userids) {
+        redirect(
+            $pageurl,
+            get_string('asv_decisions_enregistrees', 'local_simhub', count($userids)),
+            null,
+            \core\output\notification::NOTIFY_SUCCESS
+        );
+    }
+    $erreur = true;
 }
 
 echo $OUTPUT->header();
 echo \local_simhub\local\navigation::barre();
 
+if ($erreur) {
+    echo $OUTPUT->notification(get_string('selection_vide', 'local_simhub'), \core\output\notification::NOTIFY_ERROR);
+}
 $form->display();
 
 echo $OUTPUT->footer();

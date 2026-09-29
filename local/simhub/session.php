@@ -53,7 +53,13 @@ if ($action === 'demarrer') {
     require_capability('local/simhub:startsession', $context);
     require_sesskey();
 
-    session::demarrer_ou_reprendre($USER->id, $atelierid, ['methodescan' => 'manuel']);
+    // Même contrôle anti-faux-scan que le QR code (§7.3) : sans lui, le bouton « Commencer »
+    // permettrait de démarrer depuis n'importe où sans saisir le code de séance.
+    if (get_config('local_simhub', 'controlepresenceactif') && !\local_simhub\local\reseau::dans_la_salle()) {
+        redirect(new moodle_url('/local/simhub/session_code.php', ['atelierid' => $atelierid, 'methode' => 'manuel']));
+    }
+    $controle = get_config('local_simhub', 'controlepresenceactif') ? 'reseau_local' : null;
+    session::demarrer_ou_reprendre($USER->id, $atelierid, ['methodescan' => 'manuel', 'controlepresence' => $controle]);
 
     redirect(
         new moodle_url('/local/simhub/atelier.php', ['id' => $atelierid]),

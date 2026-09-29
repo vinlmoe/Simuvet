@@ -51,19 +51,39 @@ $action = optional_param('action', '', PARAM_ALPHA);
 if ($action === 'valider' || $action === 'refuser') {
     require_sesskey();
     require_capability('mod/simhub:validatesession', $context);
-    $session = $DB->get_record('local_simhub_session', ['id' => required_param('sessionid', PARAM_INT)], '*', MUST_EXIST);
-    if (
-        !in_array((int) $session->atelierid, $atelierids, true)
-            || !in_array((int) $session->userid, simhub_etudiants_notes($simhub, (int) $session->userid), true)
-    ) {
-        throw new moodle_exception('nopermissions', 'error', '', get_string('simhub:validatesession', 'simhub'));
+    // Une séance (bouton de ligne) ou une sélection (validation en masse).
+    $sessionids = optional_param_array('sessionids', [], PARAM_INT);
+    if (!$sessionids) {
+        $sessionids = [required_param('sessionid', PARAM_INT)];
     }
-    parcours_helper::valider_seance(
-        $session->id,
-        $USER->id,
-        $action === 'valider' ? val_encadrant::STATUT_VALIDE : val_encadrant::STATUT_REFUSE
-    );
-    redirect($url, get_string('changessaved'), null, \core\output\notification::NOTIFY_SUCCESS);
+    $sessions = $DB->get_records_list('local_simhub_session', 'id', array_unique($sessionids));
+    if (!$sessions) {
+        redirect($url, get_string('selection_vide', 'local_simhub'), null, \core\output\notification::NOTIFY_WARNING);
+    }
+    // Contrôle complet avant toute écriture : une sélection ne peut pas déborder de l'UC.
+    $etudiantsuc = array_flip(count($sessions) === 1
+        ? simhub_etudiants_notes($simhub, (int) reset($sessions)->userid)
+        : simhub_etudiants_notes($simhub));
+    foreach ($sessions as $session) {
+        if (!in_array((int) $session->atelierid, $atelierids, true) || !isset($etudiantsuc[(int) $session->userid])) {
+            throw new moodle_exception('nopermissions', 'error', '', get_string('simhub:validatesession', 'simhub'));
+        }
+    }
+    $traitees = 0;
+    foreach ($sessions as $session) {
+        // Déjà traitée (double envoi, autre encadrant) : on n'empile pas une seconde décision.
+        if ($DB->record_exists('local_simhub_val_encadrant', ['sessionid' => $session->id])) {
+            continue;
+        }
+        parcours_helper::valider_seance(
+            $session->id,
+            $USER->id,
+            $action === 'valider' ? val_encadrant::STATUT_VALIDE : val_encadrant::STATUT_REFUSE
+        );
+        $traitees++;
+    }
+    redirect($url, get_string('sessions_traitees', 'local_simhub', $traitees), null,
+        \core\output\notification::NOTIFY_SUCCESS);
 }
 
 $event = \mod_simhub\event\course_module_viewed::create(['context' => $context, 'objectid' => $simhub->id]);
@@ -133,7 +153,7 @@ $boutons[] = html_writer::link(new moodle_url(
 ), get_string('suividetaille', 'simhub'), ['class' => 'btn btn-secondary mr-2 me-2']);
 if (has_capability('mod/simhub:validateasvsimulation', $context)) {
     $boutons[] = html_writer::link(
-        new moodle_url('/local/simhub/asv/valider_simulation.php'),
+        new moodle_url('/local/simhub/asv/valider_simulation.php', ['courseid' => $course->id]),
         get_string('validerasv', 'simhub'),
         ['class' => 'btn btn-secondary']
     );
@@ -263,13 +283,17 @@ if (has_capability('mod/simhub:validatesession', $context) && $atelierids && $et
 
     echo $OUTPUT->heading(get_string('seancesavalider', 'simhub'), 3);
     if ($seances) {
+        \local_simhub\local\selection::requerir_js();
         $table = new html_table();
-        $table->head = [get_string('fullnameuser'), get_string('atelier', 'simhub'), get_string('date'),
+        $table->head = ['', get_string('fullnameuser'), get_string('atelier', 'simhub'), get_string('date'),
             get_string('etat', 'simhub'), ''];
         foreach ($seances as $s) {
             $params = ['id' => $cm->id, 'sessionid' => $s->id, 'sesskey' => sesskey()];
+            $nom = fullname(core_user::get_user($s->userid));
             $table->data[] = [
-                fullname(core_user::get_user($s->userid)),
+                \local_simhub\local\selection::case('sessionids', $s->id,
+                    $nom . ' — ' . $ateliers[(int) $s->atelierid]->get('nomcourt')),
+                $nom,
                 s($ateliers[(int) $s->atelierid]->get('nomcourt')),
                 userdate($s->timestart, get_string('strftimedatetimeshort', 'langconfig')),
                 get_string('statutperso_' . ($s->statut === 'commence' ? 'commence' : 'realise'), 'local_simhub')
@@ -286,7 +310,16 @@ if (has_capability('mod/simhub:validatesession', $context) && $atelierids && $et
                 ),
             ];
         }
+        echo html_writer::start_tag('form', [
+            'method' => 'post', 'action' => $url->out(false), 'class' => \local_simhub\local\selection::CONTENEUR,
+        ]);
+        echo html_writer::empty_tag('input', ['type' => 'hidden', 'name' => 'sesskey', 'value' => sesskey()]);
+        echo \local_simhub\local\selection::barre([
+            'valider' => [get_string('selection_valider', 'local_simhub'), 'btn-success'],
+            'refuser' => [get_string('selection_refuser', 'local_simhub'), 'btn-outline-danger'],
+        ], count($seances) > 10);
         echo html_writer::table($table);
+        echo html_writer::end_tag('form');
     } else {
         echo $OUTPUT->notification(get_string('aucuneseance', 'simhub'), \core\output\notification::NOTIFY_INFO);
     }

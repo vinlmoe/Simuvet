@@ -251,6 +251,19 @@ $string['sessions_aucune_a_valider'] = 'No session awaiting validation.';
 $string['session_valider'] = 'Validate';
 $string['session_refuser'] = 'Reject';
 
+// Bulk validation.
+$string['selection_tout'] = 'Select all';
+$string['selection_aucun'] = 'Deselect all';
+$string['selection_filtre'] = 'Filter…';
+$string['selection_compteur'] = '{$a} selected';
+$string['selection_case'] = 'Select {$a}';
+$string['selection_valider'] = 'Validate selection';
+$string['selection_refuser'] = 'Reject selection';
+$string['selection_vide'] = 'Nothing selected.';
+$string['sessions_traitees'] = '{$a} session(s) processed.';
+$string['asv_etudiants'] = 'Students';
+$string['asv_decisions_enregistrees'] = '{$a} decision(s) saved.';
+
 $string['asv_niveau_a1'] = 'A1';
 $string['asv_niveau_a2'] = 'A2';
 $string['asv_niveau_a3'] = 'A3';

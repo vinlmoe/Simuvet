@@ -38,12 +38,31 @@ require_capability('local/simhub:validatesession', $context);
 $action = optional_param('action', '', PARAM_ALPHA);
 if ($action === 'valider' || $action === 'refuser') {
     require_sesskey();
-    $sessionid = required_param('sessionid', PARAM_INT);
+    // Une séance (bouton de ligne) ou une sélection (validation en masse).
+    $sessionids = optional_param_array('sessionids', [], PARAM_INT);
+    if (!$sessionids) {
+        $sessionids = [optional_param('sessionid', 0, PARAM_INT)];
+    }
+    $sessionids = array_filter(array_unique($sessionids));
+    $pageurl = new moodle_url('/local/simhub/manage/sessions_a_valider.php');
+    if (!$sessionids) {
+        redirect($pageurl, get_string('selection_vide', 'local_simhub'), null, \core\output\notification::NOTIFY_WARNING);
+    }
 
     $statut = $action === 'valider' ? val_encadrant::STATUT_VALIDE : val_encadrant::STATUT_REFUSE;
-    \local_simhub\local\parcours_helper::valider_seance($sessionid, $USER->id, $statut);
+    $traitees = 0;
+    foreach ($sessionids as $sessionid) {
+        // Déjà traitée (double envoi, autre encadrant) : on n'empile pas une seconde décision.
+        if (!$DB->record_exists('local_simhub_session', ['id' => $sessionid])
+                || $DB->record_exists('local_simhub_val_encadrant', ['sessionid' => $sessionid])) {
+            continue;
+        }
+        \local_simhub\local\parcours_helper::valider_seance($sessionid, $USER->id, $statut);
+        $traitees++;
+    }
 
-    redirect(new moodle_url('/local/simhub/manage/sessions_a_valider.php'));
+    redirect($pageurl, get_string('sessions_traitees', 'local_simhub', $traitees), null,
+        \core\output\notification::NOTIFY_SUCCESS);
 }
 
 $pageurl = new moodle_url('/local/simhub/manage/sessions_a_valider.php');
@@ -52,7 +71,6 @@ $pageurl = new moodle_url('/local/simhub/manage/sessions_a_valider.php');
 echo $OUTPUT->header();
 echo \local_simhub\local\navigation::barre();
 
-global $DB;
 $sessions = $DB->get_records_sql(
     "SELECT s.*
        FROM {local_simhub_session} s
@@ -67,8 +85,11 @@ if (empty($sessions)) {
     exit;
 }
 
+\local_simhub\local\selection::requerir_js();
+
 $table = new html_table();
 $table->head = [
+    '',
     get_string('fullnameuser'),
     get_string('champ_nomcourt', 'local_simhub'),
     get_string('champ_statut', 'local_simhub'),
@@ -88,8 +109,10 @@ foreach ($sessions as $s) {
         'action' => 'refuser', 'sessionid' => $s->id, 'sesskey' => sesskey(),
     ]);
 
+    $nom = $user ? fullname($user) : '#' . $s->userid;
     $table->data[] = [
-        $user ? fullname($user) : '#' . $s->userid,
+        \local_simhub\local\selection::case('sessionids', $s->id, $nom . ' — ' . $atelier->get('nomcourt')),
+        $nom,
         s($atelier->get('nomcourt')),
         get_string('statutperso_' . ($s->statut === session::STATUT_COMMENCE ? 'commence' : 'realise'), 'local_simhub'),
         userdate($s->timestart, get_string('strftimedatetimeshort', 'langconfig')),
@@ -103,6 +126,15 @@ foreach ($sessions as $s) {
     ];
 }
 
+echo html_writer::start_tag('form', [
+    'method' => 'post', 'action' => $pageurl->out(false), 'class' => \local_simhub\local\selection::CONTENEUR,
+]);
+echo html_writer::empty_tag('input', ['type' => 'hidden', 'name' => 'sesskey', 'value' => sesskey()]);
+echo \local_simhub\local\selection::barre([
+    'valider' => [get_string('selection_valider', 'local_simhub'), 'btn-success'],
+    'refuser' => [get_string('selection_refuser', 'local_simhub'), 'btn-outline-danger'],
+], count($sessions) > 10);
 echo html_writer::table($table);
+echo html_writer::end_tag('form');
 
 echo $OUTPUT->footer();

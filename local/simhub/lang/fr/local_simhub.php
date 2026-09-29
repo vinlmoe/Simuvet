@@ -263,6 +263,19 @@ $string['sessions_aucune_a_valider'] = 'Aucune session en attente de validation.
 $string['session_valider'] = 'Valider';
 $string['session_refuser'] = 'Refuser';
 
+// Validations en masse.
+$string['selection_tout'] = 'Tout sélectionner';
+$string['selection_aucun'] = 'Tout désélectionner';
+$string['selection_filtre'] = 'Filtrer…';
+$string['selection_compteur'] = '{$a} sélectionné(s)';
+$string['selection_case'] = 'Sélectionner {$a}';
+$string['selection_valider'] = 'Valider la sélection';
+$string['selection_refuser'] = 'Refuser la sélection';
+$string['selection_vide'] = 'Aucun élément sélectionné.';
+$string['sessions_traitees'] = '{$a} séance(s) traitée(s).';
+$string['asv_etudiants'] = 'Étudiants';
+$string['asv_decisions_enregistrees'] = '{$a} décision(s) enregistrée(s).';
+
 $string['asv_niveau_a1'] = 'A1';
 $string['asv_niveau_a2'] = 'A2';
 $string['asv_niveau_a3'] = 'A3';

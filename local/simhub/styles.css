@@ -91,3 +91,17 @@
     background: #28a745;
     border-radius: 3px;
 }
+
+/* Validations en masse : une case par ligne, liste défilante si elle est longue. */
+.local-simhub-selection .fgroup .felement,
+.local-simhub-selection [data-fieldtype="group"] {
+    max-height: 24rem;
+    overflow-y: auto;
+}
+.local-simhub-selection .fgroup label.form-check-inline,
+.local-simhub-selection [data-fieldtype="group"] label.form-check-inline {
+    display: flex;
+    flex: 0 0 100%;
+    justify-content: flex-start;
+    margin-right: 0;
+}

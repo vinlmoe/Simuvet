@@ -38,16 +38,18 @@ $context = \local_simhub\local\contexte::racine();
 require_capability('local/simhub:startsession', $context);
 
 $atelierid = required_param('atelierid', PARAM_INT);
+// QR code scanné, ou bouton « Commencer » de la fiche atelier.
+$methode = optional_param('methode', 'qr', PARAM_ALPHA) === 'manuel' ? 'manuel' : 'qr';
 $atelier = new atelier($atelierid);
 
-$pageurl = new moodle_url('/local/simhub/session_code.php', ['atelierid' => $atelierid]);
+$pageurl = new moodle_url('/local/simhub/session_code.php', ['atelierid' => $atelierid, 'methode' => $methode]);
 \local_simhub\local\navigation::preparer($PAGE, $pageurl, get_string('seancecode_champ', 'local_simhub'), [
     [s($atelier->get('nomcourt')), new moodle_url('/local/simhub/atelier.php', ['id' => $atelierid])],
 ]);
 
 if (\local_simhub\local\reseau::dans_la_salle()) {
     session::demarrer_ou_reprendre($USER->id, $atelierid, [
-        'methodescan' => 'qr',
+        'methodescan' => $methode,
         'controlepresence' => 'reseau_local',
     ]);
     redirect(
@@ -76,7 +78,7 @@ if ($data = $form->get_data()) {
     // Jamais bloquant (§7.3) : sans code, la séance démarre, marquée non vérifiée.
     if (!empty($data->sanscode)) {
         session::demarrer_ou_reprendre($USER->id, $atelierid, [
-            'methodescan' => 'qr',
+            'methodescan' => $methode,
             'controlepresence' => 'non_verifie',
         ]);
         redirect(
@@ -88,7 +90,7 @@ if ($data = $form->get_data()) {
     }
     if ($data->code !== '' && seancecode::est_valide($atelier->get('salle'), core_text::strtoupper($data->code))) {
         session::demarrer_ou_reprendre($USER->id, $atelierid, [
-            'methodescan' => 'qr',
+            'methodescan' => $methode,
             'controlepresence' => 'code_seance',
         ]);
         redirect(

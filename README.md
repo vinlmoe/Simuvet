@@ -65,10 +65,10 @@ local/simhub/
 │   ├── dashboard.php              Tableau de bord par parcours/cohorte (§12.2)
 │   ├── dashboard_salle.php        Tableau de bord responsable de salle (§12.2)
 │   ├── seancecode_generer.php    Génération d'un code de séance par salle (§7.3)
-│   └── sessions_a_valider.php    File d'attente de validation manuelle par un encadrant (§7.3)
+│   └── sessions_a_valider.php    File d'attente de validation par un encadrant, en masse possible (§7.3)
 ├── asv/
 │   ├── index.php                 Pilotage du parcours ASV (§9.4)
-│   ├── valider_simulation.php    Validation ASV en simulation par un encadrant (§9.2)
+│   ├── valider_simulation.php    Validation ASV en simulation, un ou plusieurs étudiants (§9.2)
 │   ├── demander_validation_animal.php  Génération du lien de validation animal vivant (§9.3)
 │   ├── valider_animal.php        Page publique à jeton, sans compte Moodle (§9.3)
 │   ├── livret_pdf.php            Export PDF du livret de compétences ASV (§9.4)
@@ -215,12 +215,15 @@ le schéma :
 - **QR code et contrôle anti-faux-scan** (`qr.php`, `session_code.php`,
   `manage/seancecode_generer.php`, `manage/sessions_a_valider.php`, §7.3) :
   si `local_simhub/controlepresenceactif` est désactivé, le scan
-  démarre directement la session ; sinon l'étudiant est renvoyé vers
-  une page de saisie du code de séance généré par l'encadrant. Jamais
+  démarre directement la session ; sinon (hors réseau de la salle)
+  l'étudiant est renvoyé vers une page de saisie du code de séance
+  généré par l'encadrant, qu'il ait scanné le QR code ou cliqué sur
+  « Commencer » dans la fiche atelier. Jamais
   bloquant de façon absolue : sans code, l'étudiant peut tout de même
   démarrer sa session, marquée non vérifiée, et elle apparaît alors
   dans une file d'attente que tout profil `validatesession` peut
-  valider ou refuser manuellement.
+  valider ou refuser manuellement, séance par séance ou en masse
+  (cases à cocher, « tout sélectionner / tout désélectionner »).
 - **Import CSV** (`manage/import.php`, `classes/local/atelier_importer.php`) :
   import souple des ateliers avec reconnaissance d'alias de colonnes
   (accents/casse/espaces ignorés) pour s'adapter aux tableaux
