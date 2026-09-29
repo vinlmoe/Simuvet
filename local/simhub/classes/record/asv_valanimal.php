@@ -160,13 +160,43 @@ class asv_valanimal {
         bool $certificationcochee,
         string $signature
     ): bool {
+        $record = self::get_par_token($token);
+        return $record && self::signer($record, $nom, $prenom, $certificationcochee, $signature);
+    }
+
+    /**
+     * Saisie du validateur complète : nom, prénom, certification cochée et tracé de signature.
+     *
+     * @param string $nom
+     * @param string $prenom
+     * @param bool $certificationcochee
+     * @param string $signature
+     * @return bool
+     */
+    public static function saisie_valide(string $nom, string $prenom, bool $certificationcochee, string $signature): bool {
+        return $certificationcochee && trim($nom) !== '' && trim($prenom) !== '' && self::signature_valide($signature);
+    }
+
+    /**
+     * Enregistre la signature du validateur sur une demande en attente.
+     *
+     * @param \stdClass $record
+     * @param string $nom
+     * @param string $prenom
+     * @param bool $certificationcochee
+     * @param string $signature
+     * @return bool
+     */
+    protected static function signer(
+        \stdClass $record,
+        string $nom,
+        string $prenom,
+        bool $certificationcochee,
+        string $signature
+    ): bool {
         global $DB;
 
-        $record = self::get_par_token($token);
-        if (
-            !$record || $record->statut !== self::STATUT_EN_ATTENTE || !$certificationcochee
-                || trim($nom) === '' || trim($prenom) === '' || !self::signature_valide($signature)
-        ) {
+        if ($record->statut !== self::STATUT_EN_ATTENTE || !self::saisie_valide($nom, $prenom, $certificationcochee, $signature)) {
             return false;
         }
 
@@ -178,6 +208,80 @@ class asv_valanimal {
         $record->statut = self::STATUT_VALIDE;
         $DB->update_record(self::TABLE, $record);
         return true;
+    }
+
+    /**
+     * Lien groupé : regroupe sous un même jeton les demandes de plusieurs étudiants pour un
+     * acte, afin qu'un validateur externe les signe en une fois (en reprenant la demande
+     * déjà en attente de chaque étudiant, s'il en a une).
+     *
+     * @param int $acteid
+     * @param int[] $userids
+     * @return \stdClass lottoken, expire (échéance la plus proche des demandes regroupées).
+     */
+    public static function creer_lot(int $acteid, array $userids): \stdClass {
+        global $DB;
+
+        $lottoken = \core\uuid::generate();
+        $expire = 0;
+        foreach ($userids as $userid) {
+            $demande = self::get_ou_creer_demande((int) $userid, $acteid);
+            $DB->set_field(self::TABLE, 'lottoken', $lottoken, ['id' => $demande->id]);
+            $expire = $expire ? min($expire, (int) $demande->tokenexpire) : (int) $demande->tokenexpire;
+        }
+        return (object) ['lottoken' => $lottoken, 'expire' => $expire];
+    }
+
+    /**
+     * Demandes d'un lien groupé encore à signer (en attente, non expirées).
+     *
+     * @param string $lottoken
+     * @return \stdClass[] id => demande
+     */
+    public static function get_lot(string $lottoken): array {
+        global $DB;
+
+        if ($lottoken === '') {
+            return [];
+        }
+        return $DB->get_records_select(
+            self::TABLE,
+            'lottoken = :lottoken AND statut = :statut AND tokenexpire > :now',
+            ['lottoken' => $lottoken, 'statut' => self::STATUT_EN_ATTENTE, 'now' => time()],
+            'id'
+        );
+    }
+
+    /**
+     * Signature groupée : les demandes cochées du lien groupé reçoivent la même validation.
+     *
+     * @param string $lottoken
+     * @param int[] $ids Demandes retenues par le validateur.
+     * @param string $nom
+     * @param string $prenom
+     * @param bool $certificationcochee
+     * @param string $signature
+     * @return \stdClass[] Demandes validées.
+     */
+    public static function valider_lot(
+        string $lottoken,
+        array $ids,
+        string $nom,
+        string $prenom,
+        bool $certificationcochee,
+        string $signature
+    ): array {
+        if (!self::saisie_valide($nom, $prenom, $certificationcochee, $signature)) {
+            return [];
+        }
+        $ids = array_flip(array_map('intval', $ids));
+        $validees = [];
+        foreach (self::get_lot($lottoken) as $record) {
+            if (isset($ids[(int) $record->id]) && self::signer($record, $nom, $prenom, true, $signature)) {
+                $validees[] = $record;
+            }
+        }
+        return $validees;
     }
 
     /**

@@ -70,7 +70,8 @@ local/simhub/
 │   ├── index.php                 Pilotage du parcours ASV (§9.4)
 │   ├── valider_simulation.php    Validation ASV en simulation, un ou plusieurs étudiants (§9.2)
 │   ├── demander_validation_animal.php  Génération du lien de validation animal vivant (§9.3)
-│   ├── valider_animal.php        Page publique à jeton, sans compte Moodle (§9.3)
+│   ├── demande_lot.php           Lien de signature groupé : un acte, plusieurs étudiants (§9.3)
+│   ├── valider_animal.php        Page publique à jeton, sans compte Moodle, individuelle ou groupée (§9.3)
 │   ├── livret_pdf.php            Export PDF du livret de compétences ASV (§9.4)
 │   └── attestation_pdf.php       Attestation PDF de certification globale par niveau (§9.4)
 ├── db/
@@ -211,7 +212,12 @@ le schéma :
 - **Module ASV** (`asv/`) : vue de progression étudiante ou de
   pilotage (§9.4), validation en simulation par un encadrant (§9.2),
   génération d'un lien de validation animal vivant et page publique à
-  jeton avec signature au doigt (`<canvas>` vanilla JS, §9.3).
+  jeton avec signature au doigt (`<canvas>` vanilla JS, §9.3). Un encadrant
+  peut aussi générer un **lien groupé** (et son QR code) pour un acte et
+  plusieurs étudiants validés en simulation : le validateur externe coche
+  ceux qu'il a vus réaliser l'acte (« tout sélectionner / tout
+  désélectionner ») et signe une seule fois ; les non-cochés restent en
+  attente sur le même lien.
 - **QR code et contrôle anti-faux-scan** (`qr.php`, `session_code.php`,
   `manage/seancecode_generer.php`, `manage/sessions_a_valider.php`, §7.3) :
   si `local_simhub/controlepresenceactif` est désactivé, le scan

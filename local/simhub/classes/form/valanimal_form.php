@@ -30,6 +30,9 @@ require_once($CFG->libdir . '/formslib.php');
 
 /**
  * Nom, prénom, certification et signature au doigt : volontairement court (§9.3).
+ *
+ * Lien groupé (customdata lot + demandes) : le validateur coche les étudiants qu'il a vus
+ * réaliser l'acte et signe une seule fois pour tous.
  */
 class valanimal_form extends \moodleform {
     /**
@@ -39,6 +42,14 @@ class valanimal_form extends \moodleform {
      */
     protected function definition() {
         $mform = $this->_form;
+
+        if (!empty($this->_customdata['demandes'])) {
+            \local_simhub\local\selection::ajouter_cases($mform, 'demandes', get_string('asv_etudiants', 'local_simhub'), [
+                'choix' => $this->_customdata['demandes'],
+                'defaut' => array_keys($this->_customdata['demandes']),
+                'filtre' => count($this->_customdata['demandes']) > 10,
+            ]);
+        }
 
         $mform->addElement('text', 'nom', get_string('asv_champ_nom', 'local_simhub'), ['autocomplete' => 'family-name']);
         $mform->setType('nom', PARAM_TEXT);
@@ -64,8 +75,9 @@ class valanimal_form extends \moodleform {
         $mform->addElement('hidden', 'signature', '');
         $mform->setType('signature', PARAM_RAW);
 
-        $mform->addElement('hidden', 'token', $this->_customdata['token']);
-        $mform->setType('token', PARAM_ALPHANUMEXT);
+        $jeton = !empty($this->_customdata['lot']) ? 'lot' : 'token';
+        $mform->addElement('hidden', $jeton, $this->_customdata[$jeton]);
+        $mform->setType($jeton, PARAM_ALPHANUMEXT);
 
         $this->add_action_buttons(false, get_string('asv_valider_acte', 'local_simhub'));
     }

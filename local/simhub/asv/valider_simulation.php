@@ -80,16 +80,7 @@ $choixactes = [];
 foreach ($actes as $acte) {
     $choixactes[$acte['id']] = $acte['nom'] . ' (' . $acte['niveau'] . ')';
 }
-$inscrits = $courseid ? array_flip(array_map('intval', array_keys(get_enrolled_users(
-    context_course::instance($courseid),
-    '',
-    0,
-    'u.id',
-    null,
-    0,
-    0,
-    true
-)))) : null;
+$inscrits = $courseid ? \local_simhub\local\selecteurs::etudiants_du_cours($courseid) : null;
 $choixetudiants = \local_simhub\local\selecteurs::options_etudiants(
     fn(int $uid) => ($transversal || isset($autorises[$uid])) && ($inscrits === null || isset($inscrits[$uid]))
 );
@@ -124,10 +115,7 @@ $form = new \local_simhub\form\formulaire($PAGE->url, [
 
 $erreur = false;
 if ($data = $form->get_data()) {
-    $userids = array_values(array_intersect(
-        array_map('intval', array_keys(array_filter((array) ($data->userids ?? [])))),
-        array_map('intval', array_keys($choixetudiants))
-    ));
+    $userids = \local_simhub\local\selection::cochees($data->userids ?? [], $choixetudiants);
     $acteid = (int) $data->acteid;
     if (!isset($choixactes[$acteid])) {
         throw new moodle_exception('invalidrecord', 'error', '', 'local_simhub_asv_acte');

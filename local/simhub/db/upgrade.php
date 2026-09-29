@@ -134,5 +134,19 @@ function xmldb_local_simhub_upgrade($oldversion) {
         upgrade_plugin_savepoint(true, 2026092902, 'local', 'simhub');
     }
 
+    if ($oldversion < 2026092905) {
+        // Lien groupé de validation sur animal vivant : une signature pour plusieurs demandes.
+        $table = new xmldb_table('local_simhub_asv_valanimal');
+        $field = new xmldb_field('lottoken', XMLDB_TYPE_CHAR, '255', null, null, null, null, 'timecreated');
+        if (!$dbman->field_exists($table, $field)) {
+            $dbman->add_field($table, $field);
+        }
+        $index = new xmldb_index('lottoken', XMLDB_INDEX_NOTUNIQUE, ['lottoken']);
+        if (!$dbman->index_exists($table, $index)) {
+            $dbman->add_index($table, $index);
+        }
+        upgrade_plugin_savepoint(true, 2026092905, 'local', 'simhub');
+    }
+
     return true;
 }

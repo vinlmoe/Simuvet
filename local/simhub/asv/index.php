@@ -151,6 +151,11 @@ if (!$canpilot) {
         new moodle_url('/local/simhub/asv/valider_simulation.php'),
         get_string('asv_valider_simulation', 'local_simhub')
     );
+    echo $OUTPUT->single_button(
+        new moodle_url('/local/simhub/asv/demande_lot.php'),
+        get_string('asv_lot_titre', 'local_simhub'),
+        'get'
+    );
 
     // Synthèse par acte, pour repérer les actes rarement validés.
     echo html_writer::tag('h4', get_string('asv_synthese_par_acte', 'local_simhub'), ['class' => 'mt-4']);

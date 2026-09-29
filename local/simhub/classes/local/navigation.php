@@ -153,6 +153,7 @@ class navigation {
         }
         if (droits::peut_valider_asv()) {
             $ajouter('asvvalider', 'asv', $str('asv_valider_simulation'), '/local/simhub/asv/valider_simulation.php');
+            $ajouter('asvlot', 'asv', $str('asv_lot_titre'), '/local/simhub/asv/demande_lot.php');
         }
         if (has_capability('local/simhub:manageasv', $context)) {
             $ajouter(

@@ -89,4 +89,45 @@ class selection {
             'aria-label' => get_string('selection_case', 'local_simhub', $libelle),
         ]);
     }
+
+    /**
+     * Liste de cases à cocher d'un moodleform, avec sa barre de sélection. Les valeurs
+     * reviennent dans get_data() en tableau valeur => 0|1.
+     *
+     * @param \MoodleQuickForm $mform
+     * @param string $nom
+     * @param string $libelle
+     * @param array $opts choix (valeur => libellé), defaut (valeurs cochées), filtre (bool).
+     * @return void
+     */
+    public static function ajouter_cases(\MoodleQuickForm $mform, string $nom, string $libelle, array $opts): void {
+        $mform->addElement('html', \html_writer::start_div(self::CONTENEUR));
+        $mform->addElement('static', $nom . '_outils', $libelle, self::barre([], !empty($opts['filtre'])));
+        $groupe = [];
+        foreach ($opts['choix'] as $valeur => $texte) {
+            $groupe[] = $mform->createElement('advcheckbox', $nom . '[' . $valeur . ']', '', $texte,
+                ['data-selection-item' => 1], [0, 1]);
+        }
+        $mform->addGroup($groupe, $nom . '_groupe', '', '', false);
+        $mform->addElement('html', \html_writer::end_div());
+        $mform->setType($nom, PARAM_INT);
+        foreach ($opts['defaut'] ?? [] as $valeur) {
+            $mform->setDefault($nom . '[' . $valeur . ']', 1);
+        }
+        self::requerir_js();
+    }
+
+    /**
+     * Valeurs cochées d'une liste ajoutée par ajouter_cases(), limitées aux choix proposés.
+     *
+     * @param mixed $valeurs Tableau valeur => 0|1 issu de get_data().
+     * @param array $choix valeur => libellé.
+     * @return int[]
+     */
+    public static function cochees($valeurs, array $choix): array {
+        return array_values(array_intersect(
+            array_map('intval', array_keys(array_filter((array) $valeurs))),
+            array_map('intval', array_keys($choix))
+        ));
+    }
 }

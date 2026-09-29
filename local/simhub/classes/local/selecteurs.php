@@ -97,6 +97,22 @@ class selecteurs {
     }
 
     /**
+     * Étudiants inscrits (actifs) à un cours, sans ses enseignants : même règle que le
+     * suivi d'une UC, qui écarte les titulaires de mod/simhub:viewprogression.
+     *
+     * @param int $courseid
+     * @return array userid => true
+     */
+    public static function etudiants_du_cours(int $courseid): array {
+        $context = \context_course::instance($courseid);
+        $inscrits = array_map('intval', array_keys(get_enrolled_users($context, '', 0, 'u.id', null, 0, 0, true)));
+        return array_fill_keys(
+            array_filter($inscrits, fn($uid) => !has_capability('mod/simhub:viewprogression', $context, $uid)),
+            true
+        );
+    }
+
+    /**
      * Liste déroulante des ateliers de l'établissement.
      *
      * @param string $name
