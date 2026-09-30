@@ -355,11 +355,18 @@
         <FIELD NAME="prenomvalidateur" TYPE="char" LENGTH="255" NOTNULL="false"/>
         <FIELD NAME="certificationcochee" TYPE="int" LENGTH="1" NOTNULL="true" DEFAULT="0" COMMENT="Case attestant que le validateur est vétérinaire/encadrant autorisé"/>
         <FIELD NAME="signature" TYPE="text" NOTNULL="false" COMMENT="Tracé de signature (SVG/PNG base64) - niveau de preuve simple, non qualifié"/>
-        <FIELD NAME="statut" TYPE="char" LENGTH="20" NOTNULL="true" DEFAULT="en_attente" COMMENT="en_attente|valide|annule"/>
+        <FIELD NAME="statut" TYPE="char" LENGTH="20" NOTNULL="true" DEFAULT="en_attente" COMMENT="en_attente|signe (à contrôler)|valide (contrôlée)|rejete|annule"/>
         <FIELD NAME="token" TYPE="char" LENGTH="255" NOTNULL="true" COMMENT="Jeton unique du lien d'accès externe, sans compte Moodle"/>
         <FIELD NAME="tokenexpire" TYPE="int" LENGTH="10" NOTNULL="false"/>
         <FIELD NAME="timecreated" TYPE="int" LENGTH="10" NOTNULL="true"/>
         <FIELD NAME="lottoken" TYPE="char" LENGTH="255" NOTNULL="false" COMMENT="Jeton du lien groupé : un validateur externe signe plusieurs demandes en une fois"/>
+        <FIELD NAME="demandeuruserid" TYPE="int" LENGTH="10" NOTNULL="false" COMMENT="Compte Moodle ayant généré le lien (étudiant ou encadrant)"/>
+        <FIELD NAME="demandeip" TYPE="char" LENGTH="45" NOTNULL="false" COMMENT="Adresse IP à la génération du lien (indice de fraude)"/>
+        <FIELD NAME="signatureip" TYPE="char" LENGTH="45" NOTNULL="false" COMMENT="Adresse IP du signataire externe (indice de fraude)"/>
+        <FIELD NAME="signatureuserid" TYPE="int" LENGTH="10" NOTNULL="false" COMMENT="Compte Moodle connecté dans le navigateur au moment de la signature, 0 si aucun"/>
+        <FIELD NAME="controleuruserid" TYPE="int" LENGTH="10" NOTNULL="false" COMMENT="Encadrant ayant contrôlé la signature externe"/>
+        <FIELD NAME="datecontrole" TYPE="int" LENGTH="10" NOTNULL="false"/>
+        <FIELD NAME="motifcontrole" TYPE="text" NOTNULL="false" COMMENT="Motif du rejet au contrôle interne"/>
       </FIELDS>
       <KEYS>
         <KEY NAME="primary" TYPE="primary" FIELDS="id"/>

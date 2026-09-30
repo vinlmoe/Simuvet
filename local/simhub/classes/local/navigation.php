@@ -154,6 +154,14 @@ class navigation {
         if (droits::peut_valider_asv()) {
             $ajouter('asvvalider', 'asv', $str('asv_valider_simulation'), '/local/simhub/asv/valider_simulation.php');
             $ajouter('asvlot', 'asv', $str('asv_lot_titre'), '/local/simhub/asv/demande_lot.php');
+            $ajouter(
+                'asvcontrole',
+                'asv',
+                $str('asv_controle_titre'),
+                '/local/simhub/asv/controle_signatures.php',
+                [],
+                self::nb_signatures_a_controler()
+            );
         }
         if (has_capability('local/simhub:manageasv', $context)) {
             $ajouter(
@@ -193,6 +201,20 @@ class navigation {
               WHERE (s.controlepresence = 'non_verifie' OR s.dureesuspecte = 1)
                 AND NOT EXISTS (SELECT 1 FROM {local_simhub_val_encadrant} v WHERE v.sessionid = s.id)"
         );
+    }
+
+    /**
+     * Signatures externes en attente de contrôle, dans le périmètre de l'utilisateur.
+     *
+     * @return int
+     */
+    protected static function nb_signatures_a_controler(): int {
+        $demandes = \local_simhub\record\asv_valanimal::get_a_controler();
+        if (!$demandes || has_capability('local/simhub:validateasvsimulation', contexte::racine())) {
+            return count($demandes);
+        }
+        $autorises = array_flip(droits::etudiants_asv_autorises());
+        return count(array_filter($demandes, fn($d) => isset($autorises[(int) $d->userid])));
     }
 
     /**

@@ -148,5 +148,27 @@ function xmldb_local_simhub_upgrade($oldversion) {
         upgrade_plugin_savepoint(true, 2026092905, 'local', 'simhub');
     }
 
+    if ($oldversion < 2026092906) {
+        // Contrôle interne des signatures externes (anti-fraude) : une signature sur animal
+        // vivant ne compte qu'après confirmation par un encadrant. Les validations déjà
+        // enregistrées restent acquises.
+        $table = new xmldb_table('local_simhub_asv_valanimal');
+        $champs = [
+            new xmldb_field('demandeuruserid', XMLDB_TYPE_INTEGER, '10', null, null, null, null, 'lottoken'),
+            new xmldb_field('demandeip', XMLDB_TYPE_CHAR, '45', null, null, null, null, 'demandeuruserid'),
+            new xmldb_field('signatureip', XMLDB_TYPE_CHAR, '45', null, null, null, null, 'demandeip'),
+            new xmldb_field('signatureuserid', XMLDB_TYPE_INTEGER, '10', null, null, null, null, 'signatureip'),
+            new xmldb_field('controleuruserid', XMLDB_TYPE_INTEGER, '10', null, null, null, null, 'signatureuserid'),
+            new xmldb_field('datecontrole', XMLDB_TYPE_INTEGER, '10', null, null, null, null, 'controleuruserid'),
+            new xmldb_field('motifcontrole', XMLDB_TYPE_TEXT, null, null, null, null, null, 'datecontrole'),
+        ];
+        foreach ($champs as $field) {
+            if (!$dbman->field_exists($table, $field)) {
+                $dbman->add_field($table, $field);
+            }
+        }
+        upgrade_plugin_savepoint(true, 2026092906, 'local', 'simhub');
+    }
+
     return true;
 }

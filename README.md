@@ -72,6 +72,7 @@ local/simhub/
 │   ├── demander_validation_animal.php  Génération du lien de validation animal vivant (§9.3)
 │   ├── demande_lot.php           Lien de signature groupé : un acte, plusieurs étudiants (§9.3)
 │   ├── valider_animal.php        Page publique à jeton, sans compte Moodle, individuelle ou groupée (§9.3)
+│   ├── controle_signatures.php   Contrôle interne des signatures externes, anti-fraude, en masse (§9.3)
 │   ├── livret_pdf.php            Export PDF du livret de compétences ASV (§9.4)
 │   └── attestation_pdf.php       Attestation PDF de certification globale par niveau (§9.4)
 ├── db/
@@ -218,6 +219,19 @@ le schéma :
   ceux qu'il a vus réaliser l'acte (« tout sélectionner / tout
   désélectionner ») et signe une seule fois ; les non-cochés restent en
   attente sur le même lien.
+  **Contrôle interne anti-fraude** (`asv/controle_signatures.php`) : une
+  signature externe n'est jamais acquise d'emblée. Elle passe à « signée,
+  à contrôler » et ne compte (certification, livret, attestations) qu'une
+  fois confirmée par un encadrant ou un enseignant de l'UC de l'étudiant.
+  La page affiche la signature et des indices relevés automatiquement :
+  nom du signataire identique à celui de l'étudiant, signature depuis la
+  session Moodle de l'étudiant ou un autre compte connecté, même adresse IP
+  que l'étudiant, signature moins de 2 minutes après la demande. Ce sont
+  des points à vérifier, pas des preuves (le vétérinaire peut signer sur le
+  téléphone de l'étudiant, sur le même Wi-Fi). Confirmation ou rejet en
+  masse ; un rejet exige un motif, visible par l'étudiant, qui doit alors
+  refaire une demande. Les validations enregistrées avant cette version
+  restent acquises.
 - **QR code et contrôle anti-faux-scan** (`qr.php`, `session_code.php`,
   `manage/seancecode_generer.php`, `manage/sessions_a_valider.php`, §7.3) :
   si `local_simhub/controlepresenceactif` est désactivé, le scan

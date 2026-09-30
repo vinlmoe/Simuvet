@@ -54,6 +54,19 @@ if (!in_array($acteid, \local_simhub\record\asv_valsim::get_actes_valides($USER-
     exit;
 }
 
+// Signature déjà recueillie (en contrôle ou acquise) : pas de nouveau lien, sans quoi un
+// étudiant pourrait multiplier les signatures en attendant qu'une passe le contrôle.
+if ($DB->record_exists_select(
+    asv_valanimal::TABLE,
+    'userid = :userid AND acteid = :acteid AND statut IN (:signe, :valide)',
+    ['userid' => $USER->id, 'acteid' => $acteid, 'signe' => asv_valanimal::STATUT_SIGNE, 'valide' => asv_valanimal::STATUT_VALIDE]
+)) {
+    echo $OUTPUT->notification(get_string('asv_deja_signe', 'local_simhub'), \core\output\notification::NOTIFY_INFO);
+    echo $OUTPUT->continue_button(new moodle_url('/local/simhub/asv/index.php'));
+    echo $OUTPUT->footer();
+    exit;
+}
+
 // Une seule demande active par acte : revenir sur cette page réaffiche le même lien au lieu
 // d'en générer un nouveau à chaque visite.
 $demande = asv_valanimal::get_ou_creer_demande($USER->id, $acteid);

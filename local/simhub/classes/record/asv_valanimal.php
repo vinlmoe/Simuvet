@@ -28,6 +28,11 @@ namespace local_simhub\record;
  * Validation ASV sur animal vivant, potentiellement par un validateur externe sans compte
  * Moodle, via un lien à jeton (§9.3). Niveau de preuve volontairement simple : nom, prénom,
  * date, case de certification, signature au doigt — pas de signature électronique qualifiée.
+ *
+ * Contre la fraude (un étudiant qui signerait lui-même son lien), une signature externe
+ * n'est jamais acquise d'emblée : elle passe à « signe » et ne devient « valide » qu'après
+ * contrôle par un encadrant (asv/controle_signatures.php), aidé d'indices relevés à la
+ * signature (compte Moodle connecté, adresse IP, nom du signataire).
  */
 class asv_valanimal {
     /** @var string Table de la base de données. */
@@ -35,8 +40,12 @@ class asv_valanimal {
 
     /** @var string Statut : en_attente. */
     const STATUT_EN_ATTENTE = 'en_attente';
-    /** @var string Statut : valide. */
+    /** @var string Statut : signée par le validateur externe, en attente du contrôle interne. */
+    const STATUT_SIGNE = 'signe';
+    /** @var string Statut : valide (signature contrôlée et confirmée par un encadrant). */
     const STATUT_VALIDE = 'valide';
+    /** @var string Statut : signature rejetée au contrôle interne. */
+    const STATUT_REJETE = 'rejete';
     /** @var string Statut : annule. */
     const STATUT_ANNULE = 'annule';
 
@@ -104,7 +113,7 @@ class asv_valanimal {
      * @return \stdClass
      */
     public static function creer_demande(int $userid, int $acteid): \stdClass {
-        global $DB;
+        global $DB, $USER;
 
         $expiry = (int) (get_config('local_simhub', 'asvtokenexpiry') ?: 7 * DAYSECS);
         $record = (object) [
@@ -119,6 +128,8 @@ class asv_valanimal {
             'token' => \core\uuid::generate(),
             'tokenexpire' => time() + $expiry,
             'timecreated' => time(),
+            'demandeuruserid' => isloggedin() ? (int) $USER->id : 0,
+            'demandeip' => getremoteaddr(''),
         ];
         $record->id = $DB->insert_record(self::TABLE, $record);
         return $record;
@@ -178,7 +189,8 @@ class asv_valanimal {
     }
 
     /**
-     * Enregistre la signature du validateur sur une demande en attente.
+     * Enregistre la signature du validateur sur une demande en attente : elle reste à
+     * contrôler par un encadrant avant de compter (STATUT_SIGNE).
      *
      * @param \stdClass $record
      * @param string $nom
@@ -194,7 +206,7 @@ class asv_valanimal {
         bool $certificationcochee,
         string $signature
     ): bool {
-        global $DB;
+        global $DB, $USER;
 
         if ($record->statut !== self::STATUT_EN_ATTENTE || !self::saisie_valide($nom, $prenom, $certificationcochee, $signature)) {
             return false;
@@ -205,9 +217,88 @@ class asv_valanimal {
         $record->certificationcochee = 1;
         $record->signature = $signature;
         $record->datevalidation = time();
-        $record->statut = self::STATUT_VALIDE;
+        $record->statut = self::STATUT_SIGNE;
+        // Indices pour le contrôle interne.
+        $record->signatureip = getremoteaddr('');
+        $record->signatureuserid = isloggedin() && !isguestuser() ? (int) $USER->id : 0;
         $DB->update_record(self::TABLE, $record);
         return true;
+    }
+
+    /**
+     * Contrôle interne d'une signature externe : confirmée, elle devient une validation
+     * acquise ; rejetée, l'étudiant doit refaire une demande.
+     *
+     * @param int $id
+     * @param int $controleuruserid
+     * @param bool $confirme
+     * @param string $motif Motif du rejet (conservé dans l'historique).
+     * @return \stdClass|null La demande mise à jour, null si elle n'était pas à contrôler.
+     */
+    public static function controler(int $id, int $controleuruserid, bool $confirme, string $motif = ''): ?\stdClass {
+        global $DB;
+
+        $record = $DB->get_record(self::TABLE, ['id' => $id]);
+        if (!$record || $record->statut !== self::STATUT_SIGNE) {
+            return null;
+        }
+        $record->statut = $confirme ? self::STATUT_VALIDE : self::STATUT_REJETE;
+        $record->controleuruserid = $controleuruserid;
+        $record->datecontrole = time();
+        $record->motifcontrole = $motif;
+        $DB->update_record(self::TABLE, $record);
+        return $record;
+    }
+
+    /**
+     * Signatures externes en attente du contrôle interne, les plus anciennes d'abord.
+     *
+     * @return \stdClass[]
+     */
+    public static function get_a_controler(): array {
+        global $DB;
+
+        return $DB->get_records(self::TABLE, ['statut' => self::STATUT_SIGNE], 'datevalidation ASC, id ASC');
+    }
+
+    /**
+     * Indices de fraude à examiner lors du contrôle : ce ne sont pas des preuves (le
+     * vétérinaire peut signer sur le téléphone de l'étudiant, sur le même réseau Wi-Fi),
+     * mais des points à vérifier.
+     *
+     * @param \stdClass $record Demande signée.
+     * @param \stdClass|null $etudiant Utilisateur étudiant (lastname, lastip).
+     * @return string[] Libellés, les plus graves d'abord.
+     */
+    public static function indices(\stdClass $record, ?\stdClass $etudiant): array {
+        $indices = [];
+        $norm = fn($t) => \core_text::strtolower(trim((string) $t));
+        if ($etudiant && $norm($record->nomvalidateur) !== '' && $norm($record->nomvalidateur) === $norm($etudiant->lastname)) {
+            $indices[] = get_string('asv_indice_nom', 'local_simhub');
+        }
+        if (!empty($record->signatureuserid)) {
+            $indices[] = (int) $record->signatureuserid === (int) $record->userid
+                ? get_string('asv_indice_session_etudiant', 'local_simhub')
+                : get_string('asv_indice_session_autre', 'local_simhub');
+        }
+        $ip = (string) ($record->signatureip ?? '');
+        if ($ip !== '') {
+            $ipetudiant = [];
+            if ((int) ($record->demandeuruserid ?? 0) === (int) $record->userid && !empty($record->demandeip)) {
+                $ipetudiant[] = $record->demandeip;
+            }
+            if ($etudiant && !empty($etudiant->lastip)) {
+                $ipetudiant[] = $etudiant->lastip;
+            }
+            if (in_array($ip, $ipetudiant, true)) {
+                $indices[] = get_string('asv_indice_ip', 'local_simhub', s($ip));
+            }
+        }
+        if ((int) $record->datevalidation - (int) $record->timecreated < 2 * MINSECS
+                && (int) ($record->demandeuruserid ?? 0) === (int) $record->userid) {
+            $indices[] = get_string('asv_indice_rapide', 'local_simhub');
+        }
+        return $indices;
     }
 
     /**

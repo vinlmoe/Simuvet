@@ -80,13 +80,6 @@ if ($lot !== '') {
                 !empty($data->certification),
                 $data->signature
             ) : [];
-            foreach ($validees as $demande) {
-                \local_simhub\event\asv_valide_animal::create([
-                    'objectid' => $demande->id,
-                    'context' => context_system::instance(),
-                    'relateduserid' => $demande->userid,
-                ])->trigger();
-            }
             if ($validees) {
                 redirect(
                     $PAGE->url,
@@ -102,7 +95,11 @@ if ($lot !== '') {
     echo $OUTPUT->header();
     if (!$demandes) {
         // Plus rien à signer : soit tout a été validé, soit le lien est invalide ou expiré.
-        $signe = $DB->record_exists('local_simhub_asv_valanimal', ['lottoken' => $lot, 'statut' => asv_valanimal::STATUT_VALIDE]);
+        $signe = $DB->record_exists_select(
+            'local_simhub_asv_valanimal',
+            'lottoken = :lot AND statut <> :attente',
+            ['lot' => $lot, 'attente' => asv_valanimal::STATUT_EN_ATTENTE]
+        );
         echo $signe
             ? $OUTPUT->notification(get_string('asv_lot_termine', 'local_simhub'), \core\output\notification::NOTIFY_SUCCESS)
             : $OUTPUT->notification(get_string('asv_lien_invalide', 'local_simhub'), \core\output\notification::NOTIFY_ERROR);
@@ -124,7 +121,7 @@ if ($lot !== '') {
 
 $demande = asv_valanimal::get_par_token($token);
 $form = null;
-if ($demande && $demande->statut !== asv_valanimal::STATUT_VALIDE) {
+if ($demande && $demande->statut === asv_valanimal::STATUT_EN_ATTENTE) {
     $form = new \local_simhub\form\valanimal_form(
         $PAGE->url,
         ['token' => $token],
@@ -134,14 +131,9 @@ if ($demande && $demande->statut !== asv_valanimal::STATUT_VALIDE) {
     );
     $data = $form->get_data();
     if ($data && asv_valanimal::valider($token, $data->nom, $data->prenom, !empty($data->certification), $data->signature)) {
-        \local_simhub\event\asv_valide_animal::create([
-            'objectid' => $demande->id,
-            'context' => context_system::instance(),
-            'relateduserid' => $demande->userid,
-        ])->trigger();
         redirect(
             $PAGE->url,
-            get_string('asv_valide_avec_succes', 'local_simhub'),
+            get_string('asv_signature_enregistree', 'local_simhub'),
             null,
             \core\output\notification::NOTIFY_SUCCESS
         );
@@ -150,14 +142,15 @@ if ($demande && $demande->statut !== asv_valanimal::STATUT_VALIDE) {
 
 echo $OUTPUT->header();
 
-if (!$demande) {
+// Rejetée ou annulée : le lien ne sert plus, l'étudiant doit refaire une demande.
+if (!$demande || in_array($demande->statut, [asv_valanimal::STATUT_REJETE, asv_valanimal::STATUT_ANNULE], true)) {
     echo $OUTPUT->notification(get_string('asv_lien_invalide', 'local_simhub'), \core\output\notification::NOTIFY_ERROR);
     echo $OUTPUT->footer();
     exit;
 }
 
-if ($demande->statut === asv_valanimal::STATUT_VALIDE) {
-    echo $OUTPUT->notification(get_string('asv_valide_avec_succes', 'local_simhub'), \core\output\notification::NOTIFY_SUCCESS);
+if ($demande->statut !== asv_valanimal::STATUT_EN_ATTENTE) {
+    echo $OUTPUT->notification(get_string('asv_signature_enregistree', 'local_simhub'), \core\output\notification::NOTIFY_SUCCESS);
     echo $OUTPUT->footer();
     exit;
 }

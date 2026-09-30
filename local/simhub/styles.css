@@ -105,3 +105,11 @@
     justify-content: flex-start;
     margin-right: 0;
 }
+
+/* Aperçu de la signature externe au contrôle interne (fond clair, même en thème sombre). */
+.local-simhub-signature-apercu {
+    max-height: 60px;
+    max-width: 200px;
+    background: #fff;
+    border: 1px solid rgba(0, 0, 0, .15);
+}

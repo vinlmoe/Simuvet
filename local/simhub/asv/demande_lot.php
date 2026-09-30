@@ -93,9 +93,15 @@ if ($lot !== '') {
         $etudiant = core_user::get_user($d->userid);
         $table->data[] = [
             $etudiant ? fullname($etudiant) : '#' . $d->userid,
-            $d->statut === asv_valanimal::STATUT_VALIDE
-                ? get_string('asv_lot_signe', 'local_simhub', s($d->prenomvalidateur . ' ' . $d->nomvalidateur))
-                : get_string('asv_lot_en_attente', 'local_simhub'),
+            match ($d->statut) {
+                asv_valanimal::STATUT_VALIDE => get_string('asv_lot_signe', 'local_simhub',
+                    s($d->prenomvalidateur . ' ' . $d->nomvalidateur)),
+                asv_valanimal::STATUT_SIGNE => get_string('asv_lot_a_controler', 'local_simhub',
+                    s($d->prenomvalidateur . ' ' . $d->nomvalidateur)),
+                asv_valanimal::STATUT_REJETE => get_string('asv_lot_rejete', 'local_simhub'),
+                asv_valanimal::STATUT_ANNULE => get_string('asv_lot_annule', 'local_simhub'),
+                default => get_string('asv_lot_en_attente', 'local_simhub'),
+            },
         ];
     }
     echo html_writer::table($table);
@@ -135,11 +141,12 @@ if ($acteid && isset($choixactes[$acteid])) {
         'acteid = :acteid AND statut = :statut',
         ['acteid' => $acteid, 'statut' => asv_valsim::STATUT_VALIDE]
     )));
+    // Déjà signés (acquis ou en cours de contrôle) : rien à redemander.
     $animal = array_flip(array_map('intval', $DB->get_fieldset_select(
         'local_simhub_asv_valanimal',
         'DISTINCT userid',
-        'acteid = :acteid AND statut = :statut',
-        ['acteid' => $acteid, 'statut' => asv_valanimal::STATUT_VALIDE]
+        'acteid = :acteid AND statut IN (:valide, :signe)',
+        ['acteid' => $acteid, 'valide' => asv_valanimal::STATUT_VALIDE, 'signe' => asv_valanimal::STATUT_SIGNE]
     )));
     $inscrits = $courseid ? \local_simhub\local\selecteurs::etudiants_du_cours($courseid) : null;
     $choixetudiants = \local_simhub\local\selecteurs::options_etudiants(

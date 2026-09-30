@@ -160,6 +160,11 @@ if (has_capability('mod/simhub:validateasvsimulation', $context)) {
     $boutons[] = html_writer::link(
         new moodle_url('/local/simhub/asv/demande_lot.php', ['courseid' => $course->id]),
         get_string('asv_lot_titre', 'local_simhub'),
+        ['class' => 'btn btn-secondary mr-2 me-2']
+    );
+    $boutons[] = html_writer::link(
+        new moodle_url('/local/simhub/asv/controle_signatures.php', ['courseid' => $course->id]),
+        get_string('asv_controle_titre', 'local_simhub'),
         ['class' => 'btn btn-secondary']
     );
 }

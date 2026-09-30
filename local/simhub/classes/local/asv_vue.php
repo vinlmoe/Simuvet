@@ -72,13 +72,29 @@ class asv_vue {
                 $simtexte .= \html_writer::div(s($etat['annulation']->commentaire), 'small text-danger');
             }
 
+            $controle = $etat['controle'];
             if ($animal) {
                 $animaltexte = '✔ ' . userdate($animal->datevalidation, $format) . ' — '
                     . s($animal->prenomvalidateur . ' ' . $animal->nomvalidateur);
+                $controleur = !empty($animal->controleuruserid) ? \core_user::get_user($animal->controleuruserid) : null;
+                if ($controleur) {
+                    $animaltexte .= \html_writer::div($str('asv_controle_par', s(fullname($controleur))), 'small text-muted');
+                }
+            } else if ($controle) {
+                $animaltexte = $str('asv_animal_a_controler', (object) [
+                    'nom' => s($controle->prenomvalidateur . ' ' . $controle->nomvalidateur),
+                    'date' => userdate($controle->datevalidation, $format),
+                ]);
             } else if ($attente) {
                 $animaltexte = $str('asv_en_attente_jusquau', userdate($attente->tokenexpire, $format));
             } else {
                 $animaltexte = '—';
+            }
+            if (!$animal && !$controle && $etat['rejet']) {
+                $animaltexte .= \html_writer::div($str('asv_animal_rejete', (object) [
+                    'date' => userdate($etat['rejet']->datecontrole, $format),
+                    'motif' => s($etat['rejet']->motifcontrole),
+                ]), 'small text-danger');
             }
 
             $actions = [];
@@ -94,6 +110,12 @@ class asv_vue {
                         ['class' => 'text-danger']
                     );
                 }
+                if ($controle && droits::peut_valider_asv($userid)) {
+                    $actions[] = \html_writer::link(
+                        new \moodle_url('/local/simhub/asv/controle_signatures.php'),
+                        $str('asv_controler')
+                    );
+                }
                 if ($animal && has_capability('local/simhub:manageasv', $context)) {
                     $actions[] = \html_writer::link(
                         new \moodle_url(
@@ -104,7 +126,7 @@ class asv_vue {
                         ['class' => 'text-danger']
                     );
                 }
-            } else if ($simok && !$animal) {
+            } else if ($simok && !$animal && !$controle) {
                 $actions[] = \html_writer::link(
                     new \moodle_url('/local/simhub/asv/demander_validation_animal.php', ['acteid' => $acteid]),
                     $attente ? $str('asv_voir_lien') : $str('asv_demander_validation_animal')

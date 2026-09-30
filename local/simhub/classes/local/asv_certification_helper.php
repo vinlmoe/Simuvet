@@ -68,13 +68,14 @@ class asv_certification_helper {
      *
      * @param int $userid
      * @param string $envcode
-     * @return array acteid => ['acte', 'sim', 'annulation', 'animal', 'attente']
+     * @return array acteid => ['acte', 'sim', 'annulation', 'animal', 'attente', 'controle', 'rejet'] ;
+     *     controle : signature externe en attente du contrôle interne, rejet : dernier rejet.
      */
     public static function etat_etudiant(int $userid, string $envcode): array {
         $etat = [];
         foreach (asv_acte::get_referentiel($envcode) as $acte) {
             $etat[(int) $acte->get('id')] = ['acte' => $acte, 'sim' => null, 'annulation' => null, 'animal' => null,
-                'attente' => null];
+                'attente' => null, 'controle' => null, 'rejet' => null];
         }
 
         // Historique trié du plus récent au plus ancien : une validation l'emporte sur un
@@ -105,6 +106,11 @@ class asv_certification_helper {
                 $etat[$v->acteid]['animal'] = $v;
             } else if ($v->statut === asv_valanimal::STATUT_EN_ATTENTE && $v->tokenexpire > time()) {
                 $etat[$v->acteid]['attente'] = $v;
+            } else if ($v->statut === asv_valanimal::STATUT_SIGNE) {
+                $etat[$v->acteid]['controle'] = $v;
+            } else if ($v->statut === asv_valanimal::STATUT_REJETE
+                    && (!$etat[$v->acteid]['rejet'] || $v->datecontrole > $etat[$v->acteid]['rejet']->datecontrole)) {
+                $etat[$v->acteid]['rejet'] = $v;
             }
         }
 

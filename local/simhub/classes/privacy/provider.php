@@ -111,6 +111,12 @@ class provider implements
             'nomvalidateur' => 'privacy:metadata:local_simhub_asv_valanimal:nomvalidateur',
             'prenomvalidateur' => 'privacy:metadata:local_simhub_asv_valanimal:prenomvalidateur',
             'signature' => 'privacy:metadata:local_simhub_asv_valanimal:signature',
+            'demandeuruserid' => 'privacy:metadata:local_simhub_asv_valanimal:demandeuruserid',
+            'demandeip' => 'privacy:metadata:local_simhub_asv_valanimal:demandeip',
+            'signatureip' => 'privacy:metadata:local_simhub_asv_valanimal:signatureip',
+            'signatureuserid' => 'privacy:metadata:local_simhub_asv_valanimal:signatureuserid',
+            'controleuruserid' => 'privacy:metadata:local_simhub_asv_valanimal:controleuruserid',
+            'motifcontrole' => 'privacy:metadata:local_simhub_asv_valanimal:motifcontrole',
         ], 'privacy:metadata:local_simhub_asv_valanimal');
 
         foreach (self::champs_personnel() as $table => $champs) {
@@ -143,6 +149,7 @@ class provider implements
             || $DB->record_exists('local_simhub_asv_valsim', ['userid' => $userid])
             || $DB->record_exists('local_simhub_asv_valsim', ['validateuruserid' => $userid])
             || $DB->record_exists('local_simhub_asv_valanimal', ['userid' => $userid])
+            || $DB->record_exists('local_simhub_asv_valanimal', ['controleuruserid' => $userid])
             || self::est_reference_personnel($userid);
 
         if ($hasdata) {
@@ -185,7 +192,7 @@ class provider implements
             'local_simhub_session' => ['userid', 'usermodified'],
             'local_simhub_val_encadrant' => ['validateuruserid'],
             'local_simhub_asv_valsim' => ['userid', 'validateuruserid'],
-            'local_simhub_asv_valanimal' => ['userid'],
+            'local_simhub_asv_valanimal' => ['userid', 'controleuruserid'],
         ];
         foreach (self::champs_personnel() as $table => $champs) {
             $sources[$table] = array_keys($champs);

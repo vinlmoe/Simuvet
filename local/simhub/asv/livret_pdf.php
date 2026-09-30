@@ -106,6 +106,10 @@ foreach ($actes as $acte) {
             $png = substr($animal->signature, strlen('data:image/png;base64,'));
             $animaltext .= '<br><img src="@' . $png . '" height="28">';
         }
+        $controleur = !empty($animal->controleuruserid) ? \core_user::get_user($animal->controleuruserid) : null;
+        if ($controleur) {
+            $animaltext .= '<br>' . get_string('asv_controle_par', 'local_simhub', s(fullname($controleur)));
+        }
     }
 
     $html .= '<tr>'
