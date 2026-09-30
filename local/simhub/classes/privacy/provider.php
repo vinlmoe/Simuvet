@@ -111,6 +111,7 @@ class provider implements
             'nomvalidateur' => 'privacy:metadata:local_simhub_asv_valanimal:nomvalidateur',
             'prenomvalidateur' => 'privacy:metadata:local_simhub_asv_valanimal:prenomvalidateur',
             'signature' => 'privacy:metadata:local_simhub_asv_valanimal:signature',
+            'emailvalidateur' => 'privacy:metadata:local_simhub_asv_valanimal:emailvalidateur',
         ], 'privacy:metadata:local_simhub_asv_valanimal');
 
         foreach (self::champs_personnel() as $table => $champs) {

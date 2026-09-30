@@ -355,6 +355,7 @@
         <FIELD NAME="prenomvalidateur" TYPE="char" LENGTH="255" NOTNULL="false"/>
         <FIELD NAME="certificationcochee" TYPE="int" LENGTH="1" NOTNULL="true" DEFAULT="0" COMMENT="Case attestant que le validateur est vétérinaire/encadrant autorisé"/>
         <FIELD NAME="signature" TYPE="text" NOTNULL="false" COMMENT="Tracé de signature (SVG/PNG base64) - niveau de preuve simple, non qualifié"/>
+        <FIELD NAME="emailvalidateur" TYPE="char" LENGTH="255" NOTNULL="false" COMMENT="Adresse à laquelle le lien a été envoyé (jamais montré à l'étudiant)"/>
         <FIELD NAME="statut" TYPE="char" LENGTH="20" NOTNULL="true" DEFAULT="en_attente" COMMENT="en_attente|valide|annule"/>
         <FIELD NAME="token" TYPE="char" LENGTH="255" NOTNULL="true" COMMENT="Jeton unique du lien d'accès externe, sans compte Moodle"/>
         <FIELD NAME="tokenexpire" TYPE="int" LENGTH="10" NOTNULL="false"/>

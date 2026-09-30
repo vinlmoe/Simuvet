@@ -99,7 +99,8 @@ foreach ($actes as $acte) {
     $animaltext = '—';
     if ($animal) {
         $animaltext = userdate($animal->datevalidation, get_string('strftimedatefullshort', 'langconfig'))
-            . '<br>' . s($animal->prenomvalidateur . ' ' . $animal->nomvalidateur);
+            . '<br>' . s($animal->prenomvalidateur . ' ' . $animal->nomvalidateur)
+            . ($animal->emailvalidateur ? '<br>' . s($animal->emailvalidateur) : '');
         // Tracé de signature du validateur (§9.1 « date et signature »), passé à TCPDF en
         // données brutes via le préfixe « @ » plutôt qu'en URL.
         if (asv_valanimal::signature_valide((string) $animal->signature)) {

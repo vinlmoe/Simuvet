@@ -28,6 +28,10 @@ namespace local_simhub\record;
  * Validation ASV sur animal vivant, potentiellement par un validateur externe sans compte
  * Moodle, via un lien à jeton (§9.3). Niveau de preuve volontairement simple : nom, prénom,
  * date, case de certification, signature au doigt — pas de signature électronique qualifiée.
+ *
+ * Le lien n'est jamais montré à l'étudiant : il est envoyé par e-mail à l'adresse du
+ * validateur qu'il indique, adresse conservée et affichée dans le livret. L'étudiant ne peut
+ * ainsi pas ouvrir lui-même la page de validation pour se valider.
  */
 class asv_valanimal {
     /** @var string Table de la base de données. */
@@ -39,17 +43,6 @@ class asv_valanimal {
     const STATUT_VALIDE = 'valide';
     /** @var string Statut : annule. */
     const STATUT_ANNULE = 'annule';
-
-    /**
-     * Crée une demande de validation animal vivant et son lien à jeton, pour un étudiant/acte.
-     *
-     * @param int $userid Étudiant.
-     * @param int $acteid
-     * @return \stdClass Enregistrement créé (contient le token).
-     */
-    public static function get_ou_creer_demande(int $userid, int $acteid): \stdClass {
-        return self::get_demande_en_attente($userid, $acteid) ?: self::creer_demande($userid, $acteid);
-    }
 
     /**
      * Demande encore utilisable (en attente, lien non expiré) pour un acte, s'il y en a une.
@@ -97,14 +90,37 @@ class asv_valanimal {
     }
 
     /**
-     * Crée une nouvelle demande de validation, avec son propre lien à jeton.
+     * Refuse une adresse de validateur qui est celle de l'étudiant lui-même.
+     *
+     * @param int $userid Étudiant.
+     * @param string $email Adresse du validateur.
+     * @return bool
+     */
+    public static function email_acceptable(int $userid, string $email): bool {
+        $etudiant = \core_user::get_user($userid, 'id, email', MUST_EXIST);
+        return validate_email($email)
+            && \core_text::strtolower(trim($email)) !== \core_text::strtolower(trim($etudiant->email));
+    }
+
+    /**
+     * Crée une nouvelle demande de validation, avec son propre lien à jeton, et l'envoie au
+     * validateur. Une éventuelle demande encore en attente pour le même acte est expirée :
+     * une seule demande active par acte.
      *
      * @param int $userid
      * @param int $acteid
-     * @return \stdClass
+     * @param string $email Adresse du validateur, destinataire du lien.
+     * @return \stdClass Demande créée ; « envoye » indique si l'e-mail est parti.
      */
-    public static function creer_demande(int $userid, int $acteid): \stdClass {
+    public static function creer_demande(int $userid, int $acteid, string $email): \stdClass {
         global $DB;
+
+        if (!self::email_acceptable($userid, $email)) {
+            throw new \invalid_parameter_exception('emailvalidateur');
+        }
+        if ($ancienne = self::get_demande_en_attente($userid, $acteid)) {
+            $DB->set_field(self::TABLE, 'tokenexpire', time() - 1, ['id' => $ancienne->id]);
+        }
 
         $expiry = (int) (get_config('local_simhub', 'asvtokenexpiry') ?: 7 * DAYSECS);
         $record = (object) [
@@ -115,13 +131,50 @@ class asv_valanimal {
             'prenomvalidateur' => null,
             'certificationcochee' => 0,
             'signature' => null,
+            'emailvalidateur' => trim($email),
             'statut' => self::STATUT_EN_ATTENTE,
             'token' => \core\uuid::generate(),
             'tokenexpire' => time() + $expiry,
             'timecreated' => time(),
         ];
         $record->id = $DB->insert_record(self::TABLE, $record);
+        $record->envoye = self::envoyer_lien($record);
         return $record;
+    }
+
+    /**
+     * Envoie (ou renvoie) au validateur l'e-mail contenant le lien de validation.
+     *
+     * @param \stdClass $demande
+     * @return bool Vrai si l'e-mail est parti.
+     */
+    public static function envoyer_lien(\stdClass $demande): bool {
+        global $SITE;
+
+        $etudiant = \core_user::get_user($demande->userid, '*', MUST_EXIST);
+        $acte = new \local_simhub\persistent\asv_acte($demande->acteid);
+        $a = (object) [
+            'etudiant' => fullname($etudiant),
+            'acte' => $acte->get('nom'),
+            'lien' => (new \moodle_url('/local/simhub/asv/valider_animal.php', ['token' => $demande->token]))->out(false),
+            'expire' => userdate($demande->tokenexpire, get_string('strftimedatetimeshort', 'langconfig')),
+            'site' => format_string($SITE->fullname),
+        ];
+
+        // Destinataire sans compte Moodle : copie de l'utilisateur « noreply » (mis en cache par
+        // Moodle, d'où le clone) dont seule l'adresse compte pour l'envoi.
+        $destinataire = clone \core_user::get_noreply_user();
+        $destinataire->email = $demande->emailvalidateur;
+        $destinataire->emailstop = 0;
+        $destinataire->firstname = '';
+        $destinataire->lastname = $demande->emailvalidateur;
+
+        return email_to_user(
+            $destinataire,
+            \core_user::get_noreply_user(),
+            get_string('asv_mail_sujet', 'local_simhub', $a),
+            get_string('asv_mail_corps', 'local_simhub', $a)
+        );
     }
 
     /**
@@ -151,6 +204,7 @@ class asv_valanimal {
      * @param string $prenom
      * @param bool $certificationcochee Case attestant que le validateur est vétérinaire/encadrant autorisé.
      * @param string $signature Tracé de signature (SVG/PNG base64).
+     * @param int $validateurid Utilisateur Moodle connecté qui valide (0 si aucun) : jamais l'étudiant lui-même.
      * @return bool
      */
     public static function valider(
@@ -158,13 +212,15 @@ class asv_valanimal {
         string $nom,
         string $prenom,
         bool $certificationcochee,
-        string $signature
+        string $signature,
+        int $validateurid = 0
     ): bool {
         global $DB;
 
         $record = self::get_par_token($token);
         if (
             !$record || $record->statut !== self::STATUT_EN_ATTENTE || !$certificationcochee
+                || ($validateurid && $validateurid == $record->userid)
                 || trim($nom) === '' || trim($prenom) === '' || !self::signature_valide($signature)
         ) {
             return false;
@@ -178,6 +234,19 @@ class asv_valanimal {
         $record->statut = self::STATUT_VALIDE;
         $DB->update_record(self::TABLE, $record);
         return true;
+    }
+
+    /**
+     * Vrai si l'acte est déjà validé sur animal vivant pour cet étudiant.
+     *
+     * @param int $userid
+     * @param int $acteid
+     * @return bool
+     */
+    public static function est_valide(int $userid, int $acteid): bool {
+        global $DB;
+
+        return $DB->record_exists(self::TABLE, ['userid' => $userid, 'acteid' => $acteid, 'statut' => self::STATUT_VALIDE]);
     }
 
     /**
