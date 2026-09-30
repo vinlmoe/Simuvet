@@ -212,7 +212,6 @@ $string['asv_telecharger'] = 'Download';
 $string['filtrer'] = 'Filter';
 $string['asv_valider_simulation'] = 'Validate in simulation';
 $string['asv_demander_validation_animal'] = 'Request a live-animal validation';
-$string['asv_lien_valanimal'] = 'Live-animal validation link';
 $string['asv_formulaire_validateur_titre'] = 'Live-animal act validation';
 $string['asv_champ_nom'] = 'Last name';
 $string['asv_champ_prenom'] = 'First name';
@@ -373,7 +372,7 @@ $string['role_simhubadminfonctionnel_desc'] = 'All SimHub rights, including the 
 // Textes auparavant codés en dur dans les pages.
 $string['ae_autobilan'] = 'Self-review';
 $string['asv_acte_libelle'] = 'Procedure: {$a}';
-$string['asv_transmettre_lien'] = 'Send this link to the veterinarian, placement supervisor or authorised trainer who supervised the procedure on a live animal.';
+$string['asv_transmettre_lien'] = 'Enter the email address of the veterinarian, placement supervisor or authorised trainer who supervised the procedure on a live animal: the validation link is sent directly to them.';
 $string['asv_exporter_livret'] = 'Export the logbook (PDF)';
 $string['asv_col_simulation'] = 'Simulation';
 $string['asv_col_animal'] = 'Live animal';
@@ -459,7 +458,7 @@ $string['asv_non_valide_le'] = 'Not validated on {$a}';
 $string['asv_en_attente_jusquau'] = 'Request pending (link valid until {$a})';
 $string['asv_annuler_simulation'] = 'Cancel the simulation validation';
 $string['asv_annuler_animal'] = 'Cancel the live animal validation';
-$string['asv_voir_lien'] = 'Show the validation link again';
+$string['asv_voir_lien'] = 'Follow the validation request';
 $string['asv_telecharger_attestation'] = 'Download the certificate';
 $string['asv_actes_restants'] = '{$a} procedure(s) remaining';
 $string['asv_motif_obligatoire'] = 'A reason for the cancellation is required.';
@@ -475,7 +474,6 @@ $string['asv_commentaire'] = 'Remark (optional)';
 $string['asv_enregistrer_decision'] = 'Save the decision';
 $string['asv_decision_enregistree'] = 'Decision saved.';
 $string['asv_simulation_requise'] = 'This procedure must first be validated in simulation before a live animal validation can be requested.';
-$string['asv_lien_expire_le'] = 'This link is valid until {$a}. Coming back to this page shows the same link again.';
 $string['asv_validation_incomplete'] = 'Validation not saved: enter your last and first name, tick the certification and sign in the box.';
 $string['asv_signature_requise'] = 'Please sign in the box before validating.';
 $string['asv_tous_etudiants'] = 'All students with an ASV validation';
@@ -568,3 +566,29 @@ $string['import_bilan_crees'] = '{$a} created';
 $string['import_bilan_majs'] = '{$a} updated';
 $string['import_bilan_parcours'] = '{$a} pathway(s) created';
 $string['import_ligne_ressource'] = 'Line {$a}: missing or invalid title or address (URL).';
+$string['privacy:metadata:local_simhub_asv_valanimal:emailvalidateur'] = 'The validator\'s email address, to which the validation link was sent.';
+$string['asv_email_validateur'] = 'Validator\'s email address';
+$string['asv_email_validateur_help'] = 'Professional address of the veterinarian, placement supervisor or authorised trainer who supervised the procedure. The validation link is emailed to them; you do not receive it. This address appears in your logbook.';
+$string['asv_email_etudiant_refuse'] = 'Enter the validator\'s address, not your own.';
+$string['asv_envoyer_lien'] = 'Send the link to the validator';
+$string['asv_envoyer_autre_adresse'] = 'Send to another address (the previous link will stop working)';
+$string['asv_renvoyer_lien'] = 'Resend the email';
+$string['asv_lien_envoye'] = 'The validation link has been sent to {$a}.';
+$string['asv_lien_non_envoye'] = 'The email could not be sent to {$a}. Check the address or contact the administrator.';
+$string['asv_demande_envoyee'] = 'Request sent to {$a->email}. The link is valid until {$a->date}.';
+$string['asv_deja_valide_animal'] = 'This procedure is already validated on a live animal.';
+$string['asv_autovalidation_interdite'] = 'You cannot validate your own procedures. This link is intended for the veterinarian, placement supervisor or trainer who supervised the procedure.';
+$string['asv_mail_sujet'] = 'Validation of an ASV procedure on a live animal: {$a->etudiant}';
+$string['asv_mail_corps'] = 'Hello,
+
+{$a->etudiant} asks you to validate the following procedure, performed under your supervision on a live animal:
+
+{$a->acte}
+
+To validate it, open this link (no account needed):
+{$a->lien}
+
+This link is valid until {$a->expire}. Do not pass it on to the student.
+If you did not supervise this procedure, please ignore this message.
+
+{$a->site}';

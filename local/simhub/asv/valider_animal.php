@@ -78,7 +78,8 @@ if ($lot !== '') {
                 $data->nom,
                 $data->prenom,
                 !empty($data->certification),
-                $data->signature
+                $data->signature,
+                isloggedin() && !isguestuser() ? (int) $USER->id : 0
             ) : [];
             if ($validees) {
                 redirect(
@@ -120,8 +121,12 @@ if ($lot !== '') {
 }
 
 $demande = asv_valanimal::get_par_token($token);
+// Un étudiant ne se valide jamais lui-même, même s'il a obtenu le lien (§9.3). Le contrôle
+// ne porte que sur une session Moodle ouverte : le validateur externe n'en a pas.
+$connecte = isloggedin() && !isguestuser() ? (int) $USER->id : 0;
+$autovalidation = $demande && $connecte && $connecte == $demande->userid;
 $form = null;
-if ($demande && $demande->statut === asv_valanimal::STATUT_EN_ATTENTE) {
+if ($demande && $demande->statut === asv_valanimal::STATUT_EN_ATTENTE && !$autovalidation) {
     $form = new \local_simhub\form\valanimal_form(
         $PAGE->url,
         ['token' => $token],
@@ -130,7 +135,16 @@ if ($demande && $demande->statut === asv_valanimal::STATUT_EN_ATTENTE) {
         ['id' => 'local-simhub-valanimal-form']
     );
     $data = $form->get_data();
-    if ($data && asv_valanimal::valider($token, $data->nom, $data->prenom, !empty($data->certification), $data->signature)) {
+    // Signée, elle reste à contrôler par un encadrant (controle_signatures.php) avant de compter.
+    $signe = $data && asv_valanimal::valider(
+        $token,
+        $data->nom,
+        $data->prenom,
+        !empty($data->certification),
+        $data->signature,
+        $connecte
+    );
+    if ($signe) {
         redirect(
             $PAGE->url,
             get_string('asv_signature_enregistree', 'local_simhub'),
@@ -145,6 +159,12 @@ echo $OUTPUT->header();
 // Rejetée ou annulée : le lien ne sert plus, l'étudiant doit refaire une demande.
 if (!$demande || in_array($demande->statut, [asv_valanimal::STATUT_REJETE, asv_valanimal::STATUT_ANNULE], true)) {
     echo $OUTPUT->notification(get_string('asv_lien_invalide', 'local_simhub'), \core\output\notification::NOTIFY_ERROR);
+    echo $OUTPUT->footer();
+    exit;
+}
+
+if ($autovalidation) {
+    echo $OUTPUT->notification(get_string('asv_autovalidation_interdite', 'local_simhub'), \core\output\notification::NOTIFY_ERROR);
     echo $OUTPUT->footer();
     exit;
 }

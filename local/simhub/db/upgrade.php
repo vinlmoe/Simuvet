@@ -135,6 +135,25 @@ function xmldb_local_simhub_upgrade($oldversion) {
     }
 
     if ($oldversion < 2026092905) {
+        $table = new xmldb_table('local_simhub_asv_valanimal');
+        $field = new xmldb_field('emailvalidateur', XMLDB_TYPE_CHAR, '255', null, null, null, null, 'signature');
+        if (!$dbman->field_exists($table, $field)) {
+            $dbman->add_field($table, $field);
+        }
+        // Les liens des demandes en attente ont été affichés à l'étudiant, qui pourrait s'en
+        // servir pour se valider lui-même : ils sont expirés, l'étudiant renvoie la demande
+        // à l'adresse de son validateur.
+        $DB->set_field_select(
+            'local_simhub_asv_valanimal',
+            'tokenexpire',
+            time() - 1,
+            'statut = :statut AND emailvalidateur IS NULL',
+            ['statut' => 'en_attente']
+        );
+        upgrade_plugin_savepoint(true, 2026092905, 'local', 'simhub');
+    }
+
+    if ($oldversion < 2026092906) {
         // Lien groupé de validation sur animal vivant : une signature pour plusieurs demandes.
         $table = new xmldb_table('local_simhub_asv_valanimal');
         $field = new xmldb_field('lottoken', XMLDB_TYPE_CHAR, '255', null, null, null, null, 'timecreated');
@@ -145,10 +164,10 @@ function xmldb_local_simhub_upgrade($oldversion) {
         if (!$dbman->index_exists($table, $index)) {
             $dbman->add_index($table, $index);
         }
-        upgrade_plugin_savepoint(true, 2026092905, 'local', 'simhub');
+        upgrade_plugin_savepoint(true, 2026092906, 'local', 'simhub');
     }
 
-    if ($oldversion < 2026092906) {
+    if ($oldversion < 2026092907) {
         // Contrôle interne des signatures externes (anti-fraude) : une signature sur animal
         // vivant ne compte qu'après confirmation par un encadrant. Les validations déjà
         // enregistrées restent acquises.
@@ -167,7 +186,7 @@ function xmldb_local_simhub_upgrade($oldversion) {
                 $dbman->add_field($table, $field);
             }
         }
-        upgrade_plugin_savepoint(true, 2026092906, 'local', 'simhub');
+        upgrade_plugin_savepoint(true, 2026092907, 'local', 'simhub');
     }
 
     return true;

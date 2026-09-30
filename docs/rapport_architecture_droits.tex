@@ -99,7 +99,8 @@ Rattachement d'ateliers à l'UC, parcours de l'UC, échéances, suivi des inscri
 des séances de ses étudiants, note et achèvement dans le cours. \\
 \addlinespace
 Page publique ASV & Aucun (jeton signé + expiration) & Validation sur animal vivant par un
-validateur externe (§9.3), inchangée. \\
+validateur externe (§9.3). Le lien est envoyé par e-mail au validateur, jamais montré à
+l'étudiant, et l'étudiant connecté ne peut pas se valider lui-même. \\
 \bottomrule
 \end{tabularx}
 \end{center}
@@ -149,7 +150,7 @@ Gestionnaire de salle & Rôle SimHub attribué \emph{dans la catégorie} & L'adm
 fonctionnel. \\
 Administrateur fonctionnel & Rôle SimHub attribué dans la catégorie, avec
 \code{moodle/role:assign} limité à celle-ci & Un administrateur Moodle, une seule fois. \\
-Validateur externe ASV & Aucun compte & Lien ou QR code à jeton. \\
+Validateur externe ASV & Aucun compte & Lien à jeton reçu par e-mail. \\
 \bottomrule
 \end{tabularx}
 \end{center}
@@ -298,7 +299,8 @@ Wi-Fi). \\
 Présent (\code{dashboard.php}) mais non restreint aux étudiants de l'enseignant ; pas de
 vue par groupe. \\
 9 & Module ASV complet (simulation, animal vivant, livret, A1--A3) & \OK & Ordre imposé,
-signature obligatoire, annulation tracée, certification globale A3. \\
+signature obligatoire, annulation tracée, certification globale A3, pas
+d'auto-validation. \\
 10 & Rôles : différencier les profils & \PART & Profils distincts, mais au niveau système
 (section 1). \\
 10 & Cours / UC : rattacher aux enseignements & \PART & Rattachement par \code{courseid},

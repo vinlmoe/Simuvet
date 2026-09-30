@@ -222,7 +222,6 @@ $string['asv_telecharger'] = 'Télécharger';
 $string['filtrer'] = 'Filtrer';
 $string['asv_valider_simulation'] = 'Valider en simulation';
 $string['asv_demander_validation_animal'] = 'Demander une validation sur animal vivant';
-$string['asv_lien_valanimal'] = 'Lien de validation animal vivant';
 $string['asv_formulaire_validateur_titre'] = 'Validation de l\'acte sur animal vivant';
 $string['asv_champ_nom'] = 'Nom';
 $string['asv_champ_prenom'] = 'Prénom';
@@ -387,7 +386,7 @@ $string['role_simhubadminfonctionnel_desc'] = 'Tous les droits SimHub, y compris
 // Textes auparavant codés en dur dans les pages.
 $string['ae_autobilan'] = 'Auto-bilan';
 $string['asv_acte_libelle'] = 'Acte : {$a}';
-$string['asv_transmettre_lien'] = 'Transmettez ce lien au vétérinaire, maître de stage ou encadrant autorisé qui a supervisé le geste sur animal vivant.';
+$string['asv_transmettre_lien'] = 'Indiquez l\'adresse e-mail du vétérinaire, maître de stage ou encadrant autorisé qui a supervisé le geste sur animal vivant : le lien de validation lui est envoyé directement.';
 $string['asv_exporter_livret'] = 'Exporter le livret (PDF)';
 $string['asv_col_simulation'] = 'Simulation';
 $string['asv_col_animal'] = 'Animal vivant';
@@ -473,7 +472,7 @@ $string['asv_non_valide_le'] = 'Non validé le {$a}';
 $string['asv_en_attente_jusquau'] = 'Demande en attente (lien valable jusqu\'au {$a})';
 $string['asv_annuler_simulation'] = 'Annuler la validation en simulation';
 $string['asv_annuler_animal'] = 'Annuler la validation sur animal vivant';
-$string['asv_voir_lien'] = 'Revoir le lien de validation';
+$string['asv_voir_lien'] = 'Suivre la demande de validation';
 $string['asv_telecharger_attestation'] = 'Télécharger l\'attestation';
 $string['asv_actes_restants'] = '{$a} acte(s) restant(s)';
 $string['asv_motif_obligatoire'] = 'Le motif de l\'annulation est obligatoire.';
@@ -489,7 +488,6 @@ $string['asv_commentaire'] = 'Observation (optionnel)';
 $string['asv_enregistrer_decision'] = 'Enregistrer la décision';
 $string['asv_decision_enregistree'] = 'Décision enregistrée.';
 $string['asv_simulation_requise'] = 'Cet acte doit d\'abord être validé en simulation avant de pouvoir demander une validation sur animal vivant.';
-$string['asv_lien_expire_le'] = 'Ce lien est valable jusqu\'au {$a}. Revenir sur cette page réaffiche le même lien.';
 $string['asv_validation_incomplete'] = 'Validation non enregistrée : indiquez votre nom et votre prénom, cochez la certification et signez dans le cadre.';
 $string['asv_signature_requise'] = 'Veuillez signer dans le cadre avant de valider.';
 $string['asv_tous_etudiants'] = 'Tous les étudiants ayant une validation ASV';
@@ -582,3 +580,29 @@ $string['import_bilan_crees'] = '{$a} créé(s)';
 $string['import_bilan_majs'] = '{$a} mis à jour';
 $string['import_bilan_parcours'] = '{$a} parcours créé(s)';
 $string['import_ligne_ressource'] = 'Ligne {$a} : titre ou adresse (URL) manquant ou invalide.';
+$string['privacy:metadata:local_simhub_asv_valanimal:emailvalidateur'] = 'L\'adresse e-mail du validateur, à laquelle le lien de validation a été envoyé.';
+$string['asv_email_validateur'] = 'Adresse e-mail du validateur';
+$string['asv_email_validateur_help'] = 'Adresse professionnelle du vétérinaire, maître de stage ou encadrant autorisé qui a supervisé le geste. Le lien de validation lui est envoyé par e-mail ; vous ne le recevez pas. Cette adresse figure dans votre livret.';
+$string['asv_email_etudiant_refuse'] = 'Indiquez l\'adresse du validateur, pas la vôtre.';
+$string['asv_envoyer_lien'] = 'Envoyer le lien au validateur';
+$string['asv_envoyer_autre_adresse'] = 'Envoyer à une autre adresse (le lien précédent ne fonctionnera plus)';
+$string['asv_renvoyer_lien'] = 'Renvoyer l\'e-mail';
+$string['asv_lien_envoye'] = 'Le lien de validation a été envoyé à {$a}.';
+$string['asv_lien_non_envoye'] = 'L\'e-mail n\'a pas pu être envoyé à {$a}. Vérifiez l\'adresse ou contactez l\'administrateur.';
+$string['asv_demande_envoyee'] = 'Demande envoyée à {$a->email}. Le lien est valable jusqu\'au {$a->date}.';
+$string['asv_deja_valide_animal'] = 'Cet acte est déjà validé sur animal vivant.';
+$string['asv_autovalidation_interdite'] = 'Vous ne pouvez pas valider vous-même vos propres actes. Ce lien est destiné au vétérinaire, maître de stage ou encadrant qui a supervisé le geste.';
+$string['asv_mail_sujet'] = 'Validation d\'un acte ASV sur animal vivant : {$a->etudiant}';
+$string['asv_mail_corps'] = 'Bonjour,
+
+{$a->etudiant} vous demande de valider l\'acte suivant, réalisé sous votre supervision sur animal vivant :
+
+{$a->acte}
+
+Pour le valider, ouvrez ce lien (aucun compte n\'est nécessaire) :
+{$a->lien}
+
+Ce lien est valable jusqu\'au {$a->expire}. Ne le transmettez pas à l\'étudiant.
+Si vous n\'avez pas supervisé ce geste, ignorez ce message.
+
+{$a->site}';

@@ -75,7 +75,8 @@ class asv_vue {
             $controle = $etat['controle'];
             if ($animal) {
                 $animaltexte = '✔ ' . userdate($animal->datevalidation, $format) . ' — '
-                    . s($animal->prenomvalidateur . ' ' . $animal->nomvalidateur);
+                    . s($animal->prenomvalidateur . ' ' . $animal->nomvalidateur)
+                    . ($animal->emailvalidateur ? \html_writer::div(s($animal->emailvalidateur), 'small text-muted') : '');
                 $controleur = !empty($animal->controleuruserid) ? \core_user::get_user($animal->controleuruserid) : null;
                 if ($controleur) {
                     $animaltexte .= \html_writer::div($str('asv_controle_par', s(fullname($controleur))), 'small text-muted');
@@ -86,7 +87,8 @@ class asv_vue {
                     'date' => userdate($controle->datevalidation, $format),
                 ]);
             } else if ($attente) {
-                $animaltexte = $str('asv_en_attente_jusquau', userdate($attente->tokenexpire, $format));
+                $animaltexte = $str('asv_en_attente_jusquau', userdate($attente->tokenexpire, $format))
+                    . ($attente->emailvalidateur ? \html_writer::div(s($attente->emailvalidateur), 'small text-muted') : '');
             } else {
                 $animaltexte = '—';
             }
