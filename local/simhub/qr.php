@@ -34,6 +34,7 @@
 require(__DIR__ . '/../../config.php');
 
 use local_simhub\record\qrtoken;
+use local_simhub\record\seancecode;
 use local_simhub\persistent\session;
 
 require_login();
@@ -52,12 +53,11 @@ if (!has_capability('local/simhub:startsession', $context)) {
     redirect(new moodle_url('/local/simhub/atelier.php', ['id' => $qr->atelierid]));
 }
 
-$controle = get_config('local_simhub', 'controlepresenceactif');
 // Sur le réseau de la salle, la présence est vérifiée sans code (§7.3).
-$dansalle = $controle && \local_simhub\local\reseau::dans_la_salle();
-if ($controle && !$dansalle) {
+if (seancecode::est_requis() && !session::en_cours($USER->id, $qr->atelierid)) {
     redirect(new moodle_url('/local/simhub/session_code.php', ['atelierid' => $qr->atelierid]));
 }
+$dansalle = get_config('local_simhub', 'controlepresenceactif') && \local_simhub\local\reseau::dans_la_salle();
 
 session::demarrer_ou_reprendre($USER->id, $qr->atelierid, [
     'methodescan' => 'qr',

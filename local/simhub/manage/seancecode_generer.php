@@ -73,4 +73,26 @@ if ($genere) {
 
 $form->display();
 
+// Codes encore valables : l'encadrant peut réafficher le code en cours sans en générer un autre.
+echo $OUTPUT->heading(get_string('seancecode_encours', 'local_simhub'), 3);
+$encours = seancecode::get_en_cours();
+if (!$encours) {
+    echo html_writer::tag('p', get_string('seancecode_aucun', 'local_simhub'));
+} else {
+    $table = new html_table();
+    $table->head = [
+        get_string('seancecode_champ_salle', 'local_simhub'),
+        get_string('seancecode_champ', 'local_simhub'),
+        get_string('seancecode_validite', 'local_simhub', ''),
+    ];
+    foreach ($encours as $code) {
+        $table->data[] = [
+            s($code->salle),
+            html_writer::tag('strong', s($code->code)),
+            userdate($code->validto, get_string('strftimedatetimeshort', 'langconfig')),
+        ];
+    }
+    echo html_writer::table($table);
+}
+
 echo $OUTPUT->footer();
