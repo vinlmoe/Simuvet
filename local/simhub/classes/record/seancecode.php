@@ -72,10 +72,48 @@ class seancecode {
         global $DB;
 
         $now = time();
+        // Atelier sans salle renseignée : tout code en cours de validité est accepté, sinon
+        // aucun code ne pourrait jamais convenir.
+        [$where, $params] = $salle !== '' ? ['salle = ? AND ', [$salle]] : ['', []];
         return $DB->record_exists_select(
             self::TABLE,
-            'salle = ? AND code = ? AND validfrom <= ? AND validto >= ?',
-            [$salle, strtoupper($code), $now, $now]
+            $where . 'code = ? AND validfrom <= ? AND validto >= ?',
+            array_merge($params, [strtoupper($code), $now, $now])
         );
+    }
+
+    /**
+     * Vrai si un code de séance est en cours de validité pour une salle (toutes salles
+     * confondues si la salle n'est pas renseignée).
+     *
+     * @param string $salle
+     * @return bool
+     */
+    public static function existe_actif(string $salle): bool {
+        global $DB;
+
+        $now = time();
+        [$where, $params] = $salle !== '' ? ['salle = ? AND ', [$salle]] : ['', []];
+        return $DB->record_exists_select(
+            self::TABLE,
+            $where . 'validfrom <= ? AND validto >= ?',
+            array_merge($params, [$now, $now])
+        );
+    }
+
+    /**
+     * Le code de séance doit-il être demandé pour démarrer cet atelier (§7.3) ? Oui si le
+     * contrôle anti-faux-scan est activé pour tout le site, ou dès qu'un encadrant a généré
+     * un code encore valable pour la salle : générer un code n'aurait sinon aucun effet.
+     * Jamais depuis le réseau de la salle, où la présence est déjà vérifiée.
+     *
+     * @param string $salle Salle de l'atelier.
+     * @return bool
+     */
+    public static function a_demander(string $salle): bool {
+        if (\local_simhub\local\reseau::dans_la_salle()) {
+            return false;
+        }
+        return get_config('local_simhub', 'controlepresenceactif') || self::existe_actif($salle);
     }
 }

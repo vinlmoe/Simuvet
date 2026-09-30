@@ -17,8 +17,10 @@
 /**
  * Génération d'un code de séance temporaire pour une salle (§7.3, mécanisme "code de
  * séance" du contrôle anti-faux-scan). L'encadrant génère le code en début de séance et
- * le communique aux étudiants (tableau, projection...) ; il reste valable une durée
- * limitée (local_simhub/seancecodeduration).
+ * le communique aux étudiants (tableau, projection...) ; il reste valable la durée choisie
+ * (par défaut local_simhub/seancecodeduration). Tant qu'il est valable, il est demandé
+ * aux étudiants qui démarrent un atelier de cette salle, même si le contrôle anti-faux-scan
+ * n'est pas activé pour tout le site.
  *
  * @package    local_simhub
  * @copyright  2026 Écoles nationales vétérinaires de France (ENVF)
@@ -41,6 +43,14 @@ $pageurl = new moodle_url('/local/simhub/manage/seancecode_generer.php');
 $salles = $DB->get_fieldset_sql(
     "SELECT DISTINCT salle FROM {local_simhub_atelier} WHERE salle IS NOT NULL AND salle <> '' ORDER BY salle"
 );
+// Durée choisie par l'encadrant à la génération : une séance de TP dure souvent plus que
+// l'heure par défaut, et un code expiré en cours de séance oblige à en regénérer un.
+$dureedefaut = (int) (get_config('local_simhub', 'seancecodeduration') ?: DAYSECS);
+$durees = [];
+foreach ([HOURSECS, 2 * HOURSECS, 4 * HOURSECS, 8 * HOURSECS, DAYSECS, WEEKSECS, $dureedefaut] as $secondes) {
+    $durees[$secondes] = format_time($secondes);
+}
+ksort($durees);
 $form = new \local_simhub\form\formulaire($pageurl, [
     'champs' => [
         $salles
@@ -48,12 +58,16 @@ $form = new \local_simhub\form\formulaire($pageurl, [
                 'choix' => array_combine($salles, $salles),
             ]]
             : ['text', 'salle', get_string('seancecode_champ_salle', 'local_simhub'), ['requis' => true]],
+        ['select', 'duree', get_string('seancecode_champ_duree', 'local_simhub'), [
+            'choix' => $durees, 'defaut' => $dureedefaut, 'type' => PARAM_INT,
+        ]],
     ],
     'bouton' => get_string('seancecode_generer', 'local_simhub'),
 ]);
 $genere = null;
 if (($data = $form->get_data()) && trim($data->salle) !== '') {
-    $genere = seancecode::generer(trim($data->salle), $USER->id);
+    $duree = array_key_exists((int) $data->duree, $durees) ? (int) $data->duree : $dureedefaut;
+    $genere = seancecode::generer(trim($data->salle), $USER->id, $duree);
 }
 
 echo $OUTPUT->header();

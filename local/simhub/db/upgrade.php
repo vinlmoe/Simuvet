@@ -189,5 +189,14 @@ function xmldb_local_simhub_upgrade($oldversion) {
         upgrade_plugin_savepoint(true, 2026092907, 'local', 'simhub');
     }
 
+    if ($oldversion < 2026093000) {
+        // Un code de séance d'une heure expirait en cours de séance : l'ancienne valeur par
+        // défaut passe à une journée (une valeur choisie par l'administrateur est conservée).
+        if ((int) get_config('local_simhub', 'seancecodeduration') === HOURSECS) {
+            set_config('seancecodeduration', DAYSECS, 'local_simhub');
+        }
+        upgrade_plugin_savepoint(true, 2026093000, 'local', 'simhub');
+    }
+
     return true;
 }

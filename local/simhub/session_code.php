@@ -88,7 +88,7 @@ if ($data = $form->get_data()) {
             \core\output\notification::NOTIFY_INFO
         );
     }
-    if ($data->code !== '' && seancecode::est_valide($atelier->get('salle'), core_text::strtoupper($data->code))) {
+    if ($data->code !== '' && seancecode::est_valide((string) $atelier->get('salle'), core_text::strtoupper($data->code))) {
         session::demarrer_ou_reprendre($USER->id, $atelierid, [
             'methodescan' => $methode,
             'controlepresence' => 'code_seance',

@@ -236,10 +236,12 @@ le schéma :
   restent acquises.
 - **QR code et contrôle anti-faux-scan** (`qr.php`, `session_code.php`,
   `manage/seancecode_generer.php`, `manage/sessions_a_valider.php`, §7.3) :
-  si `local_simhub/controlepresenceactif` est désactivé, le scan
-  démarre directement la session ; sinon (hors réseau de la salle)
+  si `local_simhub/controlepresenceactif` est désactivé et qu'aucun code
+  de séance n'est en cours pour la salle de l'atelier, le scan démarre
+  directement la session ; sinon (hors réseau de la salle)
   l'étudiant est renvoyé vers une page de saisie du code de séance
-  généré par l'encadrant, qu'il ait scanné le QR code ou cliqué sur
+  généré par l'encadrant (valable la durée qu'il choisit, une journée
+  par défaut), qu'il ait scanné le QR code ou cliqué sur
   « Commencer » dans la fiche atelier. Jamais
   bloquant de façon absolue : sans code, l'étudiant peut tout de même
   démarrer sa session, marquée non vérifiée, et elle apparaît alors

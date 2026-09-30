@@ -52,7 +52,7 @@ if ($hassiteconfig) {
         'local_simhub/seancecodeduration',
         get_string('setting_seancecodeduration', 'local_simhub'),
         get_string('setting_seancecodeduration_desc', 'local_simhub'),
-        3600
+        DAYSECS
     ));
 
     $settings->add(new admin_setting_configduration(
