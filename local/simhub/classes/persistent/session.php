@@ -105,6 +105,21 @@ class session extends \core\persistent {
     }
 
     /**
+     * Vrai si l'étudiant a déjà une séance commencée sur cet atelier : la reprendre ne
+     * redemande pas le code de séance.
+     *
+     * @param int $userid
+     * @param int $atelierid
+     * @return bool
+     */
+    public static function en_cours(int $userid, int $atelierid): bool {
+        return self::record_exists_select(
+            'userid = ? AND atelierid = ? AND statut = ?',
+            [$userid, $atelierid, self::STATUT_COMMENCE]
+        );
+    }
+
+    /**
      * Point d'entrée unique pour démarrer une séance, quel que soit le chemin (bouton, QR,
      * code de séance) : refuse un atelier qui n'est pas actif (indisponible, archivé...,
      * §6.1) et reprend la séance déjà en cours plutôt que d'en créer une seconde (§7.1).

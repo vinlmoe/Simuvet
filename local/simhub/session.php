@@ -53,6 +53,12 @@ if ($action === 'demarrer') {
     require_capability('local/simhub:startsession', $context);
     require_sesskey();
 
+    // Même contrôle de présence que pour le scan QR (§7.3) : sans lui, le bouton
+    // « Commencer » de la fiche permettrait de ne jamais saisir le code de séance.
+    if (\local_simhub\record\seancecode::est_requis() && !session::en_cours($USER->id, $atelierid)) {
+        redirect(new moodle_url('/local/simhub/session_code.php', ['atelierid' => $atelierid, 'methode' => 'manuel']));
+    }
+
     session::demarrer_ou_reprendre($USER->id, $atelierid, ['methodescan' => 'manuel']);
 
     redirect(
