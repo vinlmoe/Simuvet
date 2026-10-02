@@ -22,7 +22,7 @@
     Context variables required for this template:
     * numero, nomcourt, discipline, espece, dureeindicative
     * statutpersolabel, estindisponible, commentaireindispo
-    * estcommence
+    * estcommence, estvalide
     * urllocalisation, urlressources, urlcommencer, urlterminer
 
     Example context (json):
@@ -37,6 +37,7 @@
         "commentaireindispo": "",
         "retourprevu": "",
         "estcommence": false,
+        "estvalide": false,
         "urllocalisation": "#",
         "urlressources": "#",
         "urlcommencer": "#",
@@ -75,7 +76,9 @@
             {{/estcommence}}
             {{^estcommence}}
                 {{^estindisponible}}
-                    <a class="btn btn-primary btn-sm" href="{{urlcommencer}}">{{strings.boutoncommencer}}</a>
+                    {{^estvalide}}
+                        <a class="btn btn-primary btn-sm" href="{{urlcommencer}}">{{strings.boutoncommencer}}</a>
+                    {{/estvalide}}
                 {{/estindisponible}}
             {{/estcommence}}
         </div>

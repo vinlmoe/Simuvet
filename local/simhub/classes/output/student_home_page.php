@@ -363,6 +363,8 @@ class student_home_page implements renderable, templatable {
             'statutperso' => $statutperso,
             'statutpersolabel' => get_string('statutperso_' . $statutperso, 'local_simhub'),
             'estcommence' => $statutperso === 'commence',
+            // Atelier validé : acquis, il n'y a plus de séance à commencer.
+            'estvalide' => $statutperso === 'valide',
             'sessionid' => $sessionencours ? $sessionencours->get('id') : 0,
             'urlfiche' => (new \moodle_url('/local/simhub/atelier.php', ['id' => $atelier->id]))->out(false),
             'urllocalisation' => (new \moodle_url(

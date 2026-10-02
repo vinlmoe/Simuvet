@@ -186,6 +186,33 @@ final class droits_test extends \advanced_testcase {
     }
 
     /**
+     * Un atelier validé n'est pas refait ; un atelier refusé, si.
+     *
+     * @return void
+     */
+    public function test_atelier_valide_non_refait(): void {
+        $etu = $this->u['etu']->id;
+        $this->setUser($this->u['etu']);
+        $valide = session::demarrer_ou_reprendre($etu, $this->at[1]->get('id'));
+        $valide->terminer();
+        $refuse = session::demarrer_ou_reprendre($etu, $this->at[2]->get('id'));
+        $refuse->terminer();
+
+        $this->setUser($this->u['ens']);
+        parcours_helper::valider_seance($valide->get('id'), $this->u['ens']->id, val_encadrant::STATUT_VALIDE);
+        parcours_helper::valider_seance($refuse->get('id'), $this->u['ens']->id, val_encadrant::STATUT_REFUSE);
+        $this->assertTrue(session::est_valide($etu, $this->at[1]->get('id')));
+        $this->assertFalse(session::est_valide($etu, $this->at[2]->get('id')));
+
+        $this->setUser($this->u['etu']);
+        $nouvelle = session::demarrer_ou_reprendre($etu, $this->at[2]->get('id'));
+        $this->assertNotEquals($refuse->get('id'), $nouvelle->get('id'));
+
+        $this->expectException(\moodle_exception::class);
+        session::demarrer_ou_reprendre($etu, $this->at[1]->get('id'));
+    }
+
+    /**
      * Rôles SimHub attribués dans la catégorie et délégation à l'administrateur fonctionnel.
      *
      * @return void

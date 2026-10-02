@@ -124,6 +124,15 @@ class session extends \core\persistent {
             );
         }
 
+        // Un atelier validé par un encadrant est acquis : le refaire n'apporterait rien.
+        if (self::est_valide($userid, $atelierid)) {
+            throw new \moodle_exception(
+                'atelier_deja_valide',
+                'local_simhub',
+                new \moodle_url('/local/simhub/atelier.php', ['id' => $atelierid])
+            );
+        }
+
         foreach (self::get_pour_etudiant($userid, $atelierid) as $existante) {
             if ($existante->get('statut') === self::STATUT_COMMENCE) {
                 return $existante;
@@ -136,6 +145,23 @@ class session extends \core\persistent {
             'context' => \context_system::instance(),
         ])->trigger();
         return $session;
+    }
+
+    /**
+     * Vrai si l'étudiant a une séance validée (certifiée) sur cet atelier.
+     *
+     * @param int $userid
+     * @param int $atelierid
+     * @return bool
+     */
+    public static function est_valide(int $userid, int $atelierid): bool {
+        global $DB;
+
+        return $DB->record_exists('local_simhub_session', [
+            'userid' => $userid,
+            'atelierid' => $atelierid,
+            'statut' => self::STATUT_CERTIFIE,
+        ]);
     }
 
     /**

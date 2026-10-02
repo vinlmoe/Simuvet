@@ -47,7 +47,7 @@ $etapesatelier = $gestionnaire ? [
 ] : [[s($atelier->get('nomcourt')), new moodle_url('/local/simhub/atelier.php', ['id' => $atelierid])]];
 
 $title = get_string('ae_modele', 'local_simhub');
-$pageurl = new moodle_url('/local/simhub/manage/ae_modele_edit.php', ['atelierid' => $atelierid]);
+$pageurl = \local_simhub\local\navigation::url('/local/simhub/manage/ae_modele_edit.php', ['atelierid' => $atelierid]);
 \local_simhub\local\navigation::preparer($PAGE, $pageurl, $title, $etapesatelier);
 if ($gestionnaire) {
     \local_simhub\local\navigation::onglets('atelier', $atelierid, 'ae');
@@ -82,7 +82,7 @@ if ($data = $form->get_data()) {
     }
 
     redirect(
-        new moodle_url('/local/simhub/manage/ae_rubriques.php', ['atelierid' => $atelierid]),
+        \local_simhub\local\navigation::url('/local/simhub/manage/ae_rubriques.php', ['atelierid' => $atelierid]),
         get_string('changessaved'),
         null,
         \core\output\notification::NOTIFY_SUCCESS
@@ -106,7 +106,7 @@ $form->display();
 
 if ($modele) {
     echo $OUTPUT->single_button(
-        new moodle_url('/local/simhub/manage/ae_rubriques.php', ['atelierid' => $atelierid]),
+        \local_simhub\local\navigation::url('/local/simhub/manage/ae_rubriques.php', ['atelierid' => $atelierid]),
         get_string('ae_gerer_rubriques', 'local_simhub')
     );
 }

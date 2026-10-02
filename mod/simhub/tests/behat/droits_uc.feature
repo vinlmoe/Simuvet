@@ -62,3 +62,18 @@ Feature: Droits limités à l'UC et avancement dans l'activité SimHub
     Then I should see "Your progress: 100 %"
     When I am on the "Ateliers UC A" "simhub activity" page logged in as "resp"
     Then I should see "50 % (1/2)"
+
+  Scenario: L'étudiant fait ses ateliers sans quitter l'activité et ne refait pas un atelier validé
+    Given the following "local_simhub > sessions" exist:
+      | user | atelier | statut   |
+      | etu  | T1      | certifie |
+    When I am on the "Ateliers UC A" "simhub activity" page logged in as "etu"
+    Then "Start" "link" should not exist in the "Suture" "table_row"
+    And "Start" "link" should exist in the "Bandage" "table_row"
+    When I click on "Start" "link" in the "Bandage" "table_row"
+    Then I should see "Workshop started."
+    And I should see "Ateliers UC A" in the ".breadcrumb" "css_element"
+    When I am on the "Ateliers UC A" "simhub activity" page
+    And I click on "Suture" "link" in the "region-main" "region"
+    Then I should see "You have already validated this workshop"
+    And "Start" "link" should not exist in the "region-main" "region"

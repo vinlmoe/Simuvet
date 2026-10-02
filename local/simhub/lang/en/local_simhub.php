@@ -492,6 +492,7 @@ $string['parcours_col_requis'] = 'Required for completion';
 $string['parcours_col_echeance'] = 'Deadline';
 $string['parcours_en_retard'] = 'overdue';
 $string['atelier_non_demarrable'] = 'This workshop is currently unavailable: no session can be started.';
+$string['atelier_deja_valide'] = 'You have already validated this workshop: there is no need to do it again.';
 $string['indispo_motif'] = 'Reason for unavailability (visible to students)';
 $string['indispo_motif_requis'] = 'Give the reason for the unavailability: it is shown to students.';
 $string['indispo_echeance'] = 'Expected back in service';

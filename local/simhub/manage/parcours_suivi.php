@@ -47,10 +47,10 @@ if (!\local_simhub\local\droits::peut_suivre_parcours($parcours)) {
 
 \local_simhub\local\navigation::preparer(
     $PAGE,
-    new moodle_url('/local/simhub/manage/parcours_suivi.php', ['parcoursid' => $parcoursid]),
+    \local_simhub\local\navigation::url('/local/simhub/manage/parcours_suivi.php', ['parcoursid' => $parcoursid]),
     s($parcours->get('nom')),
     \local_simhub\local\droits::etape_activite($parcours)
-    ?: [[get_string('filtre_parcours', 'local_simhub'), new moodle_url('/local/simhub/manage/parcours.php')]]
+    ?: [[get_string('filtre_parcours', 'local_simhub'), \local_simhub\local\navigation::url('/local/simhub/manage/parcours.php')]]
 );
 \local_simhub\local\navigation::onglets('parcours', $parcoursid, 'suivi');
 
@@ -77,7 +77,10 @@ $users = \local_simhub\local\droits::etudiants_du_parcours($parcours);
 // Parcours d'UC : les groupes de l'activité filtrent le suivi (un encadrant suit son groupe de TP).
 $cm = $parcours->get('cmid') ? get_coursemodule_from_id('simhub', $parcours->get('cmid')) : false;
 if ($cm && groups_get_activity_groupmode($cm)) {
-    groups_print_activity_menu($cm, new moodle_url('/local/simhub/manage/parcours_suivi.php', ['parcoursid' => $parcoursid]));
+    groups_print_activity_menu(
+        $cm,
+        \local_simhub\local\navigation::url('/local/simhub/manage/parcours_suivi.php', ['parcoursid' => $parcoursid])
+    );
     $groupid = groups_get_activity_group($cm, true);
     if ($groupid) {
         $membres = array_map('intval', array_keys(groups_get_members($groupid, 'u.id')));
@@ -113,7 +116,7 @@ foreach ($users as $user) {
     $row[] = $pct . ' %';
 
     if ($pct >= 100) {
-        $attestationurl = new moodle_url('/local/simhub/manage/parcours_attestation_pdf.php', [
+        $attestationurl = \local_simhub\local\navigation::url('/local/simhub/manage/parcours_attestation_pdf.php', [
             'parcoursid' => $parcoursid, 'userid' => $user->id,
         ]);
         $row[] = html_writer::link($attestationurl, get_string('attestation_pdf', 'local_simhub'));

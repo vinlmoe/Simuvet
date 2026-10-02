@@ -450,6 +450,19 @@ ou validée (événements `session_completed`, `session_validated`), l'observate
 `mod_simhub` recalcule la note de l'étudiant dans **toutes** les UC qui contiennent l'atelier.
 Modifier la composition d'un parcours (`parcours_updated`) recalcule toute l'UC.
 
+**On reste dans le cours.** Depuis l'activité, l'étudiant commence et termine ses ateliers
+directement dans le tableau de son parcours ; la fiche atelier, la séance, le code de séance
+et l'auto-évaluation s'ouvrent dans le contexte de l'activité (paramètre `cmid`, géré par
+`navigation::activite()`), avec le fil d'Ariane du cours, et la fin de séance ramène à
+l'activité. Un scan QR mène aussi dans l'UC de l'étudiant quand l'atelier en fait partie.
+Côté enseignant, composition, suivi, grille d'auto-évaluation et validations ASV ouvertes
+depuis l'activité y restent de même (retour vers l'activité, sans les menus transverses).
+
+**Un atelier validé n'est pas refait.** Dès qu'une séance est validée par un encadrant,
+l'atelier est acquis : plus de bouton « Commencer » (activité, accueil, fiche) et tout
+démarrage, y compris par QR code ou code de séance, est refusé (`session::est_valide()`).
+Un atelier refusé reste à refaire.
+
 **Note** : pourcentage d'avancement (ateliers obligatoires s'il y en a, sinon tous),
 rapporté à la note maximale de l'activité. Les groupes du cours filtrent le suivi.
 

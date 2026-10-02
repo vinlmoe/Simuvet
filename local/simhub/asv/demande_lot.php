@@ -46,11 +46,11 @@ $acteid = optional_param('acteid', 0, PARAM_INT);
 $courseid = optional_param('courseid', 0, PARAM_INT);
 $lot = optional_param('lot', '', PARAM_ALPHANUMEXT);
 
-$pageurl = new moodle_url('/local/simhub/asv/demande_lot.php', array_filter([
+$pageurl = \local_simhub\local\navigation::url('/local/simhub/asv/demande_lot.php', array_filter([
     'acteid' => $acteid, 'courseid' => $courseid, 'lot' => $lot,
 ]));
 \local_simhub\local\navigation::preparer($PAGE, $pageurl, get_string('asv_lot_titre', 'local_simhub'), [
-    [get_string('asv_parcours', 'local_simhub'), new moodle_url('/local/simhub/asv/index.php')],
+    [get_string('asv_parcours', 'local_simhub'), \local_simhub\local\navigation::url('/local/simhub/asv/index.php')],
 ]);
 
 // Lien généré : adresse, QR code et état des demandes regroupées.
@@ -115,7 +115,7 @@ foreach (asv_acte::get_referentiel('') as $a) {
     $choixactes[$a->get('id')] = $a->get('nom') . ' (' . $a->get('niveau') . ')';
 }
 $formacte = new \local_simhub\form\formulaire(
-    new moodle_url('/local/simhub/asv/demande_lot.php', array_filter(['courseid' => $courseid])),
+    \local_simhub\local\navigation::url('/local/simhub/asv/demande_lot.php', array_filter(['courseid' => $courseid])),
     [
         'champs' => [['select', 'acteid', get_string('asv_acte', 'local_simhub'), [
             'choix' => $choixactes, 'type' => PARAM_INT, 'defaut' => $acteid,
@@ -125,7 +125,7 @@ $formacte = new \local_simhub\form\formulaire(
     ]
 );
 if ($data = $formacte->get_data()) {
-    redirect(new moodle_url('/local/simhub/asv/demande_lot.php', array_filter([
+    redirect(\local_simhub\local\navigation::url('/local/simhub/asv/demande_lot.php', array_filter([
         'acteid' => (int) $data->acteid, 'courseid' => $courseid,
     ])));
 }
@@ -172,7 +172,7 @@ if ($acteid && isset($choixactes[$acteid])) {
             }
             if ($userids) {
                 $cree = asv_valanimal::creer_lot($acteid, $userids);
-                redirect(new moodle_url('/local/simhub/asv/demande_lot.php', ['lot' => $cree->lottoken]));
+                redirect(\local_simhub\local\navigation::url('/local/simhub/asv/demande_lot.php', ['lot' => $cree->lottoken]));
             }
             $erreur = true;
         }

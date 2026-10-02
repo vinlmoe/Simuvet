@@ -45,24 +45,32 @@ $sessionid = optional_param('sessionid', 0, PARAM_INT);
 $atelier = new atelier($atelierid);
 
 $pageurl = new moodle_url('/local/simhub/session.php', ['atelierid' => $atelierid, 'action' => $action]);
+$urlfiche = \local_simhub\local\navigation::url('/local/simhub/atelier.php', ['id' => $atelierid]);
 \local_simhub\local\navigation::preparer($PAGE, $pageurl, get_string('nav_seance', 'local_simhub'), [
-    [s($atelier->get('nomcourt')), new moodle_url('/local/simhub/atelier.php', ['id' => $atelierid])],
+    [s($atelier->get('nomcourt')), $urlfiche],
 ]);
 
 if ($action === 'demarrer') {
     require_capability('local/simhub:startsession', $context);
     require_sesskey();
 
+    if (session::est_valide($USER->id, $atelierid)) {
+        redirect($urlfiche, get_string('atelier_deja_valide', 'local_simhub'), null, \core\output\notification::NOTIFY_INFO);
+    }
+
     // Même contrôle anti-faux-scan que le QR code (§7.3) : sans lui, le bouton « Commencer »
     // permettrait de démarrer depuis n'importe où sans saisir le code de séance.
     if (get_config('local_simhub', 'controlepresenceactif') && !\local_simhub\local\reseau::dans_la_salle()) {
-        redirect(new moodle_url('/local/simhub/session_code.php', ['atelierid' => $atelierid, 'methode' => 'manuel']));
+        redirect(\local_simhub\local\navigation::url(
+            '/local/simhub/session_code.php',
+            ['atelierid' => $atelierid, 'methode' => 'manuel']
+        ));
     }
     $controle = get_config('local_simhub', 'controlepresenceactif') ? 'reseau_local' : null;
     session::demarrer_ou_reprendre($USER->id, $atelierid, ['methodescan' => 'manuel', 'controlepresence' => $controle]);
 
     redirect(
-        new moodle_url('/local/simhub/atelier.php', ['id' => $atelierid]),
+        $urlfiche,
         get_string('session_demarree', 'local_simhub'),
         null,
         \core\output\notification::NOTIFY_SUCCESS
@@ -76,7 +84,7 @@ if ($action !== 'terminer') {
 require_capability('local/simhub:startsession', $context);
 
 if (!$sessionid) {
-    redirect(new moodle_url('/local/simhub/index.php'));
+    redirect(\local_simhub\local\navigation::url_retour());
 }
 
 $session = new session($sessionid);
@@ -110,7 +118,10 @@ if ($modele) {
         ]];
     }
     $form = new \local_simhub\form\formulaire(
-        new moodle_url('/local/simhub/session.php', ['atelierid' => $atelierid, 'action' => 'terminer', 'sessionid' => $sessionid]),
+        \local_simhub\local\navigation::url(
+            '/local/simhub/session.php',
+            ['atelierid' => $atelierid, 'action' => 'terminer', 'sessionid' => $sessionid]
+        ),
         ['champs' => $champs, 'bouton' => get_string('bouton_terminer', 'local_simhub')]
     );
 }
@@ -134,8 +145,9 @@ if ($form && ($data = $form->get_data())) {
         'context' => $context,
     ])->trigger();
 
+    // Retour là d'où l'on vient : l'activité de l'UC, ou l'accueil SimHub.
     redirect(
-        new moodle_url('/local/simhub/index.php'),
+        \local_simhub\local\navigation::url_retour(),
         get_string('autoeval_enregistree', 'local_simhub'),
         null,
         \core\output\notification::NOTIFY_SUCCESS
@@ -157,7 +169,7 @@ if (!$modele) {
         ])->trigger();
     }
     echo $OUTPUT->notification(get_string('session_terminee', 'local_simhub'), \core\output\notification::NOTIFY_SUCCESS);
-    echo $OUTPUT->continue_button(new moodle_url('/local/simhub/index.php'));
+    echo $OUTPUT->continue_button(\local_simhub\local\navigation::url_retour());
     echo $OUTPUT->footer();
     exit;
 }

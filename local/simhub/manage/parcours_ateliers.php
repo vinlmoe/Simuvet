@@ -43,10 +43,10 @@ if (!\local_simhub\local\droits::peut_gerer_parcours($parcours)) {
 
 \local_simhub\local\navigation::preparer(
     $PAGE,
-    new moodle_url('/local/simhub/manage/parcours_ateliers.php', ['parcoursid' => $parcoursid]),
+    \local_simhub\local\navigation::url('/local/simhub/manage/parcours_ateliers.php', ['parcoursid' => $parcoursid]),
     s($parcours->get('nom')),
     \local_simhub\local\droits::etape_activite($parcours)
-    ?: [[get_string('filtre_parcours', 'local_simhub'), new moodle_url('/local/simhub/manage/parcours.php')]]
+    ?: [[get_string('filtre_parcours', 'local_simhub'), \local_simhub\local\navigation::url('/local/simhub/manage/parcours.php')]]
 );
 \local_simhub\local\navigation::onglets('parcours', $parcoursid, 'ateliers');
 
@@ -60,7 +60,7 @@ foreach (atelier::get_records([], 'numero') as $atelier) {
         $choix[$atelier->get('id')] = $atelier->get('numero') . ' — ' . $atelier->get('nomcourt');
     }
 }
-$pageurl = new moodle_url('/local/simhub/manage/parcours_ateliers.php', ['parcoursid' => $parcoursid]);
+$pageurl = \local_simhub\local\navigation::url('/local/simhub/manage/parcours_ateliers.php', ['parcoursid' => $parcoursid]);
 $form = new \local_simhub\form\formulaire($pageurl, [
     'champs' => [
         ['autocomplete', 'atelierid', get_string('atelier', 'local_simhub'), [
@@ -94,7 +94,7 @@ if ($data = $form->get_data()) {
 
     \local_simhub\local\parcours_helper::retirer_atelier($parcours, $atelierid);
 
-    redirect(new moodle_url('/local/simhub/manage/parcours_ateliers.php', ['parcoursid' => $parcoursid]));
+    redirect(\local_simhub\local\navigation::url('/local/simhub/manage/parcours_ateliers.php', ['parcoursid' => $parcoursid]));
 }
 
 echo $OUTPUT->header();
@@ -113,7 +113,7 @@ $table->head = [
 ];
 foreach ($composition as $lien) {
     $atelier = new atelier($lien->atelierid);
-    $removeurl = new moodle_url('/local/simhub/manage/parcours_ateliers.php', [
+    $removeurl = \local_simhub\local\navigation::url('/local/simhub/manage/parcours_ateliers.php', [
         'parcoursid' => $parcoursid, 'action' => 'retirer', 'atelierid' => $lien->atelierid, 'sesskey' => sesskey(),
     ]);
     $table->data[] = [

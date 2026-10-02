@@ -43,9 +43,14 @@ $methode = optional_param('methode', 'qr', PARAM_ALPHA) === 'manuel' ? 'manuel' 
 $atelier = new atelier($atelierid);
 
 $pageurl = new moodle_url('/local/simhub/session_code.php', ['atelierid' => $atelierid, 'methode' => $methode]);
+$urlfiche = \local_simhub\local\navigation::url('/local/simhub/atelier.php', ['id' => $atelierid]);
 \local_simhub\local\navigation::preparer($PAGE, $pageurl, get_string('seancecode_champ', 'local_simhub'), [
-    [s($atelier->get('nomcourt')), new moodle_url('/local/simhub/atelier.php', ['id' => $atelierid])],
+    [s($atelier->get('nomcourt')), $urlfiche],
 ]);
+
+if (session::est_valide($USER->id, $atelierid)) {
+    redirect($urlfiche, get_string('atelier_deja_valide', 'local_simhub'), null, \core\output\notification::NOTIFY_INFO);
+}
 
 if (\local_simhub\local\reseau::dans_la_salle()) {
     session::demarrer_ou_reprendre($USER->id, $atelierid, [
@@ -53,7 +58,7 @@ if (\local_simhub\local\reseau::dans_la_salle()) {
         'controlepresence' => 'reseau_local',
     ]);
     redirect(
-        new moodle_url('/local/simhub/atelier.php', ['id' => $atelierid]),
+        $urlfiche,
         get_string('session_demarree', 'local_simhub'),
         null,
         \core\output\notification::NOTIFY_SUCCESS
@@ -82,7 +87,7 @@ if ($data = $form->get_data()) {
             'controlepresence' => 'non_verifie',
         ]);
         redirect(
-            new moodle_url('/local/simhub/atelier.php', ['id' => $atelierid]),
+            $urlfiche,
             get_string('seancecode_sansvalidation', 'local_simhub'),
             null,
             \core\output\notification::NOTIFY_INFO
@@ -94,7 +99,7 @@ if ($data = $form->get_data()) {
             'controlepresence' => 'code_seance',
         ]);
         redirect(
-            new moodle_url('/local/simhub/atelier.php', ['id' => $atelierid]),
+            $urlfiche,
             get_string('session_demarree', 'local_simhub'),
             null,
             \core\output\notification::NOTIFY_SUCCESS

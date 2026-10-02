@@ -115,20 +115,35 @@ if (!$enseignant) {
         'style' => 'width:' . $prog['pct'] . '%', 'aria-valuenow' => $prog['pct'], 'aria-valuemin' => 0,
         'aria-valuemax' => 100]), 'progress mb-3');
 
+    // Commencer ou terminer un atelier sans quitter l'activité ; un atelier validé est acquis.
+    $peutdemarrer = has_capability('local/simhub:startsession', \local_simhub\local\contexte::racine());
+    $seances = parcours_helper::dernieres_seances([$USER->id], $atelierids)[$USER->id] ?? [];
     $table = new html_table();
     $table->head = [get_string('atelier', 'simhub'), get_string('obligatoire', 'simhub'),
-        get_string('echeance', 'simhub'), get_string('etat', 'simhub')];
+        get_string('echeance', 'simhub'), get_string('etat', 'simhub'), ''];
     foreach ($composition as $lien) {
         $a = $ateliers[(int) $lien->atelierid];
         $statut = parcours_helper::statut_atelier($USER->id, $a->get('id'));
+        $seance = $seances[(int) $a->get('id')] ?? null;
+        $bouton = '';
+        if ($peutdemarrer && $statut === 'commence') {
+            $bouton = html_writer::link(new moodle_url('/local/simhub/session.php', [
+                'atelierid' => $a->get('id'), 'action' => 'terminer', 'sessionid' => $seance->id, 'cmid' => $cm->id,
+            ]), get_string('bouton_terminer', 'local_simhub'), ['class' => 'btn btn-sm btn-primary']);
+        } else if ($peutdemarrer && $statut !== 'valide' && $a->get('statut') === atelier::STATUT_ACTIF) {
+            $bouton = html_writer::link(new moodle_url('/local/simhub/session.php', [
+                'atelierid' => $a->get('id'), 'action' => 'demarrer', 'sesskey' => sesskey(), 'cmid' => $cm->id,
+            ]), get_string('bouton_commencer', 'local_simhub'), ['class' => 'btn btn-sm btn-outline-primary']);
+        }
         $table->data[] = [
             html_writer::link(
-                new moodle_url('/local/simhub/atelier.php', ['id' => $a->get('id')]),
+                new moodle_url('/local/simhub/atelier.php', ['id' => $a->get('id'), 'cmid' => $cm->id]),
                 s($a->get('numero') . ' — ' . $a->get('nomcourt'))
             ),
             $lien->obligatoire ? get_string('yes') : '',
             $lien->echeance ? userdate($lien->echeance, $datefmt) : '',
             get_string('statutperso_' . $statut, 'local_simhub'),
+            $bouton,
         ];
     }
     echo $composition ? html_writer::table($table)
@@ -144,26 +159,26 @@ $boutons = [];
 if (has_capability('mod/simhub:manageparcours', $context)) {
     $boutons[] = html_writer::link(new moodle_url(
         '/local/simhub/manage/parcours_ateliers.php',
-        ['parcoursid' => $parcours->get('id')]
+        ['parcoursid' => $parcours->get('id'), 'cmid' => $cm->id]
     ), get_string('composer', 'simhub'), ['class' => 'btn btn-primary mr-2 me-2']);
 }
 $boutons[] = html_writer::link(new moodle_url(
     '/local/simhub/manage/parcours_suivi.php',
-    ['parcoursid' => $parcours->get('id')]
+    ['parcoursid' => $parcours->get('id'), 'cmid' => $cm->id]
 ), get_string('suividetaille', 'simhub'), ['class' => 'btn btn-secondary mr-2 me-2']);
 if (has_capability('mod/simhub:validateasvsimulation', $context)) {
     $boutons[] = html_writer::link(
-        new moodle_url('/local/simhub/asv/valider_simulation.php', ['courseid' => $course->id]),
+        new moodle_url('/local/simhub/asv/valider_simulation.php', ['courseid' => $course->id, 'cmid' => $cm->id]),
         get_string('validerasv', 'simhub'),
         ['class' => 'btn btn-secondary mr-2 me-2']
     );
     $boutons[] = html_writer::link(
-        new moodle_url('/local/simhub/asv/demande_lot.php', ['courseid' => $course->id]),
+        new moodle_url('/local/simhub/asv/demande_lot.php', ['courseid' => $course->id, 'cmid' => $cm->id]),
         get_string('asv_lot_titre', 'local_simhub'),
         ['class' => 'btn btn-secondary mr-2 me-2']
     );
     $boutons[] = html_writer::link(
-        new moodle_url('/local/simhub/asv/controle_signatures.php', ['courseid' => $course->id]),
+        new moodle_url('/local/simhub/asv/controle_signatures.php', ['courseid' => $course->id, 'cmid' => $cm->id]),
         get_string('asv_controle_titre', 'local_simhub'),
         ['class' => 'btn btn-secondary']
     );
@@ -230,13 +245,13 @@ if ($composition) {
         }
         if (has_capability('mod/simhub:manageparcours', $context)) {
             $liens[] = html_writer::link(
-                new moodle_url('/local/simhub/manage/ae_modele_edit.php', ['atelierid' => $aid]),
+                new moodle_url('/local/simhub/manage/ae_modele_edit.php', ['atelierid' => $aid, 'cmid' => $cm->id]),
                 get_string('grille', 'simhub')
             );
         }
         $row = new html_table_row([
             html_writer::link(
-                new moodle_url('/local/simhub/atelier.php', ['id' => $aid]),
+                new moodle_url('/local/simhub/atelier.php', ['id' => $aid, 'cmid' => $cm->id]),
                 s($a->get('numero') . ' — ' . $a->get('nomcourt'))
             ),
             $lien->obligatoire ? get_string('yes') : '',

@@ -44,6 +44,60 @@ class navigation {
     /** @var array|null Onglets à afficher sous la barre : [type, id, clé active]. */
     protected static $onglets = null;
 
+    /** @var \cm_info|null|false Activité d'UC d'où vient l'utilisateur (false : pas encore lue). */
+    protected static $activite = false;
+
+    /**
+     * Activité SimHub d'UC depuis laquelle l'utilisateur navigue (paramètre cmid).
+     *
+     * Les pages ouvertes depuis l'activité d'un cours (fiche atelier, séance, composition,
+     * suivi, validations ASV...) restent alors dans ce cours : contexte, fil d'Ariane et
+     * retours pointent vers l'activité plutôt que vers l'accueil SimHub, ce qui évite les
+     * allers-retours entre le cours et le plugin. Un cmid invalide ou invisible est ignoré :
+     * la page s'affiche simplement dans SimHub.
+     *
+     * @return \cm_info|null
+     */
+    public static function activite(): ?\cm_info {
+        if (self::$activite === false) {
+            self::$activite = null;
+            $cmid = optional_param('cmid', 0, PARAM_INT);
+            if ($cmid > 0 && isloggedin() && !isguestuser()) {
+                try {
+                    [, $cm] = get_course_and_cm_from_cmid($cmid, 'simhub');
+                    self::$activite = $cm->uservisible ? $cm : null;
+                } catch (\moodle_exception $e) {
+                    self::$activite = null;
+                }
+            }
+        }
+        return self::$activite;
+    }
+
+    /**
+     * URL d'une page du plugin qui conserve l'activité d'UC courante, s'il y en a une.
+     *
+     * @param string $chemin
+     * @param array $params
+     * @return \moodle_url
+     */
+    public static function url(string $chemin, array $params = []): \moodle_url {
+        if ($cm = self::activite()) {
+            $params['cmid'] = $cm->id;
+        }
+        return new \moodle_url($chemin, $params);
+    }
+
+    /**
+     * Page de retour « naturelle » : l'activité d'UC si l'on en vient, sinon l'accueil SimHub.
+     *
+     * @return \moodle_url
+     */
+    public static function url_retour(): \moodle_url {
+        $cm = self::activite();
+        return $cm ? new \moodle_url('/mod/simhub/view.php', ['id' => $cm->id]) : self::url_accueil();
+    }
+
     /**
      * URL de l'accueil SimHub.
      *
@@ -367,6 +421,10 @@ class navigation {
         array $etapes = [],
         string $pagelayout = 'standard'
     ): void {
+        if ($cm = self::activite()) {
+            self::preparer_dans_activite($page, $cm, $url, $titre, $etapes);
+            return;
+        }
         $page->set_context(\context_system::instance());
         $page->set_url($url);
         $page->set_pagelayout($pagelayout);
@@ -399,6 +457,58 @@ class navigation {
     }
 
     /**
+     * Variante de preparer() pour une page ouverte depuis l'activité d'un cours : la page
+     * prend le contexte de l'activité (fil d'Ariane « cours / activité / … », navigation du
+     * cours), comme les pages propres du module.
+     *
+     * @param \moodle_page $page
+     * @param \cm_info $cm
+     * @param \moodle_url $url
+     * @param string $titre
+     * @param array $etapes
+     * @return void
+     */
+    protected static function preparer_dans_activite(
+        \moodle_page $page,
+        \cm_info $cm,
+        \moodle_url $url,
+        string $titre,
+        array $etapes
+    ): void {
+        $url->param('cmid', $cm->id);
+        $page->set_cm($cm, $cm->get_course());
+        $page->set_url($url);
+        $page->set_pagelayout('incourse');
+        $page->set_title($titre . ' | ' . $cm->get_formatted_name());
+        $page->set_heading(format_string($cm->get_course()->fullname, true,
+            ['context' => \context_course::instance($cm->course)]));
+
+        // L'activité figure déjà dans le fil d'Ariane du cours : seules les étapes propres
+        // à la page sont ajoutées (pas les listes transverses de SimHub, qui feraient sortir
+        // du cours), et elles gardent l'activité dans leurs liens.
+        $horscours = ['/mod/simhub/view.php', '/local/simhub/index.php', '/local/simhub/asv/index.php',
+            '/local/simhub/manage/ateliers.php', '/local/simhub/manage/parcours.php'];
+        $etapes = array_values(array_filter($etapes, function ($e) use ($horscours) {
+            foreach ($horscours as $chemin) {
+                if (str_ends_with($e[1]->get_path(false), $chemin)) {
+                    return false;
+                }
+            }
+            return true;
+        }));
+        foreach ($etapes as $i => [$libelle, $etapeurl]) {
+            $etapeurl = new \moodle_url($etapeurl, ['cmid' => $cm->id]);
+            $etapes[$i] = [$libelle, $etapeurl];
+            $page->navbar->add($libelle, $etapeurl);
+        }
+        $page->navbar->add($titre);
+
+        self::$urlcourante = $url;
+        self::$ariane = $etapes;
+        self::$onglets = null;
+    }
+
+    /**
      * Indique si la page courante relève d'une section (URL exacte ou motif de rubrique).
      *
      * @param array $section
@@ -425,6 +535,9 @@ class navigation {
      * @return string HTML
      */
     public static function barre(): string {
+        if (self::activite()) {
+            return self::barre_activite();
+        }
         $context = contexte::racine();
 
         $retour = self::url_accueil();
@@ -501,6 +614,27 @@ class navigation {
         $out .= self::rendre_onglets();
 
         return $out;
+    }
+
+    /**
+     * Barre réduite d'une page ouverte depuis une activité d'UC : un seul retour, vers
+     * l'étape précédente ou l'activité, sans les menus transverses de SimHub qui feraient
+     * sortir du cours.
+     *
+     * @return string HTML
+     */
+    protected static function barre_activite(): string {
+        $retour = self::url_retour();
+        if (!empty(self::$ariane)) {
+            [, $retour] = self::$ariane[count(self::$ariane) - 1];
+        }
+        return \html_writer::tag(
+            'nav',
+            \html_writer::link($retour, '◂ ' . get_string('nav_retour', 'local_simhub'), [
+                'class' => 'btn btn-secondary btn-sm',
+            ]),
+            ['class' => 'local-simhub-nav mb-3', 'aria-label' => get_string('pluginname', 'local_simhub')]
+        );
     }
 
     /**

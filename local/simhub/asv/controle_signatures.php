@@ -43,9 +43,12 @@ $courseid = optional_param('courseid', 0, PARAM_INT);
 $inscrits = $courseid ? \local_simhub\local\selecteurs::etudiants_du_cours($courseid) : null;
 $visible = fn(int $uid) => ($transversal || isset($autorises[$uid])) && ($inscrits === null || isset($inscrits[$uid]));
 
-$pageurl = new moodle_url('/local/simhub/asv/controle_signatures.php', array_filter(['courseid' => $courseid]));
+$pageurl = \local_simhub\local\navigation::url(
+    '/local/simhub/asv/controle_signatures.php',
+    array_filter(['courseid' => $courseid])
+);
 \local_simhub\local\navigation::preparer($PAGE, $pageurl, get_string('asv_controle_titre', 'local_simhub'), [
-    [get_string('asv_parcours', 'local_simhub'), new moodle_url('/local/simhub/asv/index.php')],
+    [get_string('asv_parcours', 'local_simhub'), \local_simhub\local\navigation::url('/local/simhub/asv/index.php')],
 ]);
 
 $action = optional_param('action', '', PARAM_ALPHA);
@@ -118,7 +121,7 @@ foreach ($demandes as $d) {
     $indices = asv_valanimal::indices($d, $etudiant ?: null);
     $table->data[] = [
         \local_simhub\local\selection::case('ids', $d->id, $nom . ' — ' . $actes[(int) $d->acteid]),
-        html_writer::link(new moodle_url('/local/simhub/asv/etudiant.php', ['userid' => $d->userid]), s($nom)),
+        html_writer::link(\local_simhub\local\navigation::url('/local/simhub/asv/etudiant.php', ['userid' => $d->userid]), s($nom)),
         s($actes[(int) $d->acteid]),
         s($d->prenomvalidateur . ' ' . $d->nomvalidateur),
         userdate($d->datevalidation, $format),

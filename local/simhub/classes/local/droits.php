@@ -51,6 +51,28 @@ class droits {
     }
 
     /**
+     * Activité d'UC de l'utilisateur courant contenant l'atelier, pour qu'un scan QR mène
+     * directement dans son cours plutôt que dans SimHub.
+     *
+     * @param int $atelierid
+     * @return int cmid, 0 si l'atelier ne relève d'aucune UC de l'utilisateur.
+     */
+    public static function activite_etudiant(int $atelierid): int {
+        global $USER;
+
+        foreach (self::activites_pour_atelier($atelierid) as $cmid => $courseid) {
+            if (!is_enrolled(\context_course::instance($courseid), $USER, '', true)) {
+                continue;
+            }
+            $cm = get_fast_modinfo($courseid)->get_cm($cmid);
+            if ($cm->uservisible) {
+                return (int) $cmid;
+            }
+        }
+        return 0;
+    }
+
+    /**
      * Toutes les activités d'UC existantes.
      *
      * @return array cmid => courseid

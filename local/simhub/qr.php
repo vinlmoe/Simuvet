@@ -48,15 +48,22 @@ if (!$qr) {
     throw new \moodle_exception('invalidtoken', 'error');
 }
 
+// Le scan mène dans le cours de l'UC de l'étudiant quand l'atelier en fait partie.
+$cmid = \local_simhub\local\droits::activite_etudiant((int) $qr->atelierid);
+$urlfiche = new moodle_url('/local/simhub/atelier.php', array_filter(['id' => $qr->atelierid, 'cmid' => $cmid]));
+
 if (!has_capability('local/simhub:startsession', $context)) {
-    redirect(new moodle_url('/local/simhub/atelier.php', ['id' => $qr->atelierid]));
+    redirect($urlfiche);
+}
+if (session::est_valide($USER->id, $qr->atelierid)) {
+    redirect($urlfiche, get_string('atelier_deja_valide', 'local_simhub'), null, \core\output\notification::NOTIFY_INFO);
 }
 
 $controle = get_config('local_simhub', 'controlepresenceactif');
 // Sur le réseau de la salle, la présence est vérifiée sans code (§7.3).
 $dansalle = $controle && \local_simhub\local\reseau::dans_la_salle();
 if ($controle && !$dansalle) {
-    redirect(new moodle_url('/local/simhub/session_code.php', ['atelierid' => $qr->atelierid]));
+    redirect(new moodle_url('/local/simhub/session_code.php', array_filter(['atelierid' => $qr->atelierid, 'cmid' => $cmid])));
 }
 
 session::demarrer_ou_reprendre($USER->id, $qr->atelierid, [
@@ -64,4 +71,4 @@ session::demarrer_ou_reprendre($USER->id, $qr->atelierid, [
     'controlepresence' => $dansalle ? 'reseau_local' : null,
 ]);
 
-redirect(new moodle_url('/local/simhub/atelier.php', ['id' => $qr->atelierid]));
+redirect($urlfiche);

@@ -47,11 +47,11 @@ $preselection = optional_param('userid', 0, PARAM_INT);
 // Depuis l'activité d'une UC : liste restreinte aux inscrits du cours.
 $courseid = optional_param('courseid', 0, PARAM_INT);
 
-$pageurl = new moodle_url('/local/simhub/asv/valider_simulation.php', array_filter([
+$pageurl = \local_simhub\local\navigation::url('/local/simhub/asv/valider_simulation.php', array_filter([
     'atelierid' => $atelierid, 'courseid' => $courseid,
 ]));
 \local_simhub\local\navigation::preparer($PAGE, $pageurl, get_string('asv_valider_simulation', 'local_simhub'), [
-    [get_string('asv_parcours', 'local_simhub'), new moodle_url('/local/simhub/asv/index.php')],
+    [get_string('asv_parcours', 'local_simhub'), \local_simhub\local\navigation::url('/local/simhub/asv/index.php')],
 ]);
 if ($atelierid) {
     \local_simhub\local\navigation::onglets('atelier', $atelierid, 'asv');
@@ -157,7 +157,7 @@ if ($data = $form->get_data()) {
 
     if (count($userids) === 1) {
         redirect(
-            new moodle_url('/local/simhub/asv/etudiant.php', ['userid' => $userids[0]]),
+            \local_simhub\local\navigation::url('/local/simhub/asv/etudiant.php', ['userid' => $userids[0]]),
             get_string('asv_decision_enregistree', 'local_simhub'),
             null,
             \core\output\notification::NOTIFY_SUCCESS

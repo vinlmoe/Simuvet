@@ -40,10 +40,10 @@ $action = optional_param('action', '', PARAM_ALPHA);
 $envcode = '';
 
 $user = \core_user::get_user($userid, '*', MUST_EXIST);
-$url = new moodle_url('/local/simhub/asv/etudiant.php', ['userid' => $userid]);
+$url = \local_simhub\local\navigation::url('/local/simhub/asv/etudiant.php', ['userid' => $userid]);
 
 \local_simhub\local\navigation::preparer($PAGE, $url, s(fullname($user)), [
-    [get_string('asv_parcours', 'local_simhub'), new moodle_url('/local/simhub/asv/index.php')],
+    [get_string('asv_parcours', 'local_simhub'), \local_simhub\local\navigation::url('/local/simhub/asv/index.php')],
 ]);
 
 if ($action === 'annulersim' || $action === 'annuleranimal') {
@@ -94,13 +94,13 @@ echo \local_simhub\local\navigation::barre();
 
 echo html_writer::div(
     html_writer::link(
-        new moodle_url('/local/simhub/asv/livret_pdf.php', ['userid' => $userid, 'envcode' => $envcode]),
+        \local_simhub\local\navigation::url('/local/simhub/asv/livret_pdf.php', ['userid' => $userid, 'envcode' => $envcode]),
         get_string('asv_exporter_livret', 'local_simhub'),
         ['class' => 'btn btn-outline-secondary btn-sm mr-2 me-2']
     )
     . (\local_simhub\local\droits::peut_valider_asv($userid)
         ? html_writer::link(
-            new moodle_url('/local/simhub/asv/valider_simulation.php', ['userid' => $userid]),
+            \local_simhub\local\navigation::url('/local/simhub/asv/valider_simulation.php', ['userid' => $userid]),
             get_string('asv_valider_simulation', 'local_simhub'),
             ['class' => 'btn btn-primary btn-sm']
         )

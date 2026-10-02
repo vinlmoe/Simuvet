@@ -50,7 +50,7 @@ $etapesatelier = $gestionnaire ? [
 
 $modele = ae_modele::get_pour_atelier($atelierid);
 if (!$modele) {
-    redirect(new moodle_url('/local/simhub/manage/ae_modele_edit.php', ['atelierid' => $atelierid]));
+    redirect(\local_simhub\local\navigation::url('/local/simhub/manage/ae_modele_edit.php', ['atelierid' => $atelierid]));
 }
 
 // PARAM_ALPHA n'autorise que les lettres a-z/A-Z : il aurait silencieusement supprimé le
@@ -73,12 +73,12 @@ if ($action !== '') {
     $modele->update();
 }
 
-$pageurl = new moodle_url('/local/simhub/manage/ae_rubriques.php', ['atelierid' => $atelierid]);
+$pageurl = \local_simhub\local\navigation::url('/local/simhub/manage/ae_rubriques.php', ['atelierid' => $atelierid]);
 $title = get_string('ae_gerer_rubriques', 'local_simhub');
 \local_simhub\local\navigation::preparer($PAGE, $pageurl, $title, array_merge($etapesatelier, [
     [
         get_string('ae_modele', 'local_simhub'),
-        new moodle_url('/local/simhub/manage/ae_modele_edit.php', ['atelierid' => $atelierid]),
+        \local_simhub\local\navigation::url('/local/simhub/manage/ae_modele_edit.php', ['atelierid' => $atelierid]),
     ],
 ]));
 if ($gestionnaire) {
@@ -129,14 +129,14 @@ if ($action === 'supprimer_rubrique') {
     $verifierrubrique($rubriqueid);
     ae_rubrique::supprimer($rubriqueid);
 
-    redirect(new moodle_url('/local/simhub/manage/ae_rubriques.php', ['atelierid' => $atelierid]));
+    redirect(\local_simhub\local\navigation::url('/local/simhub/manage/ae_rubriques.php', ['atelierid' => $atelierid]));
 } else if ($action === 'supprimer_critere') {
     require_sesskey();
     $critereid = required_param('critereid', PARAM_INT);
     $verifierrubrique((int) $DB->get_field(ae_critere::TABLE, 'rubriqueid', ['id' => $critereid], MUST_EXIST));
     ae_critere::supprimer($critereid);
 
-    redirect(new moodle_url('/local/simhub/manage/ae_rubriques.php', ['atelierid' => $atelierid]));
+    redirect(\local_simhub\local\navigation::url('/local/simhub/manage/ae_rubriques.php', ['atelierid' => $atelierid]));
 }
 
 echo $OUTPUT->header();
@@ -144,7 +144,7 @@ echo \local_simhub\local\navigation::barre();
 
 echo html_writer::tag('p', s($modele->get('titre')));
 echo $OUTPUT->single_button(
-    new moodle_url('/local/simhub/manage/ae_modele_edit.php', ['atelierid' => $atelierid]),
+    \local_simhub\local\navigation::url('/local/simhub/manage/ae_modele_edit.php', ['atelierid' => $atelierid]),
     get_string('edit')
 );
 
@@ -156,7 +156,7 @@ foreach ($rubriques as $rubrique) {
             ? ' ' . html_writer::tag('span', get_string('ae_badge_risques', 'local_simhub'), ['class' => 'badge badge-warning'])
             : ''));
 
-    $delrubriqueurl = new moodle_url('/local/simhub/manage/ae_rubriques.php', [
+    $delrubriqueurl = \local_simhub\local\navigation::url('/local/simhub/manage/ae_rubriques.php', [
         'atelierid' => $atelierid, 'action' => 'supprimer_rubrique', 'rubriqueid' => $rubrique->id, 'sesskey' => sesskey(),
     ]);
     echo html_writer::link($delrubriqueurl, get_string('retirer', 'local_simhub'), ['class' => 'text-danger']);
@@ -168,7 +168,7 @@ foreach ($rubriques as $rubrique) {
     if (!empty($criteres)) {
         echo html_writer::start_tag('ul');
         foreach ($criteres as $critere) {
-            $delcritereurl = new moodle_url('/local/simhub/manage/ae_rubriques.php', [
+            $delcritereurl = \local_simhub\local\navigation::url('/local/simhub/manage/ae_rubriques.php', [
                 'atelierid' => $atelierid, 'action' => 'supprimer_critere', 'critereid' => $critere->id, 'sesskey' => sesskey(),
             ]);
             echo html_writer::tag(

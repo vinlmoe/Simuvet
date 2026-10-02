@@ -506,6 +506,7 @@ $string['parcours_col_requis'] = 'Requis pour l\'achèvement';
 $string['parcours_col_echeance'] = 'Échéance';
 $string['parcours_en_retard'] = 'en retard';
 $string['atelier_non_demarrable'] = 'Cet atelier n\'est pas disponible actuellement : aucune séance ne peut y être démarrée.';
+$string['atelier_deja_valide'] = 'Vous avez déjà validé cet atelier : inutile de le refaire.';
 $string['indispo_motif'] = 'Motif de l\'indisponibilité (visible par les étudiants)';
 $string['indispo_motif_requis'] = 'Indiquez le motif de l\'indisponibilité : il est affiché aux étudiants.';
 $string['indispo_echeance'] = 'Remise en service prévue';

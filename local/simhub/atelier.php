@@ -42,7 +42,7 @@ $onglet = optional_param('onglet', '', PARAM_ALPHA);
 
 $atelier = new atelier($id);
 
-$pageurl = new moodle_url('/local/simhub/atelier.php', ['id' => $id]);
+$pageurl = \local_simhub\local\navigation::url('/local/simhub/atelier.php', ['id' => $id]);
 \local_simhub\local\navigation::preparer($PAGE, $pageurl, s($atelier->get('nomcourt')));
 
 echo $OUTPUT->header();
@@ -68,7 +68,11 @@ if ($atelier->get('statut') !== atelier::STATUT_ACTIF) {
     }
     echo $OUTPUT->notification($message, \core\output\notification::NOTIFY_WARNING);
 }
-if (has_capability('local/simhub:startsession', $context)) {
+$dejavalide = has_capability('local/simhub:startsession', $context)
+    && \local_simhub\persistent\session::est_valide($USER->id, $id);
+if ($dejavalide) {
+    echo $OUTPUT->notification(get_string('atelier_deja_valide', 'local_simhub'), \core\output\notification::NOTIFY_SUCCESS);
+} else if (has_capability('local/simhub:startsession', $context)) {
     $encours = null;
     foreach (\local_simhub\persistent\session::get_pour_etudiant($USER->id, $id) as $session) {
         if ($session->get('statut') === \local_simhub\persistent\session::STATUT_COMMENCE) {
@@ -78,14 +82,17 @@ if (has_capability('local/simhub:startsession', $context)) {
     }
     if ($encours) {
         $actions .= html_writer::link(
-            new moodle_url('/local/simhub/session.php', ['atelierid' => $id, 'action' => 'terminer',
+            \local_simhub\local\navigation::url('/local/simhub/session.php', ['atelierid' => $id, 'action' => 'terminer',
                 'sessionid' => $encours->get('id')]),
             get_string('bouton_terminer', 'local_simhub'),
             ['class' => 'btn btn-primary btn-sm mr-2 me-2']
         );
     } else if ($atelier->get('statut') === atelier::STATUT_ACTIF) {
         $actions .= html_writer::link(
-            new moodle_url('/local/simhub/session.php', ['atelierid' => $id, 'action' => 'demarrer', 'sesskey' => sesskey()]),
+            \local_simhub\local\navigation::url(
+                '/local/simhub/session.php',
+                ['atelierid' => $id, 'action' => 'demarrer', 'sesskey' => sesskey()]
+            ),
             get_string('bouton_commencer', 'local_simhub'),
             ['class' => 'btn btn-primary btn-sm mr-2 me-2']
         );
