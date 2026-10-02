@@ -81,6 +81,7 @@ class ressource_form extends \moodleform {
 
         $mform->addElement('hidden', 'id');
         $mform->setType('id', PARAM_INT);
+        \local_simhub\local\navigation::champ_activite($mform);
         $mform->addElement('hidden', 'atelierid');
         $mform->setType('atelierid', PARAM_INT);
 

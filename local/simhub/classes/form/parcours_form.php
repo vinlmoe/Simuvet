@@ -110,6 +110,7 @@ class parcours_form extends \moodleform {
 
         $mform->addElement('hidden', 'id');
         $mform->setType('id', PARAM_INT);
+        \local_simhub\local\navigation::champ_activite($mform);
 
         $this->add_action_buttons();
     }

@@ -39,8 +39,8 @@ $atelier = new atelier($id);
 
 $title = get_string('nav_plan', 'local_simhub');
 \local_simhub\local\navigation::preparer($PAGE, new moodle_url('/local/simhub/manage/atelier_plan.php', ['id' => $id]), $title, [
-    [get_string('manage_ateliers', 'local_simhub'), new moodle_url('/local/simhub/manage/ateliers.php')],
-    [s($atelier->get('nomcourt')), new moodle_url('/local/simhub/manage/atelier_edit.php', ['id' => $id])],
+    [get_string('manage_ateliers', 'local_simhub'), \local_simhub\local\navigation::url('/local/simhub/manage/ateliers.php')],
+    [s($atelier->get('nomcourt')), \local_simhub\local\navigation::url('/local/simhub/manage/atelier_edit.php', ['id' => $id])],
 ]);
 \local_simhub\local\navigation::onglets('atelier', $id, 'plan');
 
@@ -56,7 +56,7 @@ if ($submitted) {
     $atelier->update();
 
     redirect(
-        new moodle_url('/local/simhub/manage/atelier_plan.php', ['id' => $id]),
+        \local_simhub\local\navigation::url('/local/simhub/manage/atelier_plan.php', ['id' => $id]),
         get_string('changessaved'),
         null,
         \core\output\notification::NOTIFY_SUCCESS
@@ -71,7 +71,7 @@ if (!$atelier->get('planimageitemid')) {
         get_string('plan_absent', 'local_simhub'),
         \core\output\notification::NOTIFY_WARNING
     );
-    echo $OUTPUT->continue_button(new moodle_url('/local/simhub/manage/atelier_edit.php', ['id' => $id]));
+    echo $OUTPUT->continue_button(\local_simhub\local\navigation::url('/local/simhub/manage/atelier_edit.php', ['id' => $id]));
     echo $OUTPUT->footer();
     exit;
 }
@@ -92,7 +92,7 @@ if (!$planfile) {
         get_string('plan_absent', 'local_simhub'),
         \core\output\notification::NOTIFY_WARNING
     );
-    echo $OUTPUT->continue_button(new moodle_url('/local/simhub/manage/atelier_edit.php', ['id' => $id]));
+    echo $OUTPUT->continue_button(\local_simhub\local\navigation::url('/local/simhub/manage/atelier_edit.php', ['id' => $id]));
     echo $OUTPUT->footer();
     exit;
 }
@@ -129,6 +129,6 @@ if ($atelier->get('planrepx') !== null && $atelier->get('planrepy') !== null) {
 echo html_writer::end_div();
 $PAGE->requires->js_call_amd('local_simhub/plan', 'init');
 
-echo $OUTPUT->continue_button(new moodle_url('/local/simhub/manage/atelier_edit.php', ['id' => $id]));
+echo $OUTPUT->continue_button(\local_simhub\local\navigation::url('/local/simhub/manage/atelier_edit.php', ['id' => $id]));
 
 echo $OUTPUT->footer();

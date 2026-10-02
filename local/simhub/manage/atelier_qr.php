@@ -42,13 +42,13 @@ $action = optional_param('action', '', PARAM_ALPHA);
 if ($action === 'regenerer') {
     require_sesskey();
     qrtoken::regenerer($id);
-    redirect(new moodle_url('/local/simhub/manage/atelier_qr.php', ['id' => $id]));
+    redirect(\local_simhub\local\navigation::url('/local/simhub/manage/atelier_qr.php', ['id' => $id]));
 }
 
 $title = get_string('nav_qrcode', 'local_simhub');
 \local_simhub\local\navigation::preparer($PAGE, new moodle_url('/local/simhub/manage/atelier_qr.php', ['id' => $id]), $title, [
-    [get_string('manage_ateliers', 'local_simhub'), new moodle_url('/local/simhub/manage/ateliers.php')],
-    [s($atelier->get('nomcourt')), new moodle_url('/local/simhub/manage/atelier_edit.php', ['id' => $id])],
+    [get_string('manage_ateliers', 'local_simhub'), \local_simhub\local\navigation::url('/local/simhub/manage/ateliers.php')],
+    [s($atelier->get('nomcourt')), \local_simhub\local\navigation::url('/local/simhub/manage/atelier_edit.php', ['id' => $id])],
 ]);
 \local_simhub\local\navigation::onglets('atelier', $id, 'qr');
 
@@ -76,7 +76,7 @@ echo html_writer::link('#', get_string('qr_telecharger', 'local_simhub'), [
 ]);
 
 echo $OUTPUT->single_button(
-    new moodle_url('/local/simhub/manage/atelier_qr.php', ['id' => $id, 'action' => 'regenerer']),
+    \local_simhub\local\navigation::url('/local/simhub/manage/atelier_qr.php', ['id' => $id, 'action' => 'regenerer']),
     get_string('qr_regenerer', 'local_simhub')
 );
 

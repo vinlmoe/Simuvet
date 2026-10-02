@@ -56,13 +56,13 @@ $record = $id ? $DB->get_record(ressource::TABLE, ['id' => $id, 'atelierid' => $
 ];
 
 $title = $id ? get_string('edit') : get_string('ressource_nouvelle', 'local_simhub');
-$pageurl = new moodle_url('/local/simhub/manage/ressource_edit.php', ['atelierid' => $atelierid, 'id' => $id]);
+$pageurl = \local_simhub\local\navigation::url('/local/simhub/manage/ressource_edit.php', ['atelierid' => $atelierid, 'id' => $id]);
 \local_simhub\local\navigation::preparer($PAGE, $pageurl, $title, [
-    [get_string('manage_ateliers', 'local_simhub'), new moodle_url('/local/simhub/manage/ateliers.php')],
+    [get_string('manage_ateliers', 'local_simhub'), \local_simhub\local\navigation::url('/local/simhub/manage/ateliers.php')],
     [s($atelier->get('nomcourt')), new moodle_url('/local/simhub/manage/atelier_edit.php', ['id' => $atelierid])],
     [
         get_string('bouton_ressources', 'local_simhub'),
-        new moodle_url('/local/simhub/manage/ressources.php', ['atelierid' => $atelierid]),
+        \local_simhub\local\navigation::url('/local/simhub/manage/ressources.php', ['atelierid' => $atelierid]),
     ],
 ]);
 \local_simhub\local\navigation::onglets('atelier', $atelierid, 'ressources');
@@ -83,7 +83,7 @@ $data->fichier = $draftitemid;
 $form->set_data($data);
 
 if ($form->is_cancelled()) {
-    redirect(new moodle_url('/local/simhub/manage/ressources.php', ['atelierid' => $atelierid]));
+    redirect(\local_simhub\local\navigation::url('/local/simhub/manage/ressources.php', ['atelierid' => $atelierid]));
 } else if ($formdata = $form->get_data()) {
     $record->titre = $formdata->titre;
     $record->type = $formdata->type;
@@ -127,7 +127,7 @@ if ($form->is_cancelled()) {
     $DB->update_record(ressource::TABLE, $record);
 
     redirect(
-        new moodle_url('/local/simhub/manage/ressources.php', ['atelierid' => $atelierid]),
+        \local_simhub\local\navigation::url('/local/simhub/manage/ressources.php', ['atelierid' => $atelierid]),
         get_string('changessaved'),
         null,
         \core\output\notification::NOTIFY_SUCCESS

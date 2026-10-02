@@ -26,8 +26,6 @@
 
 require(__DIR__ . '/../../../config.php');
 
-use local_simhub\persistent\atelier;
-use local_simhub\persistent\session;
 use local_simhub\record\val_encadrant;
 
 require_login();
@@ -44,7 +42,8 @@ if ($action === 'valider' || $action === 'refuser') {
         $sessionids = [optional_param('sessionid', 0, PARAM_INT)];
     }
     $sessionids = array_filter(array_unique($sessionids));
-    $pageurl = new moodle_url('/local/simhub/manage/sessions_a_valider.php');
+    $commentaire = trim(optional_param('commentaire', '', PARAM_TEXT));
+    $pageurl = \local_simhub\local\navigation::url('/local/simhub/manage/sessions_a_valider.php');
     if (!$sessionids) {
         redirect($pageurl, get_string('selection_vide', 'local_simhub'), null, \core\output\notification::NOTIFY_WARNING);
     }
@@ -57,7 +56,7 @@ if ($action === 'valider' || $action === 'refuser') {
                 || $DB->record_exists('local_simhub_val_encadrant', ['sessionid' => $sessionid])) {
             continue;
         }
-        \local_simhub\local\parcours_helper::valider_seance($sessionid, $USER->id, $statut);
+        \local_simhub\local\parcours_helper::valider_seance($sessionid, $USER->id, $statut, $commentaire);
         $traitees++;
     }
 
@@ -78,63 +77,6 @@ $sessions = $DB->get_records_sql(
         AND NOT EXISTS (SELECT 1 FROM {local_simhub_val_encadrant} v WHERE v.sessionid = s.id)
    ORDER BY s.timestart DESC"
 );
-
-if (empty($sessions)) {
-    echo $OUTPUT->notification(get_string('sessions_aucune_a_valider', 'local_simhub'), \core\output\notification::NOTIFY_INFO);
-    echo $OUTPUT->footer();
-    exit;
-}
-
-\local_simhub\local\selection::requerir_js();
-
-$table = new html_table();
-$table->head = [
-    '',
-    get_string('fullnameuser'),
-    get_string('champ_nomcourt', 'local_simhub'),
-    get_string('champ_statut', 'local_simhub'),
-    get_string('session_demarree_le', 'local_simhub'),
-    get_string('session_motif', 'local_simhub'),
-    '',
-];
-
-foreach ($sessions as $s) {
-    $atelier = new atelier($s->atelierid);
-    $user = \core_user::get_user($s->userid);
-
-    $validerurl = new moodle_url('/local/simhub/manage/sessions_a_valider.php', [
-        'action' => 'valider', 'sessionid' => $s->id, 'sesskey' => sesskey(),
-    ]);
-    $refuserurl = new moodle_url('/local/simhub/manage/sessions_a_valider.php', [
-        'action' => 'refuser', 'sessionid' => $s->id, 'sesskey' => sesskey(),
-    ]);
-
-    $nom = $user ? fullname($user) : '#' . $s->userid;
-    $table->data[] = [
-        \local_simhub\local\selection::case('sessionids', $s->id, $nom . ' — ' . $atelier->get('nomcourt')),
-        $nom,
-        s($atelier->get('nomcourt')),
-        get_string('statutperso_' . ($s->statut === session::STATUT_COMMENCE ? 'commence' : 'realise'), 'local_simhub'),
-        userdate($s->timestart, get_string('strftimedatetimeshort', 'langconfig')),
-        \local_simhub\local\parcours_helper::motif_a_valider($s),
-        html_writer::link($validerurl, get_string('session_valider', 'local_simhub'), ['class' => 'btn btn-sm btn-success mr-1'])
-            . html_writer::link(
-                $refuserurl,
-                get_string('session_refuser', 'local_simhub'),
-                ['class' => 'btn btn-sm btn-outline-danger'],
-            ),
-    ];
-}
-
-echo html_writer::start_tag('form', [
-    'method' => 'post', 'action' => $pageurl->out(false), 'class' => \local_simhub\local\selection::CONTENEUR,
-]);
-echo html_writer::empty_tag('input', ['type' => 'hidden', 'name' => 'sesskey', 'value' => sesskey()]);
-echo \local_simhub\local\selection::barre([
-    'valider' => [get_string('selection_valider', 'local_simhub'), 'btn-success'],
-    'refuser' => [get_string('selection_refuser', 'local_simhub'), 'btn-outline-danger'],
-], count($sessions) > 10);
-echo html_writer::table($table);
-echo html_writer::end_tag('form');
+echo \local_simhub\local\validation::seances($sessions, $pageurl);
 
 echo $OUTPUT->footer();

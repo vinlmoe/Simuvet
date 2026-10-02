@@ -27,7 +27,6 @@
 
 require(__DIR__ . '/../../../config.php');
 
-use local_simhub\persistent\asv_acte;
 use local_simhub\record\asv_valanimal;
 
 require_login();
@@ -51,16 +50,20 @@ $pageurl = \local_simhub\local\navigation::url(
     [get_string('asv_parcours', 'local_simhub'), \local_simhub\local\navigation::url('/local/simhub/asv/index.php')],
 ]);
 
+// Contrôle lancé depuis l'activité d'une UC : on y revient après traitement.
+$returnurl = optional_param('returnurl', '', PARAM_LOCALURL);
+$apres = $returnurl ? new moodle_url($returnurl) : $pageurl;
+
 $action = optional_param('action', '', PARAM_ALPHA);
 if ($action === 'confirmer' || $action === 'rejeter') {
     require_sesskey();
     $ids = array_unique(optional_param_array('ids', [], PARAM_INT));
-    $motif = trim(optional_param('motif', '', PARAM_TEXT));
+    $motif = trim(optional_param('commentaire', '', PARAM_TEXT));
     if (!$ids) {
-        redirect($pageurl, get_string('selection_vide', 'local_simhub'), null, \core\output\notification::NOTIFY_WARNING);
+        redirect($apres, get_string('selection_vide', 'local_simhub'), null, \core\output\notification::NOTIFY_WARNING);
     }
     if ($action === 'rejeter' && $motif === '') {
-        redirect($pageurl, get_string('asv_controle_motif_requis', 'local_simhub'), null,
+        redirect($apres, get_string('asv_controle_motif_requis', 'local_simhub'), null,
             \core\output\notification::NOTIFY_WARNING);
     }
     // Contrôle complet avant toute écriture : une sélection ne peut pas déborder du périmètre.
@@ -86,7 +89,7 @@ if ($action === 'confirmer' || $action === 'rejeter') {
         }
         $traitees++;
     }
-    redirect($pageurl, get_string('asv_controle_traitees', 'local_simhub', $traitees), null,
+    redirect($apres, get_string('asv_controle_traitees', 'local_simhub', $traitees), null,
         \core\output\notification::NOTIFY_SUCCESS);
 }
 
@@ -95,60 +98,6 @@ echo \local_simhub\local\navigation::barre();
 echo html_writer::tag('p', get_string('asv_controle_intro', 'local_simhub'));
 
 $demandes = array_filter(asv_valanimal::get_a_controler(), fn($d) => $visible((int) $d->userid));
-if (!$demandes) {
-    echo $OUTPUT->notification(get_string('asv_controle_aucune', 'local_simhub'), \core\output\notification::NOTIFY_INFO);
-    echo $OUTPUT->footer();
-    exit;
-}
-
-\local_simhub\local\selection::requerir_js();
-$format = get_string('strftimedatetimeshort', 'langconfig');
-$actes = [];
-$table = new html_table();
-$table->head = [
-    '',
-    get_string('etudiant', 'local_simhub'),
-    get_string('asv_acte', 'local_simhub'),
-    get_string('asv_col_signataire', 'local_simhub'),
-    get_string('asv_col_signe_le', 'local_simhub'),
-    get_string('asv_col_signature', 'local_simhub'),
-    get_string('asv_col_indices', 'local_simhub'),
-];
-foreach ($demandes as $d) {
-    $etudiant = core_user::get_user($d->userid);
-    $nom = $etudiant ? fullname($etudiant) : '#' . $d->userid;
-    $actes[(int) $d->acteid] = $actes[(int) $d->acteid] ?? (new asv_acte($d->acteid))->get('nom');
-    $indices = asv_valanimal::indices($d, $etudiant ?: null);
-    $table->data[] = [
-        \local_simhub\local\selection::case('ids', $d->id, $nom . ' — ' . $actes[(int) $d->acteid]),
-        html_writer::link(\local_simhub\local\navigation::url('/local/simhub/asv/etudiant.php', ['userid' => $d->userid]), s($nom)),
-        s($actes[(int) $d->acteid]),
-        s($d->prenomvalidateur . ' ' . $d->nomvalidateur),
-        userdate($d->datevalidation, $format),
-        asv_valanimal::signature_valide((string) $d->signature)
-            ? html_writer::empty_tag('img', [
-                'src' => $d->signature, 'alt' => get_string('asv_col_signature', 'local_simhub'),
-                'class' => 'local-simhub-signature-apercu',
-            ])
-            : '',
-        implode('', array_map(fn($i) => html_writer::div('⚠ ' . s($i), 'text-danger small'), $indices)),
-    ];
-}
-
-echo html_writer::start_tag('form', [
-    'method' => 'post', 'action' => $pageurl->out(false), 'class' => \local_simhub\local\selection::CONTENEUR,
-]);
-echo html_writer::empty_tag('input', ['type' => 'hidden', 'name' => 'sesskey', 'value' => sesskey()]);
-echo html_writer::div(html_writer::empty_tag('input', [
-    'type' => 'text', 'name' => 'motif', 'class' => 'form-control form-control-sm',
-    'placeholder' => get_string('asv_controle_motif', 'local_simhub'),
-    'aria-label' => get_string('asv_controle_motif', 'local_simhub'),
-]), 'mb-2');
-echo \local_simhub\local\selection::barre([
-    'confirmer' => [get_string('asv_controle_confirmer', 'local_simhub'), 'btn-success'],
-    'rejeter' => [get_string('asv_controle_rejeter', 'local_simhub'), 'btn-outline-danger'],
-], count($demandes) > 10);
-echo html_writer::table($table);
-echo html_writer::end_tag('form');
+echo \local_simhub\local\validation::signatures($demandes, $pageurl);
 
 echo $OUTPUT->footer();

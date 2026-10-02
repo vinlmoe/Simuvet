@@ -26,6 +26,7 @@
 
 namespace local_simhub\local;
 
+use local_simhub\record\asv_valanimal;
 use local_simhub\record\asv_valsim;
 
 /**
@@ -76,7 +77,15 @@ class asv_vue {
             if ($animal) {
                 $animaltexte = '✔ ' . userdate($animal->datevalidation, $format) . ' — '
                     . s($animal->prenomvalidateur . ' ' . $animal->nomvalidateur)
-                    . ($animal->emailvalidateur ? \html_writer::div(s($animal->emailvalidateur), 'small text-muted') : '');
+                    . ($animal->emailvalidateur ? \html_writer::div(s($animal->emailvalidateur), 'small text-muted') : '')
+                    . (asv_valanimal::signature_valide((string) $animal->signature)
+                        ? \html_writer::div(\html_writer::empty_tag('img', [
+                            'src' => $animal->signature,
+                            'alt' => get_string('valid_signature_de', 'local_simhub',
+                                s($animal->prenomvalidateur . ' ' . $animal->nomvalidateur)),
+                            'class' => 'local-simhub-signature-apercu',
+                        ]))
+                        : '');
                 $controleur = !empty($animal->controleuruserid) ? \core_user::get_user($animal->controleuruserid) : null;
                 if ($controleur) {
                     $animaltexte .= \html_writer::div($str('asv_controle_par', s(fullname($controleur))), 'small text-muted');
@@ -114,7 +123,7 @@ class asv_vue {
                 }
                 if ($controle && droits::peut_valider_asv($userid)) {
                     $actions[] = \html_writer::link(
-                        new \moodle_url('/local/simhub/asv/controle_signatures.php'),
+                        navigation::url('/local/simhub/asv/controle_signatures.php'),
                         $str('asv_controler')
                     );
                 }
@@ -130,7 +139,7 @@ class asv_vue {
                 }
             } else if ($simok && !$animal && !$controle) {
                 $actions[] = \html_writer::link(
-                    new \moodle_url('/local/simhub/asv/demander_validation_animal.php', ['acteid' => $acteid]),
+                    navigation::url('/local/simhub/asv/demander_validation_animal.php', ['acteid' => $acteid]),
                     $attente ? $str('asv_voir_lien') : $str('asv_demander_validation_animal')
                 );
             }

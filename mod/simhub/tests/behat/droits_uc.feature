@@ -77,3 +77,14 @@ Feature: Droits limités à l'UC et avancement dans l'activité SimHub
     And I click on "Suture" "link" in the "region-main" "region"
     Then I should see "You have already validated this workshop"
     And "Start" "link" should not exist in the "region-main" "region"
+
+  Scenario: L'enseignant voit le détail des séances et valide d'un clic celles sans anomalie
+    Given the following "local_simhub > sessions" exist:
+      | user | atelier | statut  |
+      | etu  | T1      | realise |
+    When I am on the "Ateliers UC A" "simhub activity" page logged in as "ens"
+    Then I should see "0 min (expected: 20 min)"
+    And I should see "No self-assessment"
+    When I press "Validate the 1 session(s) without issues"
+    Then I should see "1 session(s) processed."
+    And I should see "No session awaiting validation."

@@ -607,3 +607,32 @@ Ce lien est valable jusqu\'au {$a->expire}. Ne le transmettez pas à l\'étudian
 Si vous n\'avez pas supervisé ce geste, ignorez ce message.
 
 {$a->site}';
+
+// Listes de validation (séances, signatures animal vivant).
+$string['valid_col_seance'] = 'Séance';
+$string['valid_col_presence'] = 'Présence';
+$string['valid_col_autoeval'] = 'Auto-évaluation';
+$string['valid_duree'] = '{$a} min';
+$string['valid_duree_indicative'] = '(indicative : {$a} min)';
+$string['valid_duree_courte'] = 'durée anormalement courte';
+$string['valid_encours'] = 'en cours';
+$string['valid_methode_qr'] = 'Lancée par QR code';
+$string['valid_methode_manuel'] = 'Lancée par le bouton Commencer';
+$string['valid_presence_code_seance'] = 'Code de séance saisi';
+$string['valid_presence_reseau_local'] = 'Réseau de la salle';
+$string['valid_presence_validation_encadrant'] = 'Vérifiée par un encadrant';
+$string['valid_presence_non_verifie'] = 'Présence non vérifiée';
+$string['valid_presence_aucun'] = 'Contrôle de présence désactivé';
+$string['valid_autoeval'] = '{$a->reussi} réussi(s) · {$a->consolider} à consolider · {$a->reprendre} à reprendre';
+$string['valid_autoeval_aucune'] = 'Pas d\'auto-évaluation';
+$string['valid_sans_anomalie'] = 'Valider les {$a} séance(s) sans anomalie';
+$string['valid_commentaire'] = 'Commentaire (facultatif, visible dans l\'historique de l\'étudiant)';
+$string['valid_certification_oui'] = '✓ Certification sur l\'honneur cochée';
+$string['valid_certification_non'] = 'Certification sur l\'honneur non cochée';
+$string['valid_demande_le'] = 'Demandée le {$a}';
+$string['valid_lien_individuel'] = 'Lien individuel';
+$string['valid_lien_groupe'] = 'Lien groupé';
+$string['valid_signature_de'] = 'Signature de {$a}';
+$string['valid_aucun_indice'] = 'Aucun';
+$string['valid_confirmer'] = 'Confirmer';
+$string['valid_sans_indice'] = 'Confirmer les {$a} signature(s) sans indice';

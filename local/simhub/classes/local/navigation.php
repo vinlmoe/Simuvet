@@ -89,6 +89,19 @@ class navigation {
     }
 
     /**
+     * Champ caché qui garde l'activité d'UC dans un formulaire envoyé.
+     *
+     * @param \MoodleQuickForm $mform
+     * @return void
+     */
+    public static function champ_activite(\MoodleQuickForm $mform): void {
+        if ($cm = self::activite()) {
+            $mform->addElement('hidden', 'cmid', $cm->id);
+            $mform->setType('cmid', PARAM_INT);
+        }
+    }
+
+    /**
      * Page de retour « naturelle » : l'activité d'UC si l'on en vient, sinon l'accueil SimHub.
      *
      * @return \moodle_url
@@ -286,7 +299,7 @@ class navigation {
         $ajouter = function (string $cle, string $libelle, string $chemin, array $params, ?string $cap = null)
  use (&$liens, $context) {
             if ($cap === null || has_capability($cap, $context)) {
-                $liens[$cle] = ['libelle' => $libelle, 'url' => new \moodle_url($chemin, $params)];
+                $liens[$cle] = ['libelle' => $libelle, 'url' => self::url($chemin, $params)];
             }
         };
         $str = function (string $cle): string {
@@ -349,17 +362,17 @@ class navigation {
         $liens = [];
         if (has_capability('local/simhub:manageparcours', $context)) {
             $liens['fiche'] = ['libelle' => get_string('onglet_fiche', 'local_simhub'),
-                'url' => new \moodle_url('/local/simhub/manage/parcours_edit.php', ['id' => $parcoursid])];
+                'url' => self::url('/local/simhub/manage/parcours_edit.php', ['id' => $parcoursid])];
         }
         if (droits::peut_gerer_parcours($parcours)) {
             $liens['ateliers'] = ['libelle' => get_string('onglet_composition', 'local_simhub'),
-                'url' => new \moodle_url('/local/simhub/manage/parcours_ateliers.php', ['parcoursid' => $parcoursid])];
+                'url' => self::url('/local/simhub/manage/parcours_ateliers.php', ['parcoursid' => $parcoursid])];
         }
         $liens['suivi'] = ['libelle' => get_string('onglet_suivi', 'local_simhub'),
-            'url' => new \moodle_url('/local/simhub/manage/parcours_suivi.php', ['parcoursid' => $parcoursid])];
+            'url' => self::url('/local/simhub/manage/parcours_suivi.php', ['parcoursid' => $parcoursid])];
         if (has_capability('local/simhub:exportsuivi', $context) || droits::peut_suivre_parcours($parcours)) {
             $liens['export'] = ['libelle' => get_string('onglet_export_csv', 'local_simhub'),
-                'url' => new \moodle_url('/local/simhub/manage/export.php', ['type' => 'parcours', 'parcoursid' => $parcoursid])];
+                'url' => self::url('/local/simhub/manage/export.php', ['type' => 'parcours', 'parcoursid' => $parcoursid])];
         }
         return $liens;
     }
@@ -618,8 +631,8 @@ class navigation {
 
     /**
      * Barre réduite d'une page ouverte depuis une activité d'UC : un seul retour, vers
-     * l'étape précédente ou l'activité, sans les menus transverses de SimHub qui feraient
-     * sortir du cours.
+     * l'étape précédente ou l'activité, et les onglets de l'atelier ou du parcours (qui
+     * gardent l'activité), sans les menus transverses de SimHub qui feraient sortir du cours.
      *
      * @return string HTML
      */
@@ -634,7 +647,7 @@ class navigation {
                 'class' => 'btn btn-secondary btn-sm',
             ]),
             ['class' => 'local-simhub-nav mb-3', 'aria-label' => get_string('pluginname', 'local_simhub')]
-        );
+        ) . self::rendre_onglets();
     }
 
     /**

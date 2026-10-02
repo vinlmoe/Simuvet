@@ -99,13 +99,13 @@ if ($dejavalide) {
     }
 }
 $actions .= html_writer::link(
-    new moodle_url('/local/simhub/manage/atelier_fiche_pdf.php', ['id' => $id]),
+    \local_simhub\local\navigation::url('/local/simhub/manage/atelier_fiche_pdf.php', ['id' => $id]),
     get_string('telecharger_fiche_pdf', 'local_simhub'),
     ['class' => 'btn btn-outline-secondary btn-sm mr-2 me-2']
 );
 if (has_capability('local/simhub:manageateliers', $context)) {
     $actions .= html_writer::link(
-        new moodle_url('/local/simhub/manage/atelier_edit.php', ['id' => $id]),
+        \local_simhub\local\navigation::url('/local/simhub/manage/atelier_edit.php', ['id' => $id]),
         get_string('gerer_atelier', 'local_simhub'),
         ['class' => 'btn btn-outline-secondary btn-sm']
     );

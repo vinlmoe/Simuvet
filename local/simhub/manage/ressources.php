@@ -45,13 +45,13 @@ if ($action === 'supprimer') {
     $fs->delete_area_files(\local_simhub\local\contexte::fichiers()->id, 'local_simhub', 'ressource', $id);
     $DB->delete_records(ressource::TABLE, ['id' => $id, 'atelierid' => $atelierid]);
 
-    redirect(new moodle_url('/local/simhub/manage/ressources.php', ['atelierid' => $atelierid]));
+    redirect(\local_simhub\local\navigation::url('/local/simhub/manage/ressources.php', ['atelierid' => $atelierid]));
 }
 
 $title = get_string('nav_ressources', 'local_simhub');
-$pageurl = new moodle_url('/local/simhub/manage/ressources.php', ['atelierid' => $atelierid]);
+$pageurl = \local_simhub\local\navigation::url('/local/simhub/manage/ressources.php', ['atelierid' => $atelierid]);
 \local_simhub\local\navigation::preparer($PAGE, $pageurl, $title, [
-    [get_string('manage_ateliers', 'local_simhub'), new moodle_url('/local/simhub/manage/ateliers.php')],
+    [get_string('manage_ateliers', 'local_simhub'), \local_simhub\local\navigation::url('/local/simhub/manage/ateliers.php')],
     [s($atelier->get('nomcourt')), new moodle_url('/local/simhub/manage/atelier_edit.php', ['id' => $atelierid])],
 ]);
 \local_simhub\local\navigation::onglets('atelier', $atelierid, 'ressources');
@@ -60,7 +60,7 @@ echo $OUTPUT->header();
 echo \local_simhub\local\navigation::barre();
 
 echo $OUTPUT->single_button(
-    new moodle_url('/local/simhub/manage/ressource_edit.php', ['atelierid' => $atelierid]),
+    \local_simhub\local\navigation::url('/local/simhub/manage/ressource_edit.php', ['atelierid' => $atelierid]),
     get_string('ressource_nouvelle', 'local_simhub')
 );
 
@@ -75,8 +75,11 @@ $table->head = [
     '',
 ];
 foreach ($ressources as $r) {
-    $editurl = new moodle_url('/local/simhub/manage/ressource_edit.php', ['atelierid' => $atelierid, 'id' => $r->id]);
-    $delurl = new moodle_url('/local/simhub/manage/ressources.php', [
+    $editurl = \local_simhub\local\navigation::url(
+        '/local/simhub/manage/ressource_edit.php',
+        ['atelierid' => $atelierid, 'id' => $r->id]
+    );
+    $delurl = \local_simhub\local\navigation::url('/local/simhub/manage/ressources.php', [
         'atelierid' => $atelierid, 'action' => 'supprimer', 'id' => $r->id, 'sesskey' => sesskey(),
     ]);
     $table->data[] = [

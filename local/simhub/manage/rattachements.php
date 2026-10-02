@@ -41,9 +41,9 @@ $atelierid = required_param('atelierid', PARAM_INT);
 $atelier = new atelier($atelierid);
 
 $title = get_string('rattachements', 'local_simhub');
-$pageurl = new moodle_url('/local/simhub/manage/rattachements.php', ['atelierid' => $atelierid]);
+$pageurl = \local_simhub\local\navigation::url('/local/simhub/manage/rattachements.php', ['atelierid' => $atelierid]);
 \local_simhub\local\navigation::preparer($PAGE, $pageurl, $title, [
-    [get_string('manage_ateliers', 'local_simhub'), new moodle_url('/local/simhub/manage/ateliers.php')],
+    [get_string('manage_ateliers', 'local_simhub'), \local_simhub\local\navigation::url('/local/simhub/manage/ateliers.php')],
     [s($atelier->get('nomcourt')), new moodle_url('/local/simhub/manage/atelier_edit.php', ['id' => $atelierid])],
 ]);
 \local_simhub\local\navigation::onglets('atelier', $atelierid, 'rattachements');
@@ -92,7 +92,7 @@ if ($data = $form->get_data()) {
     $DB->get_record(rattachement::TABLE, ['id' => $id, 'atelierid' => $atelierid], 'id', MUST_EXIST);
     rattachement::supprimer($id);
 
-    redirect(new moodle_url('/local/simhub/manage/rattachements.php', ['atelierid' => $atelierid]));
+    redirect(\local_simhub\local\navigation::url('/local/simhub/manage/rattachements.php', ['atelierid' => $atelierid]));
 }
 
 echo $OUTPUT->header();
@@ -114,7 +114,7 @@ $table->head = [
     '',
 ];
 foreach (rattachement::get_pour_atelier($atelierid) as $r) {
-    $delurl = new moodle_url('/local/simhub/manage/rattachements.php', [
+    $delurl = \local_simhub\local\navigation::url('/local/simhub/manage/rattachements.php', [
         'atelierid' => $atelierid, 'action' => 'supprimer', 'id' => $r->id, 'sesskey' => sesskey(),
     ]);
     $table->data[] = [

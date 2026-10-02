@@ -458,6 +458,22 @@ l'activité. Un scan QR mène aussi dans l'UC de l'étudiant quand l'atelier en 
 Côté enseignant, composition, suivi, grille d'auto-évaluation et validations ASV ouvertes
 depuis l'activité y restent de même (retour vers l'activité, sans les menus transverses).
 
+Les liens de gestion (fiche de l'atelier, ressources, plan, QR code, grille, PDF) restent
+eux aussi dans le cours, avec leurs onglets ; après enregistrement, on revient à la fiche
+de l'atelier dans l'activité.
+
+**Validation simplifiée** (`classes/local/validation.php`, partagée par l'activité, la file
+des séances à valider et le contrôle des signatures) :
+- séances : jour, horaires, durée réelle face à la durée indicative, façon dont la séance a
+  été lancée et contrôle de présence, résultat de l'auto-évaluation et point à retravailler ;
+  un bouton « Valider les N séances sans anomalie » traite tout ce qui ne présente aucun
+  signal, et un commentaire facultatif accompagne la décision (repris dans l'historique
+  exporté de l'étudiant) ;
+- animal vivant : signataire (prénom, NOM, adresse du lien), certification sur l'honneur,
+  date de signature et de demande, lien individuel ou groupé, signature et indices ; un
+  bouton « Confirmer les N signatures sans indice ». La liste figure aussi directement dans
+  l'activité pour les étudiants de l'UC, et la signature apparaît dans le livret ASV.
+
 **Un atelier validé n'est pas refait.** Dès qu'une séance est validée par un encadrant,
 l'atelier est acquis : plus de bouton « Commencer » (activité, accueil, fiche) et tout
 démarrage, y compris par QR code ou code de séance, est refusé (`session::est_valide()`).

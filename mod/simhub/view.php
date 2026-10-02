@@ -69,6 +69,7 @@ if ($action === 'valider' || $action === 'refuser') {
             throw new moodle_exception('nopermissions', 'error', '', get_string('simhub:validatesession', 'simhub'));
         }
     }
+    $commentaire = trim(optional_param('commentaire', '', PARAM_TEXT));
     $traitees = 0;
     foreach ($sessions as $session) {
         // Déjà traitée (double envoi, autre encadrant) : on n'empile pas une seconde décision.
@@ -78,7 +79,8 @@ if ($action === 'valider' || $action === 'refuser') {
         parcours_helper::valider_seance(
             $session->id,
             $USER->id,
-            $action === 'valider' ? val_encadrant::STATUT_VALIDE : val_encadrant::STATUT_REFUSE
+            $action === 'valider' ? val_encadrant::STATUT_VALIDE : val_encadrant::STATUT_REFUSE,
+            $commentaire
         );
         $traitees++;
     }
@@ -307,47 +309,20 @@ if (has_capability('mod/simhub:validatesession', $context) && $atelierids && $et
     );
 
     echo $OUTPUT->heading(get_string('seancesavalider', 'simhub'), 3);
-    if ($seances) {
-        \local_simhub\local\selection::requerir_js();
-        $table = new html_table();
-        $table->head = ['', get_string('fullnameuser'), get_string('atelier', 'simhub'), get_string('date'),
-            get_string('etat', 'simhub'), ''];
-        foreach ($seances as $s) {
-            $params = ['id' => $cm->id, 'sessionid' => $s->id, 'sesskey' => sesskey()];
-            $nom = fullname(core_user::get_user($s->userid));
-            $table->data[] = [
-                \local_simhub\local\selection::case('sessionids', $s->id,
-                    $nom . ' — ' . $ateliers[(int) $s->atelierid]->get('nomcourt')),
-                $nom,
-                s($ateliers[(int) $s->atelierid]->get('nomcourt')),
-                userdate($s->timestart, get_string('strftimedatetimeshort', 'langconfig')),
-                get_string('statutperso_' . ($s->statut === 'commence' ? 'commence' : 'realise'), 'local_simhub')
-                    . (($motif = parcours_helper::motif_a_valider($s)) !== '' ? ' — ' . $motif : ''),
-                html_writer::link(
-                    new moodle_url($url, $params + ['action' => 'valider']),
-                    get_string('session_valider', 'local_simhub'),
-                    ['class' => 'btn btn-sm btn-success mr-1 me-1']
-                )
-                . html_writer::link(
-                    new moodle_url($url, $params + ['action' => 'refuser']),
-                    get_string('session_refuser', 'local_simhub'),
-                    ['class' => 'btn btn-sm btn-outline-danger']
-                ),
-            ];
-        }
-        echo html_writer::start_tag('form', [
-            'method' => 'post', 'action' => $url->out(false), 'class' => \local_simhub\local\selection::CONTENEUR,
-        ]);
-        echo html_writer::empty_tag('input', ['type' => 'hidden', 'name' => 'sesskey', 'value' => sesskey()]);
-        echo \local_simhub\local\selection::barre([
-            'valider' => [get_string('selection_valider', 'local_simhub'), 'btn-success'],
-            'refuser' => [get_string('selection_refuser', 'local_simhub'), 'btn-outline-danger'],
-        ], count($seances) > 10);
-        echo html_writer::table($table);
-        echo html_writer::end_tag('form');
-    } else {
-        echo $OUTPUT->notification(get_string('aucuneseance', 'simhub'), \core\output\notification::NOTIFY_INFO);
-    }
+    echo \local_simhub\local\validation::seances($seances, $url);
+}
+
+// Signatures animal vivant des étudiants de l'UC, à contrôler sans quitter l'activité.
+if (has_capability('mod/simhub:validateasvsimulation', $context) && $etudiants) {
+    $uc = array_flip($etudiants);
+    $demandes = array_filter(
+        \local_simhub\record\asv_valanimal::get_a_controler(),
+        fn($d) => isset($uc[(int) $d->userid]) && \local_simhub\local\droits::peut_valider_asv((int) $d->userid)
+    );
+    echo $OUTPUT->heading(get_string('asv_controle_titre', 'local_simhub'), 3);
+    echo \local_simhub\local\validation::signatures($demandes, new moodle_url('/local/simhub/asv/controle_signatures.php', [
+        'courseid' => $course->id, 'cmid' => $cm->id, 'returnurl' => $url->out_as_local_url(false),
+    ]));
 }
 
 echo $OUTPUT->footer();

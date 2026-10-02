@@ -103,14 +103,12 @@ class formulaire extends \moodleform {
             }
         }
 
-        // Ouvert depuis l'activité d'une UC : le formulaire envoyé y reste aussi.
-        if ($cm = \local_simhub\local\navigation::activite()) {
-            $cd['caches'] = ($cd['caches'] ?? []) + ['cmid' => $cm->id];
-        }
         foreach (($cd['caches'] ?? []) as $nom => $valeur) {
             $mform->addElement('hidden', $nom, $valeur);
             $mform->setType($nom, PARAM_INT);
         }
+        // Ouvert depuis l'activité d'une UC : le formulaire envoyé y reste aussi.
+        \local_simhub\local\navigation::champ_activite($mform);
         if (!empty($cd['boutons'])) {
             $groupe = [];
             foreach ($cd['boutons'] as $nom => $libelle) {

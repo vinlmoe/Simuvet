@@ -178,6 +178,7 @@ class exporteur {
                 $s->get('timeend') ? userdate($s->get('timeend'), $format) : '',
                 get_string('session_statut_' . $s->get('statut'), 'local_simhub'),
                 $val ? get_string('session_val_' . $val->statut, 'local_simhub') . ' — ' . userdate($val->datevalidation, $format)
+                    . ($val->commentaire !== '' && $val->commentaire !== null ? ' — ' . $val->commentaire : '')
                     : '',
             ];
         }

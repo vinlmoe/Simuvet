@@ -593,3 +593,32 @@ This link is valid until {$a->expire}. Do not pass it on to the student.
 If you did not supervise this procedure, please ignore this message.
 
 {$a->site}';
+
+// Validation lists (sessions, live animal signatures).
+$string['valid_col_seance'] = 'Session';
+$string['valid_col_presence'] = 'Attendance';
+$string['valid_col_autoeval'] = 'Self-assessment';
+$string['valid_duree'] = '{$a} min';
+$string['valid_duree_indicative'] = '(expected: {$a} min)';
+$string['valid_duree_courte'] = 'unusually short';
+$string['valid_encours'] = 'in progress';
+$string['valid_methode_qr'] = 'Started by QR code';
+$string['valid_methode_manuel'] = 'Started with the Start button';
+$string['valid_presence_code_seance'] = 'Session code entered';
+$string['valid_presence_reseau_local'] = 'Room network';
+$string['valid_presence_validation_encadrant'] = 'Checked by a supervisor';
+$string['valid_presence_non_verifie'] = 'Attendance not checked';
+$string['valid_presence_aucun'] = 'Attendance check disabled';
+$string['valid_autoeval'] = '{$a->reussi} achieved · {$a->consolider} to consolidate · {$a->reprendre} to redo';
+$string['valid_autoeval_aucune'] = 'No self-assessment';
+$string['valid_sans_anomalie'] = 'Validate the {$a} session(s) without issues';
+$string['valid_commentaire'] = 'Comment (optional, shown in the student\'s history)';
+$string['valid_certification_oui'] = '✓ Statement of honour ticked';
+$string['valid_certification_non'] = 'Statement of honour not ticked';
+$string['valid_demande_le'] = 'Requested on {$a}';
+$string['valid_lien_individuel'] = 'Individual link';
+$string['valid_lien_groupe'] = 'Group link';
+$string['valid_signature_de'] = 'Signature of {$a}';
+$string['valid_aucun_indice'] = 'None';
+$string['valid_confirmer'] = 'Confirm';
+$string['valid_sans_indice'] = 'Confirm the {$a} signature(s) without warnings';

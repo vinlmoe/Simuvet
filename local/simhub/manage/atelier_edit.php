@@ -59,6 +59,11 @@ file_prepare_draft_area(
     $planoptions,
 );
 
+// Depuis l'activité d'une UC, on revient à la fiche de l'atelier dans le cours.
+$retour = \local_simhub\local\navigation::activite() && $id
+    ? \local_simhub\local\navigation::url('/local/simhub/atelier.php', ['id' => $id])
+    : new moodle_url('/local/simhub/manage/ateliers.php');
+
 $form = new atelier_form();
 $formdata = $atelier->to_record();
 $formdata->planimage = $plandraftid;
@@ -70,7 +75,7 @@ if ($indispoencours) {
 $form->set_data($formdata);
 
 if ($form->is_cancelled()) {
-    redirect(new moodle_url('/local/simhub/manage/ateliers.php'));
+    redirect($retour);
 } else if ($data = $form->get_data()) {
     $isnew = empty($data->id);
 
@@ -128,7 +133,7 @@ if ($form->is_cancelled()) {
     }
 
     redirect(
-        new moodle_url('/local/simhub/manage/ateliers.php'),
+        $retour,
         get_string('atelier_enregistre', 'local_simhub'),
         null,
         \core\output\notification::NOTIFY_SUCCESS
@@ -141,7 +146,7 @@ $form->display();
 
 if ($id && $atelier->get('planimageitemid')) {
     echo $OUTPUT->single_button(
-        new moodle_url('/local/simhub/manage/atelier_plan.php', ['id' => $id]),
+        \local_simhub\local\navigation::url('/local/simhub/manage/atelier_plan.php', ['id' => $id]),
         get_string('plan_positionner', 'local_simhub')
     );
 }
